@@ -30,6 +30,7 @@ export function validateInspectionDraft(draft) {
       make: clean(draft.make),
       model: clean(draft.model),
       year: Number.isFinite(Number(draft.year)) && String(draft.year ?? '').trim() ? Number(draft.year) : null,
+      serial: clean(draft.serial), // long-tail facts (serial, etc.) live in attributes
       customer_name: clean(draft.customerName),
       customer_email: clean(draft.customerEmail),
     },
@@ -42,7 +43,9 @@ export async function createInspection(orgId, draft, userId) {
   const v = validateInspectionDraft(draft)
   if (!v.valid) return { data: null, error: new Error(v.error) }
 
-  const row = { org_id: orgId, status: 'draft', ...v.value }
+  const { serial, ...cols } = v.value
+  const attributes = serial ? { serial } : {}
+  const row = { org_id: orgId, status: 'draft', attributes, ...cols }
   if (userId) row.created_by = userId
 
   const { data, error } = await supabase

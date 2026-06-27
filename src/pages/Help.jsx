@@ -29,6 +29,10 @@ const FAQ = [
     a: 'From your dashboard, click “New inspection” and enter the identifier — for an aircraft shop that’s the N-number; for a boat shop it’s the HIN. Add make/model and customer details if you have them. It’s saved as a draft you can work through next.',
   },
   {
+    q: 'Does PreBuy look up the aircraft for me?',
+    a: 'Yes — for aircraft, enter the N-number and click “Look up”. We pull the make, model, year, and serial number from the FAA registry so you don’t have to type them (you can still edit anything). Boats are entered manually for now, since there’s no public hull-number decoder.',
+  },
+  {
     q: 'Does my shop do aircraft or boats?',
     a: 'Each shop inspects one type, chosen when you create the shop — so the whole app (identifiers, checklists, reports) is tailored to it. If you inspect more than one type, create a separate shop for each; they all share your login and you can switch between them on the dashboard.',
   },

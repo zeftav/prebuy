@@ -18,6 +18,7 @@ export const VERTICALS = {
     modelLabel: 'Model',
     makePlaceholder: 'Cessna',
     modelPlaceholder: '172S',
+    hasLookup: true, // FAA registry prepopulation (see lib/aircraft.js)
   },
   marine: {
     key: 'marine',
@@ -30,6 +31,7 @@ export const VERTICALS = {
     modelLabel: 'Model',
     makePlaceholder: 'Catalina',
     modelPlaceholder: '30',
+    hasLookup: false, // no clean public HIN decoder — manual entry for now
   },
 }
 

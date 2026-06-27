@@ -3,6 +3,20 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.4.0] — 2026-06-27
+
+### Added
+- **Identify stage — FAA N-number lookup + prepopulation** (first step of the canonical workflow).
+  - `supabase/migrations/004_faa_registry.sql` — trimmed `faa_registry` + `faa_aircraft_ref` tables
+    (no registrant PII), RLS read-only to authenticated users, seeded with fixtures incl. the
+    `N3704A → 1970 Beech A36, S/N E-212` test case. Includes the bulk-load procedure for the full
+    FAA releasable dataset (run by service role; ~<100 MB trimmed).
+  - `src/lib/aircraft.js` — `lookupAircraft(nNumber)` + pure `normalizeNNumber`/`shapeAircraft` (+ tests).
+  - `NewInspection` is now identifier-first: for aviation shops, "Look up" pulls make/model/year/serial
+    from the registry (inspector can still edit); serial is stored in `inspections.attributes`.
+  - `lib/verticals.js` gains a `hasLookup` flag (aviation true, marine manual for now).
+  - `/help`: entry on FAA lookup.
+
 ## [0.3.1] — 2026-06-27
 
 ### Changed

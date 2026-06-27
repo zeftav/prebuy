@@ -117,9 +117,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   vertical; multiple verticals = multiple shops per login. v0.3.1: migration `003` (`orgs.vertical`),
   `signup` edge fn sets it (**redeploy**), CreateShop picks it, NewInspection derives it from the shop.
   Brett **ran 002** in SQL editor (confirmed). ⚠️ **003 must be run** + **signup edge fn redeployed**.
-  Next test case: **A36 Beech Bonanza** — building the concrete aircraft path (checklist + guided
-  detail in risk order). Future idea logged in `docs/backlog.md`: self-serve "add an industry"
-  (shop builds own checklist/report, or concierge build) — not now.
+  Future idea logged in `docs/backlog.md`: self-serve "add an industry" (shop builds own
+  checklist/report, or concierge build) — not now.
+- Session 2 cont. — **Canonical workflow** locked (docs/backlog.md): identify→assemble→customize→
+  inspect→report. Built the **Identify stage** (v0.4.0): migration `004` trimmed `faa_registry` +
+  `faa_aircraft_ref` (RLS read; seed incl. **N3704A → 1970 A36, S/N E-212**; bulk-load procedure in
+  the file). `lib/aircraft.js` `lookupAircraft` (+tests). NewInspection is identifier-first: aviation
+  "Look up" prefills make/model/year/serial; serial → `attributes`. Lint + 50 tests + build green;
+  pushed to `main`. ⚠️ **migration 004 must be run** before lookup works (fixtures load with it).
+  **▶ NEXT:** Stage 2 — seed an **A36 pre-purchase checklist** (PreBuy-authored; Brett to send ABS
+  checklist as learning material) into a global `checklist_templates` row + `template_items` (risk
+  weighted), instantiate into `inspection_items` on create, then the guided detail view (`risk.js`
+  order). FAA full bulk-load = Brett, when wanted (trimmed ≈ <100 MB; lookups are single indexed reads).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

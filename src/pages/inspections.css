@@ -186,6 +186,31 @@
   color: var(--accent);
 }
 
+.insp__lookup {
+  display: flex;
+  gap: 8px;
+}
+.insp__lookup input {
+  flex: 1;
+}
+.insp__lookupbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  white-space: nowrap;
+  padding: 0 14px;
+  font-size: 14px;
+}
+.insp__found {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e9e57;
+}
+
 .insp__row2 {
   display: flex;
   gap: 10px;

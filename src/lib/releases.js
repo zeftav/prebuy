@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.4.0',
+    date: '2026-06-27',
+    title: 'Look up an aircraft by N-number',
+    items: [
+      'Starting an aircraft inspection? Enter the N-number and tap “Look up”.',
+      'We fill in the make, model, year, and serial from the FAA registry — edit anything you like.',
+    ],
+  },
+  {
     version: '0.3.1',
     date: '2026-06-27',
     title: 'Shops have a type',
