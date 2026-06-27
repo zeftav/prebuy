@@ -6,6 +6,8 @@ import {
   formatSpecValue,
   profileRows,
   currencyStatus,
+  draftFromExtraction,
+  mergeProfileDraft,
   SPEC_FIELDS,
   CURRENCY_FIELDS,
 } from './profile.js'
@@ -89,5 +91,44 @@ describe('currencyStatus', () => {
   })
   it('flags far-out dates ok', () => {
     expect(currencyStatus('2027-01', today)).toBe('ok')
+  })
+})
+
+describe('draftFromExtraction', () => {
+  it('stringifies numeric specs, dropping 0 to empty', () => {
+    const d = draftFromExtraction({ specs: { total_time: 4200, engine_smoh: 0, engine_notes: ' new cams ' } })
+    expect(d.specs.total_time).toBe('4200')
+    expect(d.specs.engine_smoh).toBe('')
+    expect(d.specs.engine_notes).toBe('new cams')
+  })
+  it('keeps currency strings and filters nameless equipment', () => {
+    const d = draftFromExtraction({
+      currency: { annual_due: '2026-04' },
+      equipment: { avionics: [{ name: 'GTN 750', notes: '' }, { name: '', notes: 'x' }], additional: [] },
+    })
+    expect(d.currency.annual_due).toBe('2026-04')
+    expect(d.equipment.avionics).toHaveLength(1)
+  })
+  it('is safe on junk', () => {
+    expect(draftFromExtraction(null).equipment.additional).toEqual([])
+  })
+})
+
+describe('mergeProfileDraft', () => {
+  it('fills blank specs/currency but never clobbers existing values', () => {
+    const profile = { specs: { total_time: '4200' }, currency: { annual_due: '2026-04' } }
+    const draft = { specs: { total_time: 9999, engine_smoh: 850 }, currency: { annual_due: '2030-01', elt_battery_due: '2027-02' } }
+    const merged = mergeProfileDraft(profile, draft)
+    expect(merged.specs.total_time).toBe('4200') // kept
+    expect(merged.specs.engine_smoh).toBe('850') // filled
+    expect(merged.currency.annual_due).toBe('2026-04') // kept
+    expect(merged.currency.elt_battery_due).toBe('2027-02') // filled
+  })
+  it('appends new equipment but dedupes by name (case-insensitive)', () => {
+    const profile = { equipment: { avionics: [{ name: 'GTN 750', notes: '' }], additional: [] } }
+    const draft = { equipment: { avionics: [{ name: 'gtn 750', notes: 'dup' }, { name: 'GFC 500', notes: 'AP' }], additional: [] } }
+    const merged = mergeProfileDraft(profile, draft)
+    expect(merged.equipment.avionics).toHaveLength(2)
+    expect(merged.equipment.avionics.map((r) => r.name)).toEqual(['GTN 750', 'GFC 500'])
   })
 })

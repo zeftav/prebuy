@@ -3,6 +3,22 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.14.0] — 2026-06-27
+
+### Added
+- **Scan-to-pre-fill the Aircraft Profile** (beta) — extend the logbook vision pass to also draft the
+  spec sheet.
+  - `structure-logbook` edge fn — schema + prompt now also extract `specs`, `currency`, and a
+    categorized `equipment` list (avionics + additional) alongside logbooks/events; `max_tokens`
+    raised to 8192. Backward-compatible (Logbook audit ignores the new fields). **Redeploy required
+    (JWT ON).**
+  - `src/lib/profile.js` — `extractProfile(imageUrls)` calls the edge fn; pure `draftFromExtraction`
+    (numbers→strings, drop 0/blank, filter nameless equipment) and `mergeProfileDraft` (fill blanks
+    only — never clobber existing values; append equipment deduped by name). +tests (+5).
+  - `src/pages/AircraftProfile.jsx` — new "Scan to pre-fill" section: photograph records → review
+    proposed specs/currency/equipment (tick to keep) → merged into the form for review before Save.
+    Reuses the private media upload + signed-URL flow.
+
 ## [0.13.0] — 2026-06-27
 
 ### Added

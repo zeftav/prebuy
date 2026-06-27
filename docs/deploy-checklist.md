@@ -34,6 +34,9 @@ Run in order. All are idempotent (safe to re-run).
         for the two-part report (Aircraft profile + maintenance timeline). JWT still **OFF**. No new
         migration (profile lives in the existing `inspections.attributes` JSONB).
 - [x] ✅ `structure-logbook` — Verify JWT **ON**. Logbook OCR import (Claude vision). (2026-06-27)
+  - [ ] 🔁 **REDEPLOY `structure-logbook` for v0.14.0** — vision now also extracts specs / currency /
+        equipment for the Aircraft profile "Scan to pre-fill" (additive; logbook import unaffected).
+        JWT still **ON**; reuses `ANTHROPIC_API_KEY`. No migration.
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 

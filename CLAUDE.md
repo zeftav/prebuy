@@ -206,9 +206,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   redesigned: **Part 1 Aircraft profile** (spec/currency cards w/ overdue flags, damage callout,
   maintenance timeline from events, equipment, photos) → **Part 2 Inspection findings** (existing).
   Part 1 blocks render only with data → legacy reports degrade cleanly. Lint + 84 tests + build green.
-  ⚠️ **REDEPLOY `report` (JWT OFF)** for the profile/timeline (no migration). **NEXT (v0.14.0):** extend
-  `structure-logbook` vision to auto-extract equipment/specs into the profile draft (backlog "extraction
-  targets"); then broker-style narrative generator, gear-rigging measurement forms, marketing page.
+  ⚠️ **REDEPLOY `report` (JWT OFF)** for the profile/timeline (no migration).
+- Session 2 cont. — **Scan-to-pre-fill the Aircraft Profile** (v0.14.0). Extended `structure-logbook`
+  vision (schema+prompt) to also extract `specs`/`currency`/`equipment` (max_tokens→8192); additive,
+  logbook import unaffected. `lib/profile.js`: `extractProfile` + pure `draftFromExtraction` &
+  `mergeProfileDraft` (fill-blanks-only, dedupe equipment by name) +tests (+5). AircraftProfile has a
+  "Scan to pre-fill" section (photograph records → review specs/currency/equipment → merge into form →
+  Save). Lint + 89 tests + build green. ⚠️ **Deploys pending (Brett, batched):** REDEPLOY **`report`
+  (JWT OFF)** [v0.13.0] + **`structure-logbook` (JWT ON)** [v0.14.0]; both no-migration.
+  **NEXT:** broker-style narrative generator (Claude prose from the structured profile/findings); then
+  gear-rigging measurement forms, marketing landing page.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

@@ -8,9 +8,17 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, FileText, Plus, Trash2, Check } from 'lucide-react'
+import { ChevronLeft, FileText, Plus, Trash2, Check, ScanLine } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
-import { normalizeProfile, saveProfile, SPEC_FIELDS, CURRENCY_FIELDS } from '../lib/profile.js'
+import {
+  normalizeProfile,
+  saveProfile,
+  extractProfile,
+  mergeProfileDraft,
+  SPEC_FIELDS,
+  CURRENCY_FIELDS,
+} from '../lib/profile.js'
+import { uploadMedia, signedUrlsFor } from '../lib/media.js'
 import { InfoDot } from '../components/Tooltip.jsx'
 import './auth.css'
 import './inspections.css'
@@ -70,6 +78,12 @@ export default function AircraftProfile() {
   const setCurrency = (k) => (e) => edit((p) => { p.currency[k] = e.target.value })
   const setSummary = (e) => edit((p) => { p.summary = e.target.value })
 
+  // Merge a reviewed scan draft into the in-progress form (user still Saves).
+  function applyScan(filteredDraft) {
+    setSaved(false)
+    setProfile((p) => mergeProfileDraft(p, filteredDraft))
+  }
+
   async function onSave() {
     setBusy(true)
     setError(null)
@@ -114,6 +128,8 @@ export default function AircraftProfile() {
         you can confirm; blank fields are simply left off the report. The dated maintenance
         timeline comes from the <Link to={`/app/inspections/${id}/logbooks`} className="auth__inlinelink">logbook audit</Link>.
       </p>
+
+      <ScanPrefill inspection={inspection} onApply={applyScan} />
 
       {/* Narrative summary */}
       <section className="insp__section">
@@ -226,6 +242,169 @@ export default function AircraftProfile() {
         )}
       </div>
     </main>
+  )
+}
+
+// Scan records (weight & balance, equipment lists, placards, logbook pages) →
+// Claude vision → review proposed specs/currency/equipment → merge into the form.
+function ScanPrefill({ inspection, onApply }) {
+  const [phase, setPhase] = useState('idle') // idle | working | review
+  const [draft, setDraft] = useState(null)
+  const [error, setError] = useState(null)
+  const [pick, setPick] = useState({ specs: new Set(), currency: new Set(), avionics: new Set(), additional: new Set() })
+
+  async function onPick(files) {
+    const list = Array.from(files ?? [])
+    if (!list.length) return
+    setError(null)
+    setPhase('working')
+    const paths = []
+    for (const f of list) {
+      const { data, error } = await uploadMedia({ orgId: inspection.org_id, inspectionId: inspection.id, purpose: 'logbook', file: f })
+      if (!error && data) paths.push(data.storage_path)
+    }
+    const urls = await signedUrlsFor(paths)
+    if (!urls.length) {
+      setError('Couldn’t upload the photos. Try again.')
+      return setPhase('idle')
+    }
+    const { data, error } = await extractProfile(urls)
+    if (error) {
+      setError(error.message)
+      return setPhase('idle')
+    }
+    setDraft(data)
+    setPick({
+      specs: new Set(SPEC_FIELDS.map((f) => f.key).filter((k) => data.specs[k])),
+      currency: new Set(CURRENCY_FIELDS.map((f) => f.key).filter((k) => data.currency[k])),
+      avionics: new Set(data.equipment.avionics.map((_, i) => i)),
+      additional: new Set(data.equipment.additional.map((_, i) => i)),
+    })
+    setPhase('review')
+  }
+
+  function toggle(group, key) {
+    setPick((p) => {
+      const next = new Set(p[group])
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return { ...p, [group]: next }
+    })
+  }
+
+  const count = pick.specs.size + pick.currency.size + pick.avionics.size + pick.additional.size
+
+  function apply() {
+    const filtered = {
+      specs: Object.fromEntries([...pick.specs].map((k) => [k, draft.specs[k]])),
+      currency: Object.fromEntries([...pick.currency].map((k) => [k, draft.currency[k]])),
+      equipment: {
+        avionics: [...pick.avionics].map((i) => draft.equipment.avionics[i]),
+        additional: [...pick.additional].map((i) => draft.equipment.additional[i]),
+      },
+    }
+    onApply(filtered)
+    setPhase('idle')
+    setDraft(null)
+  }
+
+  const specLabel = (k) => SPEC_FIELDS.find((f) => f.key === k)?.label ?? k
+  const curLabel = (k) => CURRENCY_FIELDS.find((f) => f.key === k)?.label ?? k
+
+  return (
+    <section className="insp__section lb__scan">
+      <div className="insp__sectionhead">
+        <h2><ScanLine size={18} aria-hidden="true" /> Scan to pre-fill <span className="lb__beta">beta</span></h2>
+      </div>
+
+      {phase === 'idle' && (
+        <>
+          <p className="auth__hint">
+            Photograph records — a weight &amp; balance / equipment list, avionics placard, or logbook
+            pages — and we’ll propose specs, currency, and equipment for you to review. We never
+            overwrite anything you’ve already filled in.
+          </p>
+          <label className="auth__btn auth__btn--ghost insp__walkthrough">
+            <ScanLine size={15} aria-hidden="true" /> Scan records
+            <input type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => onPick(e.target.files)} />
+          </label>
+          {error && <div className="auth__error" role="alert">{error}</div>}
+        </>
+      )}
+
+      {phase === 'working' && <p className="auth__hint">Reading the records…</p>}
+
+      {phase === 'review' && draft && (
+        <div className="lb__review">
+          {count === 0 && pick.specs.size + pick.currency.size + draft.equipment.avionics.length + draft.equipment.additional.length === 0 && (
+            <p className="auth__hint">Nothing legible found. Try clearer, well-lit photos.</p>
+          )}
+
+          {SPEC_FIELDS.some((f) => draft.specs[f.key]) && (
+            <ReviewGroup
+              title="Specs & times"
+              items={SPEC_FIELDS.filter((f) => draft.specs[f.key]).map((f) => ({ key: f.key, label: specLabel(f.key), value: draft.specs[f.key] }))}
+              isOn={(it) => pick.specs.has(it.key)}
+              onToggle={(it) => toggle('specs', it.key)}
+            />
+          )}
+
+          {[...CURRENCY_FIELDS].some((f) => draft.currency[f.key]) && (
+            <ReviewGroup
+              title="Currency & due dates"
+              items={CURRENCY_FIELDS.filter((f) => draft.currency[f.key]).map((f) => ({ key: f.key, label: curLabel(f.key), value: draft.currency[f.key] }))}
+              isOn={(it) => pick.currency.has(it.key)}
+              onToggle={(it) => toggle('currency', it.key)}
+            />
+          )}
+
+          {draft.equipment.avionics.length > 0 && (
+            <ReviewGroup
+              title="Avionics"
+              items={draft.equipment.avionics.map((r, i) => ({ key: i, label: r.name, value: r.notes }))}
+              isOn={(it) => pick.avionics.has(it.key)}
+              onToggle={(it) => toggle('avionics', it.key)}
+            />
+          )}
+
+          {draft.equipment.additional.length > 0 && (
+            <ReviewGroup
+              title="Additional equipment"
+              items={draft.equipment.additional.map((r, i) => ({ key: i, label: r.name, value: r.notes }))}
+              isOn={(it) => pick.additional.has(it.key)}
+              onToggle={(it) => toggle('additional', it.key)}
+            />
+          )}
+
+          <div className="insp__capture">
+            <button type="button" className="auth__btn" disabled={count === 0} onClick={apply}>
+              Add {count} to profile
+            </button>
+            <button type="button" className="auth__btn auth__btn--ghost" onClick={() => { setPhase('idle'); setDraft(null) }}>Discard</button>
+          </div>
+          <p className="auth__hint">Added fields drop into the form below — review them, then Save.</p>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function ReviewGroup({ title, items, isOn, onToggle }) {
+  return (
+    <>
+      <h3 className="lb__reviewh">{title}</h3>
+      <ul className="insp__list">
+        {items.map((it) => (
+          <li key={it.key} className="lb__pick" onClick={() => onToggle(it)}>
+            <span className={`lb__check ${isOn(it) ? 'is-on' : ''}`}>{isOn(it) && <Check size={13} />}</span>
+            <span className="insp__main">
+              <span className="insp__id">{it.label}</span>
+              {it.value && <span className="insp__sub">{it.value}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
 

@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.14.0',
+    date: '2026-06-27',
+    title: 'Scan records to fill the profile',
+    items: [
+      'New (beta) on the Aircraft profile: photograph records — a weight & balance / equipment list, an avionics placard, or logbook pages — and we’ll propose specs, currency dates, and equipment.',
+      'Review and tick what to keep; we never overwrite anything you’ve already entered.',
+      'Picked fields drop straight into the profile form — eyeball them, then Save.',
+    ],
+  },
+  {
     version: '0.13.0',
     date: '2026-06-27',
     title: 'A professional, two-part report',
