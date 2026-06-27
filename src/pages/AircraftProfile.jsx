@@ -23,6 +23,7 @@ import {
 } from '../lib/profile.js'
 import { uploadMedia, signedUrlsFor } from '../lib/media.js'
 import { InfoDot } from '../components/Tooltip.jsx'
+import PhotoPicker from '../components/PhotoPicker.jsx'
 import './auth.css'
 import './inspections.css'
 
@@ -352,10 +353,14 @@ function ScanPrefill({ inspection, onApply }) {
             pages — and we’ll propose specs, currency, and equipment for you to review. We never
             overwrite anything you’ve already filled in.
           </p>
-          <label className="auth__btn auth__btn--ghost insp__walkthrough">
-            <ScanLine size={15} aria-hidden="true" /> Scan records
-            <input type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => onPick(e.target.files)} />
-          </label>
+          <PhotoPicker
+            onPick={onPick}
+            multiple
+            takeLabel="Scan records"
+            uploadLabel="Upload files"
+            takeIcon={ScanLine}
+            className="auth__btn auth__btn--ghost insp__walkthrough"
+          />
           {error && <div className="auth__error" role="alert">{error}</div>}
         </>
       )}

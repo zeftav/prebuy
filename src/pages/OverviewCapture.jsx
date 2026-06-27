@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Camera, Check, ChevronLeft, Plane, Ship } from 'lucide-react'
+import PhotoPicker from '../components/PhotoPicker.jsx'
 import { getInspection } from '../lib/checklist.js'
 import { getVertical } from '../lib/verticals.js'
 import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
@@ -128,18 +129,7 @@ export default function OverviewCapture() {
                   </button>
                 </div>
               ) : (
-                <label className="insp__capturebtn">
-                  <Camera size={15} aria-hidden="true" />
-                  {busyShot === shot ? 'Uploading…' : 'Take photo'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    hidden
-                    disabled={busyShot === shot}
-                    onChange={(e) => onPick(shot, e.target.files?.[0])}
-                  />
-                </label>
+                <PhotoPicker onPick={(files) => onPick(shot, files?.[0])} busy={busyShot === shot} />
               )}
             </li>
           )

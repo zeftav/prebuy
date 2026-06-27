@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.15.1',
+    date: '2026-06-27',
+    title: 'Take a photo or choose one',
+    items: [
+      'Everywhere you add photos or scan records, you now get two buttons: take a new photo, or upload/choose an existing one.',
+      'Works on phone and desktop — on mobile, “take” opens the camera and “upload” opens your photo library.',
+    ],
+  },
+  {
     version: '0.15.0',
     date: '2026-06-27',
     title: 'Let AI write the summary',

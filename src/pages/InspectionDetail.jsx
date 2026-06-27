@@ -6,7 +6,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText } from 'lucide-react'
+import PhotoPicker from '../components/PhotoPicker.jsx'
 import {
   getInspection,
   ensureInspectionItems,
@@ -341,18 +342,7 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
               <Sparkles size={15} aria-hidden="true" />
               {aiBusy ? 'Cleaning…' : 'Clean up with AI'}
             </button>
-            <label className="insp__capturebtn">
-              <Camera size={15} aria-hidden="true" />
-              {photoBusy ? 'Uploading…' : 'Add photo'}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                hidden
-                disabled={photoBusy}
-                onChange={(e) => addPhoto(e.target.files?.[0])}
-              />
-            </label>
+            <PhotoPicker onPick={(files) => addPhoto(files?.[0])} busy={photoBusy} />
           </div>
 
           {media.length > 0 && (

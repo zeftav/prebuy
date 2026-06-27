@@ -748,6 +748,13 @@
   max-width: 88px;
 }
 
+/* Two-button photo picker (Take / Upload) — works on desktop + mobile. */
+.photopick {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* ── Aircraft profile editor ─────────────────────────────────────────────── */
 .insp__profileintro {
   margin-top: -4px;

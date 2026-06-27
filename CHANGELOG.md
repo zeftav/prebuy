@@ -3,6 +3,15 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.15.1] — 2026-06-27
+
+### Changed
+- **Photo inputs: take OR upload, on desktop + mobile.** New shared `src/components/PhotoPicker.jsx`
+  renders two buttons — a camera input (`capture="environment"`) and a plain file input (no `capture`,
+  opens the library/file picker). Replaces the single `capture`-forced inputs in InspectionDetail
+  (discrepancy photos), OverviewCapture (walkthrough), AircraftProfile (scan to pre-fill), and
+  LogbookAudit (scan pages). Frontend only — no deploy/migration.
+
 ## [0.15.0] — 2026-06-27
 
 ### Added

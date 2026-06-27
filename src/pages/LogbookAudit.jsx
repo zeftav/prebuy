@@ -16,6 +16,7 @@ import {
   LOGBOOK_KINDS, EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { uploadMedia, signedUrlsFor } from '../lib/media.js'
+import PhotoPicker from '../components/PhotoPicker.jsx'
 import './auth.css'
 import './inspections.css'
 
@@ -278,10 +279,14 @@ function ScanImport({ inspection, onAddBook, onAddEvent }) {
             Photograph the logbook pages — we’ll read them and propose logbooks + notable events for you
             to review. Handwriting varies, so always confirm before importing.
           </p>
-          <label className="auth__btn auth__btn--ghost insp__walkthrough">
-            <ScanLine size={15} aria-hidden="true" /> Scan logbook pages
-            <input type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => onPick(e.target.files)} />
-          </label>
+          <PhotoPicker
+            onPick={onPick}
+            multiple
+            takeLabel="Scan logbook pages"
+            uploadLabel="Upload files"
+            takeIcon={ScanLine}
+            className="auth__btn auth__btn--ghost insp__walkthrough"
+          />
           {error && <div className="auth__error" role="alert">{error}</div>}
         </>
       )}
