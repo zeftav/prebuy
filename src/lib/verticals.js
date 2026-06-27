@@ -38,6 +38,36 @@ export const VERTICALS = {
       'Data plate / registration',
     ],
   },
+  home: {
+    key: 'home',
+    label: 'Home',
+    noun: 'property',
+    identifierLabel: 'Address',
+    identifierPlaceholder: '123 Main St, Springfield, IL',
+    identifierHint: 'The property’s street address.',
+    makeLabel: 'Property type',
+    modelLabel: 'Style',
+    makePlaceholder: 'Single-family',
+    modelPlaceholder: 'Two-story',
+    hasLookup: false, // property-data API later; manual for now
+    overviewShots: [
+      'Exterior — front elevation',
+      'Exterior — left side',
+      'Exterior — right side',
+      'Exterior — rear elevation',
+      'Roof — overview',
+      'Foundation / basement / crawl space',
+      'Electrical panel',
+      'Heating equipment',
+      'Cooling equipment',
+      'Water heater',
+      'Kitchen',
+      'Bathrooms',
+      'Attic / insulation',
+      'Garage',
+      'Address / house number',
+    ],
+  },
   marine: {
     key: 'marine',
     label: 'Boat',
@@ -66,7 +96,7 @@ export const VERTICALS = {
 }
 
 // Order shown in the create UI.
-export const VERTICAL_OPTIONS = [VERTICALS.aviation, VERTICALS.marine]
+export const VERTICAL_OPTIONS = [VERTICALS.aviation, VERTICALS.marine, VERTICALS.home]
 
 export function getVertical(key) {
   return VERTICALS[key] ?? null
@@ -78,7 +108,12 @@ export function getVertical(key) {
  * across verticals, no authoritative resolver wired up yet.
  */
 export function validateIdentifier(verticalKey, raw) {
-  const value = String(raw ?? '').trim().toUpperCase().replace(/\s+/g, '')
+  // Codes (N-number, HIN) normalize to uppercase + no spaces; free-text
+  // identifiers (a home address) keep their spaces and case.
+  const isCode = verticalKey === 'aviation' || verticalKey === 'marine'
+  const value = isCode
+    ? String(raw ?? '').trim().toUpperCase().replace(/\s+/g, '')
+    : String(raw ?? '').trim()
   if (!value) return { valid: false, value, error: 'Enter an identifier.' }
 
   switch (verticalKey) {
@@ -97,7 +132,7 @@ export function validateIdentifier(verticalKey, raw) {
       return { valid: true, value, error: null }
     }
     default:
-      // Unknown/relaxed vertical: accept any non-empty value.
+      // Home + any future relaxed vertical: accept any non-empty value.
       return { valid: true, value, error: null }
   }
 }

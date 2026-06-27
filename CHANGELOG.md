@@ -3,6 +3,24 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.19.0] — 2026-06-27
+
+### Added
+- **Home & marine verticals with seeded checklists.**
+  - `src/lib/verticals.js` — new **home** vertical (identifier = address, manual; overview shot list)
+    added to `VERTICAL_OPTIONS` (now aviation · marine · home; surfaces in Create Shop automatically).
+    `validateIdentifier` no longer upper-cases/strips free-text identifiers (addresses keep spaces/case);
+    codes (N-number, HIN) still normalize. Tests updated (+1).
+  - `supabase/seed/inspection-guidelines.json` — committed source data (InterNACHI home SoP, Oct 2022,
+    rephrased/free-use; synthesized marine pre-purchase scope from ABYC domains).
+  - `scripts/seed/gen-checklist-sql.mjs` — generator that turns the JSON into the two seed migrations
+    (area → category; `inspect`→item, `describe`→"Record: …", `report_if`→defect-check item;
+    `not_required`/limitations kept in JSON for a future scope drawer, not seeded as tasks). PreBuy-
+    authored per-area risk weights drive the existing risk ordering.
+  - `supabase/migrations/012_seed_home_checklist.sql` (~101 items) + `013_seed_marine_checklist.sql`
+    (~56 items) — global fallback templates (`model IS NULL`) for the home/marine verticals; slot into
+    the existing instantiate → capture → report flow with no engine changes. **Both need running.**
+
 ## [0.18.0] — 2026-06-27
 
 ### Added

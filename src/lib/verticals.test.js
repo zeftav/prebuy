@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { validateIdentifier, getVertical, VERTICAL_OPTIONS } from './verticals.js'
 
 describe('VERTICAL_OPTIONS', () => {
-  it('offers aviation and marine, aviation first', () => {
-    expect(VERTICAL_OPTIONS.map((v) => v.key)).toEqual(['aviation', 'marine'])
+  it('offers aviation, marine and home, aviation first', () => {
+    expect(VERTICAL_OPTIONS.map((v) => v.key)).toEqual(['aviation', 'marine', 'home'])
   })
 })
 
@@ -47,8 +47,13 @@ describe('validateIdentifier — marine (HIN)', () => {
   })
 })
 
-describe('validateIdentifier — unknown vertical', () => {
-  it('accepts any non-empty value', () => {
-    expect(validateIdentifier('home', '123 Main St').valid).toBe(true)
+describe('validateIdentifier — home / relaxed vertical', () => {
+  it('accepts any non-empty value and keeps spaces + case (address)', () => {
+    const r = validateIdentifier('home', '  123 Main St, Springfield IL ')
+    expect(r.valid).toBe(true)
+    expect(r.value).toBe('123 Main St, Springfield IL') // trimmed, not upper-cased / despaced
+  })
+  it('rejects empty', () => {
+    expect(validateIdentifier('home', '   ').valid).toBe(false)
   })
 })

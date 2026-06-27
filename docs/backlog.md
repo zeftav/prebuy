@@ -362,6 +362,16 @@ logbook scan, and the report):
 (Names as given — fill in contact details / shops as we line them up. Pre-launch email/auth must be on
 **Resend SMTP** before inviting them so confirm/reset emails work; see `docs/deploy.md` → Email.)
 
+## Scope / disclaimer drawer (Brett, 2026-06-27)
+The seed data (`supabase/seed/inspection-guidelines.json`) carries per-area **`not_required`** exclusions
+plus global **limitations/exclusions** (home) — scope boundaries, not tasks, so they're intentionally NOT
+seeded as `template_items`. Build a collapsed **"What's not included / scope"** drawer (per area + a global
+one) on the inspection and/or the report, sourced from the JSON (or a stored `scope` JSONB on the
+template). Valuable for the customer report's disclaimer and for honest "out of scope" UI. Home SoP also
+notes the **ASHI** alternate standard and marine has **NAMS/SAMS** bodies + **ABYC/NFPA/USCG** reference
+standards in the JSON `meta` — surface as "performed to … standard" later. Pairs with per-vertical report
+polish.
+
 ## Inspection search / filter (Brett, 2026-06-27)
 Once a shop has many inspections, the Dashboard list needs **search + filter** to stay usable. Likely:
 text search (N-number/identifier, make/model, customer, inspector), plus filters by **status**

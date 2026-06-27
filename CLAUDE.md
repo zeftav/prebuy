@@ -247,8 +247,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   page (hero+CTA, 5-step "how it works", feature grid, who-it's-for, closing CTA); `App.css` styles.
   Serves at `/` for app.prebuy.app + apex until a separate apex site exists. Backlog: noted inspection
   **search/filter** for the Dashboard.
-  **NEXT:** gear-rigging measurement forms, invite teammates, server-side PDF, Resend SMTP (pre-beta);
-  plus logbook/checklist multi-engine, aircraft-as-entity + broker intake, and the research project.
+- Session 2 cont. — **Home & marine verticals + seeded checklists** (v0.19.0). Brett supplied structured
+  seed data (`supabase/seed/inspection-guidelines.json` — InterNACHI home SoP + synthesized marine scope).
+  `verticals.js`: new **home** vertical (address identifier, manual) added to `VERTICAL_OPTIONS`;
+  `validateIdentifier` keeps free-text identifiers' spaces/case (codes still normalized). Generator
+  `scripts/seed/gen-checklist-sql.mjs` → migrations **012** (home, ~101 items) + **013** (marine, ~56)
+  as global fallback templates (`model IS NULL`); area→category, inspect/describe/report_if→items,
+  not_required kept in JSON for a future scope drawer. Slots into the existing engine, no schema change.
+  Lint + 99 tests + build green. ⚠️ **Run migrations 012 + 013.**
+  **NEXT:** scope/disclaimer drawer (not_required/limitations), gear-rigging measurement forms, invite
+  teammates, server-side PDF, Resend SMTP (pre-beta); plus logbook/checklist multi-engine,
+  aircraft-as-entity + broker intake, and the research project.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.19.0',
+    date: '2026-06-27',
+    title: 'Home & boat inspections',
+    items: [
+      'PreBuy now does home inspections and boat surveys, not just aircraft — pick the type when you create a shop.',
+      'Each comes with a thorough, risk-ordered starter checklist (home from the InterNACHI standard; boat from typical pre-purchase survey scope).',
+      'Same workflow throughout — identify, work the checklist, capture findings, publish the report.',
+    ],
+  },
+  {
     version: '0.18.0',
     date: '2026-06-27',
     title: 'A proper front page',

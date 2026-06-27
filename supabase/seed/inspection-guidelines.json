@@ -1,0 +1,572 @@
+{
+  "$schema_notes": "Seed data for an inspection helper app. Two top-level domains: home_inspection and boat_survey. Each inspectable area has items grouped by action type. Item types: 'inspect' = surveyor must examine/operate it; 'describe' = record its type/characteristics in the report; 'report_if' = defect conditions that must be flagged as needing correction; 'not_required' = explicit exclusions (useful for scoping disclaimers / 'out of scope' UI). Every item has a stable id (area_code + type letter + index) so it can map cleanly to DB rows / checkboxes.",
+  "version": "1.0",
+  "generated": "2026-06-27",
+
+  "home_inspection": {
+    "meta": {
+      "source": "InterNACHI International Standards of Practice for Performing a General Home Inspection",
+      "source_url": "https://www.nachi.org/sop.htm",
+      "source_revision": "October 2022",
+      "license_note": "InterNACHI publishes this SoP under a free-use license and offers a 'create your own clean copy' option. Item text below is rephrased into terse checklist form rather than copied verbatim.",
+      "definition": "A non-invasive, visual examination of the accessible areas of a residential property, performed for a fee, to identify material defects that are both observed and deemed material by the inspector.",
+      "scope_note": "Applies to properties with four or fewer residential units and their attached garages/carports. Visual only. Not technically exhaustive. Not a code-compliance inspection.",
+      "alternate_standard": "ASHI (American Society of Home Inspectors) publishes a parallel Standard of Practice covering the same core systems; it is more prescriptive in places, does not mandate photos, and does not require AFCI/GFCI testing. Many state licensing boards reference one or both."
+    },
+
+    "global_limitations": [
+      "Not technically exhaustive.",
+      "Will not identify concealed or latent defects.",
+      "Does not cover aesthetic / cosmetic / matters-of-taste concerns.",
+      "Does not determine suitability for any use.",
+      "Does not determine market value or marketability.",
+      "Does not determine insurability.",
+      "Does not advise for or against purchase.",
+      "Does not determine life expectancy of property or systems.",
+      "Does not include items not permanently installed.",
+      "Based on observations on the inspection date only; not a prediction of future conditions."
+    ],
+
+    "global_exclusions": {
+      "not_required_to_determine": [
+        "Property boundary lines or encroachments.",
+        "Condition of anything not readily accessible.",
+        "Service life expectancy of any component or system.",
+        "Size, capacity, BTU, performance or efficiency of any system.",
+        "Cause or reason of any condition.",
+        "Cause of the need for any correction/repair/replacement.",
+        "Future conditions.",
+        "Compliance with codes or regulations.",
+        "Presence of pests (rodents, birds, bats, insects, etc.).",
+        "Presence of mold, mildew or fungus.",
+        "Presence of airborne hazards including radon.",
+        "Air quality.",
+        "Environmental hazards (lead paint, asbestos, toxic drywall).",
+        "Electromagnetic fields.",
+        "Hazardous waste conditions.",
+        "Manufacturer recalls or installation conformance.",
+        "Acoustical properties.",
+        "Correction/replacement/repair cost estimates.",
+        "Cost to operate any system."
+      ],
+      "not_required_to_operate": [
+        "Any system that is shut down.",
+        "Any system that does not function properly.",
+        "Low-voltage systems (phone, cable, satellite, antennae, lights, remotes).",
+        "Any system that does not turn on with normal operating controls.",
+        "Shut-off / manual stop valves.",
+        "Electrical disconnects or over-current devices.",
+        "Alarm systems.",
+        "Moisture meters, gas detectors or similar equipment."
+      ]
+    },
+
+    "areas": [
+      {
+        "code": "roof",
+        "name": "Roof",
+        "inspect": [
+          { "id": "roof-i1", "text": "Roof-covering materials (from ground level or eaves)" },
+          { "id": "roof-i2", "text": "Gutters" },
+          { "id": "roof-i3", "text": "Downspouts" },
+          { "id": "roof-i4", "text": "Vents, flashing, skylights, chimney and other roof penetrations" },
+          { "id": "roof-i5", "text": "General roof structure from readily accessible panels/doors/stairs" }
+        ],
+        "describe": [
+          { "id": "roof-d1", "text": "Type of roof-covering materials" }
+        ],
+        "report_if": [
+          { "id": "roof-r1", "text": "Observed indications of active roof leaks" }
+        ],
+        "not_required": [
+          "Walk on any roof surface.",
+          "Predict service life expectancy.",
+          "Inspect underground downspout diverter drainage pipes.",
+          "Remove snow/ice/debris obstructing the surface.",
+          "Move insulation.",
+          "Inspect antennae, satellite dishes, lightning arresters, de-icing equipment.",
+          "Perform a water test.",
+          "Warrant or certify the roof.",
+          "Confirm fastening/installation of roof-covering materials."
+        ]
+      },
+      {
+        "code": "exterior",
+        "name": "Exterior",
+        "inspect": [
+          { "id": "ext-i1", "text": "Exterior wall-covering materials" },
+          { "id": "ext-i2", "text": "Eaves, soffits and fascia" },
+          { "id": "ext-i3", "text": "Representative number of windows" },
+          { "id": "ext-i4", "text": "All exterior doors" },
+          { "id": "ext-i5", "text": "Flashing and trim" },
+          { "id": "ext-i6", "text": "Adjacent walkways and driveways" },
+          { "id": "ext-i7", "text": "Stairs, steps, stoops, stairways and ramps" },
+          { "id": "ext-i8", "text": "Porches, patios, decks, balconies and carports" },
+          { "id": "ext-i9", "text": "Railings, guards and handrails" },
+          { "id": "ext-i10", "text": "Vegetation, surface drainage, retaining walls and grading where they may affect the structure via moisture intrusion" }
+        ],
+        "describe": [
+          { "id": "ext-d1", "text": "Type of exterior wall-covering materials" }
+        ],
+        "report_if": [
+          { "id": "ext-r1", "text": "Improper spacing between intermediate balusters, spindles and rails" }
+        ],
+        "not_required": [
+          "Inspect/operate screens, storm windows, shutters, awnings, fences, outbuildings, accent lighting.",
+          "Inspect items not visible/accessible from the ground (incl. window/door flashing).",
+          "Inspect geological/geotechnical/hydrological/soil conditions.",
+          "Inspect recreational or playground equipment.",
+          "Inspect seawalls, breakwalls or docks.",
+          "Inspect erosion-control / earth-stabilization measures.",
+          "Inspect for safety glass.",
+          "Inspect underground utilities or items.",
+          "Inspect wells or springs.",
+          "Inspect solar, wind or geothermal systems.",
+          "Inspect pools or spas.",
+          "Inspect septic / wastewater systems.",
+          "Inspect irrigation/sprinkler systems.",
+          "Inspect drainfields or dry wells.",
+          "Determine integrity of multi-pane glazing or thermal seals."
+        ]
+      },
+      {
+        "code": "structure",
+        "name": "Basement, Foundation, Crawl Space & Structure",
+        "inspect": [
+          { "id": "str-i1", "text": "Foundation" },
+          { "id": "str-i2", "text": "Basement" },
+          { "id": "str-i3", "text": "Crawl space" },
+          { "id": "str-i4", "text": "Structural components" }
+        ],
+        "describe": [
+          { "id": "str-d1", "text": "Type of foundation" },
+          { "id": "str-d2", "text": "Location of access to the under-floor crawl space" }
+        ],
+        "report_if": [
+          { "id": "str-r1", "text": "Wood in contact with or near soil" },
+          { "id": "str-r2", "text": "Active water penetration" },
+          { "id": "str-r3", "text": "Possible foundation movement (sheetrock/brick cracks, out-of-square door frames, unlevel floors)" },
+          { "id": "str-r4", "text": "Cutting/notching/boring of framing members posing a structural or safety concern" }
+        ],
+        "not_required": [
+          "Enter crawl spaces not readily accessible or where entry risks damage/hazard.",
+          "Move stored items or debris.",
+          "Operate sump pumps with inaccessible floats.",
+          "Determine size/spacing/span/adequacy of foundation bolting, bracing, joists or supports.",
+          "Provide engineering or architectural service.",
+          "Report on adequacy of any structural system or component."
+        ]
+      },
+      {
+        "code": "heating",
+        "name": "Heating",
+        "inspect": [
+          { "id": "heat-i1", "text": "Heating system, using normal operating controls" }
+        ],
+        "describe": [
+          { "id": "heat-d1", "text": "Location of the heating thermostat" },
+          { "id": "heat-d2", "text": "Energy source" },
+          { "id": "heat-d3", "text": "Heating method" }
+        ],
+        "report_if": [
+          { "id": "heat-r1", "text": "Heating system that did not operate" },
+          { "id": "heat-r2", "text": "Heating system deemed inaccessible" }
+        ],
+        "not_required": [
+          "Inspect/measure interiors of flues, chimneys, fire chambers, heat exchangers, combustion-air systems, humidifiers, dehumidifiers, electronic air filters, geothermal or solar heating.",
+          "Inspect fuel tanks or concealed fuel supply systems.",
+          "Determine uniformity/temperature/flow/balance/distribution/capacity/adequacy of heating.",
+          "Light or ignite pilot flames.",
+          "Activate heating when ambient conditions risk unsafe operation or equipment damage.",
+          "Override electronic thermostats.",
+          "Evaluate fuel quality.",
+          "Verify thermostat calibration / setbacks / timers.",
+          "Calculate combustion / ventilation / dilution air."
+        ]
+      },
+      {
+        "code": "cooling",
+        "name": "Cooling",
+        "inspect": [
+          { "id": "cool-i1", "text": "Cooling system, using normal operating controls" }
+        ],
+        "describe": [
+          { "id": "cool-d1", "text": "Location of the cooling thermostat" },
+          { "id": "cool-d2", "text": "Cooling method" }
+        ],
+        "report_if": [
+          { "id": "cool-r1", "text": "Cooling system that did not operate" },
+          { "id": "cool-r2", "text": "Cooling system deemed inaccessible" }
+        ],
+        "not_required": [
+          "Determine uniformity/temperature/flow/balance/distribution/capacity/adequacy of cooling.",
+          "Inspect portable window/through-wall units or electronic air filters.",
+          "Operate equipment when exterior temp is below 65°F or conditions risk damage/unsafe operation.",
+          "Determine thermostat calibration / setbacks.",
+          "Examine electrical current, coolant fluids/gases, or coolant leakage."
+        ]
+      },
+      {
+        "code": "plumbing",
+        "name": "Plumbing",
+        "inspect": [
+          { "id": "plmb-i1", "text": "Main water supply shut-off valve" },
+          { "id": "plmb-i2", "text": "Main fuel supply shut-off valve" },
+          { "id": "plmb-i3", "text": "Water heating equipment (energy source, venting, TPR/Watts 210 valves, seismic bracing)" },
+          { "id": "plmb-i4", "text": "Interior water supply incl. all fixtures and faucets, by running water" },
+          { "id": "plmb-i5", "text": "All toilets, by flushing" },
+          { "id": "plmb-i6", "text": "All sinks, tubs and showers for functional drainage" },
+          { "id": "plmb-i7", "text": "Drain, waste and vent system" },
+          { "id": "plmb-i8", "text": "Drainage sump pumps with accessible floats" }
+        ],
+        "describe": [
+          { "id": "plmb-d1", "text": "Whether water supply is public or private (per observed evidence)" },
+          { "id": "plmb-d2", "text": "Location of main water supply shut-off valve" },
+          { "id": "plmb-d3", "text": "Location of main fuel supply shut-off valve" },
+          { "id": "plmb-d4", "text": "Location of any observed fuel-storage system" },
+          { "id": "plmb-d5", "text": "Capacity of water heating equipment, if labeled" }
+        ],
+        "report_if": [
+          { "id": "plmb-r1", "text": "Water supply deficiencies (functional flow with two fixtures run simultaneously)" },
+          { "id": "plmb-r2", "text": "Hot/cold faucet installation deficiencies" },
+          { "id": "plmb-r3", "text": "Active plumbing water leaks observed" },
+          { "id": "plmb-r4", "text": "Toilets damaged, loose at floor, leaking, or with non-operating tank components" }
+        ],
+        "not_required": [
+          "Light/ignite pilot flames.",
+          "Measure capacity/temperature/age/life/adequacy of water heater.",
+          "Inspect flue/chimney interiors, combustion air, water softeners/filters, well pumps/tanks, floor drains, lawn or fire sprinklers.",
+          "Determine flow rate/volume/pressure/temperature/adequacy of supply.",
+          "Determine water quality/potability/reliability.",
+          "Open sealed plumbing access panels.",
+          "Inspect clothes washers or their connections.",
+          "Operate any valve.",
+          "Test shower pans / tub-shower surrounds for leakage.",
+          "Evaluate conservation/energy/building-standard compliance or sizing.",
+          "Determine effectiveness of anti-siphon / backflow / drain-stop devices.",
+          "Inspect wastewater / water-treatment systems or filters.",
+          "Inspect water storage tanks, pressure or bladder tanks.",
+          "Determine presence/condition of polybutylene or similar plastic piping.",
+          "Inspect or test for gas/fuel leaks."
+        ]
+      },
+      {
+        "code": "electrical",
+        "name": "Electrical",
+        "inspect": [
+          { "id": "elec-i1", "text": "Service drop" },
+          { "id": "elec-i2", "text": "Overhead service conductors and attachment point" },
+          { "id": "elec-i3", "text": "Service head, gooseneck and drip loops" },
+          { "id": "elec-i4", "text": "Service mast, conduit and raceway" },
+          { "id": "elec-i5", "text": "Electric meter and base" },
+          { "id": "elec-i6", "text": "Service-entrance conductors" },
+          { "id": "elec-i7", "text": "Main service disconnect" },
+          { "id": "elec-i8", "text": "Panelboards and over-current devices (breakers and fuses)" },
+          { "id": "elec-i9", "text": "Service grounding and bonding" },
+          { "id": "elec-i10", "text": "Representative number of switches, fixtures and receptacles, incl. AFCI test where possible" },
+          { "id": "elec-i11", "text": "GFCI receptacles and breakers, tested where possible" },
+          { "id": "elec-i12", "text": "Presence of smoke and carbon monoxide detectors" }
+        ],
+        "describe": [
+          { "id": "elec-d1", "text": "Main service disconnect amperage rating, if labeled" },
+          { "id": "elec-d2", "text": "Type of wiring observed" }
+        ],
+        "report_if": [
+          { "id": "elec-r1", "text": "Service-entrance conductor insulation / drip loop / clearance deficiencies" },
+          { "id": "elec-r2", "text": "Unfilled circuit-breaker panel openings" },
+          { "id": "elec-r3", "text": "Solid-conductor aluminum branch wiring, if readily visible" },
+          { "id": "elec-r4", "text": "Receptacle faults: no power, reversed polarity, missing cover, faulty GFCI, arcing/heat, ungrounded, or loose" },
+          { "id": "elec-r5", "text": "Absence of smoke and/or carbon monoxide detectors" }
+        ],
+        "not_required": [
+          "Insert tools/probes into panelboards or fixtures.",
+          "Operate systems that are shut down.",
+          "Remove panelboard covers / dead fronts.",
+          "Operate or reset over-current / overload devices.",
+          "Operate or test smoke/CO detectors or alarms.",
+          "Inspect/test security, fire or signaling systems.",
+          "Measure amperage/voltage of service equipment if unlabeled.",
+          "Inspect ancillary wiring or remote-control devices.",
+          "Inspect low-voltage systems, de-icing tape, pool wiring or time-controlled devices.",
+          "Verify the service ground.",
+          "Inspect generators, windmills, PV solar, or battery storage.",
+          "Conduct voltage-drop calculations.",
+          "Inspect exterior lighting."
+        ]
+      },
+      {
+        "code": "fireplace",
+        "name": "Fireplace",
+        "inspect": [
+          { "id": "fire-i1", "text": "Readily accessible/visible portions of fireplaces and chimneys" },
+          { "id": "fire-i2", "text": "Lintels above fireplace openings" },
+          { "id": "fire-i3", "text": "Damper doors, by opening/closing if accessible and operable" },
+          { "id": "fire-i4", "text": "Cleanout doors and frames" }
+        ],
+        "describe": [
+          { "id": "fire-d1", "text": "Type of fireplace" }
+        ],
+        "report_if": [
+          { "id": "fire-r1", "text": "Joint separation/damage/deterioration of hearth, hearth extension or chambers" },
+          { "id": "fire-r2", "text": "Manually operated dampers that did not open/close" },
+          { "id": "fire-r3", "text": "Lack of a smoke detector in the same room" },
+          { "id": "fire-r4", "text": "Lack of a CO detector in the same room" },
+          { "id": "fire-r5", "text": "Cleanouts not made of non-combustible material" }
+        ],
+        "not_required": [
+          "Inspect flue/vent system or chimney/flue interiors, fire doors, seals, mantels.",
+          "Determine need for a chimney sweep.",
+          "Operate gas fireplace inserts.",
+          "Light pilot flames.",
+          "Inspect automatic fuel-fed or combustion/make-up air devices.",
+          "Inspect heat-distribution assists.",
+          "Ignite or extinguish fires.",
+          "Determine draft adequacy.",
+          "Move inserts, stoves or firebox contents.",
+          "Perform smoke test or NFPA-style / Phase I inspection."
+        ]
+      },
+      {
+        "code": "attic",
+        "name": "Attic, Insulation & Ventilation",
+        "inspect": [
+          { "id": "att-i1", "text": "Insulation in unfinished spaces (attics, crawl spaces, foundation areas)" },
+          { "id": "att-i2", "text": "Ventilation of unfinished spaces" },
+          { "id": "att-i3", "text": "Mechanical exhaust systems in kitchen, bathrooms and laundry" }
+        ],
+        "describe": [
+          { "id": "att-d1", "text": "Type of insulation observed" },
+          { "id": "att-d2", "text": "Approximate average insulation depth at unfinished attic floor / roof structure" }
+        ],
+        "report_if": [
+          { "id": "att-r1", "text": "General absence of insulation or ventilation in unfinished spaces" }
+        ],
+        "not_required": [
+          "Enter attic/unfinished spaces not readily accessible or where entry risks damage/hazard.",
+          "Move/touch/disturb insulation or vapor retarders.",
+          "Damage finish/weather seal around access panels.",
+          "Identify composition or R-value of insulation.",
+          "Activate thermostatically operated fans.",
+          "Determine adequacy of ventilation."
+        ]
+      },
+      {
+        "code": "interior",
+        "name": "Doors, Windows & Interior",
+        "inspect": [
+          { "id": "int-i1", "text": "Representative number of doors and windows, by opening/closing" },
+          { "id": "int-i2", "text": "Floors, walls and ceilings" },
+          { "id": "int-i3", "text": "Stairs, steps, landings, stairways and ramps" },
+          { "id": "int-i4", "text": "Railings, guards and handrails" },
+          { "id": "int-i5", "text": "Garage vehicle doors and openers, using normal operating controls" }
+        ],
+        "describe": [
+          { "id": "int-d1", "text": "Garage vehicle door as manual or opener-equipped" }
+        ],
+        "report_if": [
+          { "id": "int-r1", "text": "Improper baluster/spindle/rail spacing on steps, stairways, guards, railings" },
+          { "id": "int-r2", "text": "Photo-electric garage safety sensors that did not operate properly" },
+          { "id": "int-r3", "text": "Any window obviously fogged or showing broken-seal evidence" }
+        ],
+        "not_required": [
+          "Inspect paint, wallpaper, window/finish treatments.",
+          "Inspect floor coverings or carpeting.",
+          "Inspect central vacuum systems.",
+          "Inspect for safety glazing.",
+          "Inspect security systems.",
+          "Evaluate fastening of islands/countertops/cabinets/sink tops/fixtures.",
+          "Move furniture/stored items/coverings to inspect concealed floor structure.",
+          "Move suspended-ceiling tiles.",
+          "Inspect/move/operate household appliances.",
+          "Verify garage-door auto-reverse safety feature.",
+          "Operate items requiring special keys/codes/combinations.",
+          "Inspect elevators, pools, spas or fountains."
+        ]
+      }
+    ]
+  },
+
+  "boat_survey": {
+    "meta": {
+      "structure_note": "Unlike home inspection, marine surveying has NO single public line-by-line Standard of Practice and NO licensing. Surveyors instead (a) hold an accreditation, (b) follow their body's voluntary report-content guidelines, and (c) evaluate the vessel against published technical standards (ABYC, NFPA, USCG/CFR). The 'system_checklist' below is a practical inspection checklist synthesized from typical pre-purchase survey scope and ABYC system domains — it is NOT a verbatim published standard, but is structured to mirror how the home_inspection data works so both can share UI.",
+      "accrediting_bodies": [
+        {
+          "abbr": "NAMS",
+          "name": "National Association of Marine Surveyors",
+          "credential": "NAMS-CMS (Certified Marine Surveyor)",
+          "report_guideline": "Recommended Guidelines for Yacht Condition and Valuation Surveys",
+          "note": "Min. ~5 yrs full-time experience + exam. Specializations: Yacht & Small Craft, Hull & Machinery, Cargo."
+        },
+        {
+          "abbr": "SAMS",
+          "name": "Society of Accredited Marine Surveyors",
+          "credential": "AMS (Accredited Marine Surveyor)",
+          "report_guideline": "Recommended Survey Report Content / Survey Practice Recommendations",
+          "note": "Min. ~5 yrs experience + exam + continuing education. Surveyor Associate (SA) is the pre-accreditation tier."
+        }
+      ],
+      "reference_standards": [
+        { "abbr": "ABYC", "name": "American Boat & Yacht Council", "covers": "The authoritative reference. ~68 standards / 650+ pages covering deck hardware, hull, electrical (AC/DC), fuel, propulsion, steering, etc. Members get 24/7 access.", "access": "Membership-gated" },
+        { "abbr": "NFPA", "name": "National Fire Protection Association", "covers": "Fuel and electrical fire-safety standards for boats (esp. NFPA 302).", "access": "Public/paid" },
+        { "abbr": "USCG / CFR", "name": "US Coast Guard requirements, 33 & 46 CFR", "covers": "Federal safety and regulatory compliance (required safety equipment, construction, labeling).", "access": "Public (eCFR)" },
+        { "abbr": "ABS / Lloyd's", "name": "American Bureau of Shipping / Lloyd's Register", "covers": "Hull construction standards, referenced mainly for larger/commercial vessels.", "access": "Paid" }
+      ]
+    },
+
+    "survey_types": [
+      { "code": "pre_purchase", "name": "Pre-Purchase (Condition) Survey", "purpose": "Most comprehensive. Full examination of condition + valuation, for a prospective buyer. Often paired with a sea trial and (for larger vessels) a separate engine/machinery survey." },
+      { "code": "insurance_cv", "name": "Insurance / Condition & Value (C&V) Survey", "purpose": "Required by underwriters; focuses on safety, seaworthiness and fair market value. Performed to the same standard as a pre-purchase survey." },
+      { "code": "appraisal", "name": "Appraisal Survey", "purpose": "Valuation for financing, estate/divorce settlement, or charitable donation. Recognized by IRS, courts, banks and insurers." },
+      { "code": "damage", "name": "Damage Survey", "purpose": "Determines nature, cause and extent of damage after an incident; performed for insurers, owners or other vested parties." }
+    ],
+
+    "common_methods": [
+      "Sound the hull with a phenolic/plastic hammer to detect voids and delamination.",
+      "Reference ABYC standards throughout (and cite them in the report).",
+      "Test electronics and electrical systems for operability.",
+      "Use a moisture meter on the hull/deck (common but not universal).",
+      "Conduct a sea trial where possible (assesses propulsion, steering, handling under load).",
+      "Haul-out / out-of-water inspection of bottom, running gear, through-hulls and shafts."
+    ],
+
+    "system_checklist": [
+      {
+        "code": "hull_structure",
+        "name": "Hull & Structure",
+        "inspect": [
+          { "id": "hull-1", "text": "Hull exterior topsides and bottom (sounding for voids/delamination)" },
+          { "id": "hull-2", "text": "Moisture readings on hull and deck (cored areas especially)" },
+          { "id": "hull-3", "text": "Keel, keel-to-hull joint, and ballast attachment" },
+          { "id": "hull-4", "text": "Stringers, bulkheads and internal structural members (accessible)" },
+          { "id": "hull-5", "text": "Blisters, cracks, prior repairs, osmosis (FRP) / corrosion (metal) / rot (wood)" },
+          { "id": "hull-6", "text": "Deck, cabin top and hull-to-deck joint" },
+          { "id": "hull-7", "text": "Transom and swim platform" }
+        ],
+        "report_if": [
+          { "id": "hull-r1", "text": "Structural delamination, significant moisture intrusion, or compromised hull-to-deck joint" }
+        ]
+      },
+      {
+        "code": "deck_topside",
+        "name": "Deck Hardware & Topsides",
+        "inspect": [
+          { "id": "deck-1", "text": "Cleats, chocks, stanchions, pulpits and rails (backing plates where accessible)" },
+          { "id": "deck-2", "text": "Hatches, ports, windows and seals" },
+          { "id": "deck-3", "text": "Lifelines, rails and guards" },
+          { "id": "deck-4", "text": "Non-skid and deck surface condition" }
+        ]
+      },
+      {
+        "code": "below_waterline",
+        "name": "Through-Hulls, Seacocks & Running Gear",
+        "inspect": [
+          { "id": "blw-1", "text": "All through-hull fittings and seacocks (operation and bonding)" },
+          { "id": "blw-2", "text": "Hose clamps, hoses and double-clamping below waterline" },
+          { "id": "blw-3", "text": "Shaft, strut, cutless bearing and shaft seal" },
+          { "id": "blw-4", "text": "Propeller(s) and rudder(s)" },
+          { "id": "blw-5", "text": "Sacrificial anodes (zincs) condition" }
+        ],
+        "report_if": [
+          { "id": "blw-r1", "text": "Seized/corroded seacocks, single-clamped below-waterline hoses, or excessive shaft/bearing play" }
+        ]
+      },
+      {
+        "code": "propulsion",
+        "name": "Propulsion & Machinery",
+        "inspect": [
+          { "id": "prop-1", "text": "Engine(s) external condition, mounts and alignment" },
+          { "id": "prop-2", "text": "Belts, hoses, exhaust system and risers" },
+          { "id": "prop-3", "text": "Transmission/gearcase and controls" },
+          { "id": "prop-4", "text": "Cooling system (raw-water and closed-loop)" },
+          { "id": "prop-5", "text": "Operation under load during sea trial (smoke, temp, RPM, vibration)" }
+        ],
+        "not_required": [
+          "Internal engine teardown or oil analysis (recommend a separate engine/machinery surveyor for high-hour or large vessels)."
+        ]
+      },
+      {
+        "code": "fuel",
+        "name": "Fuel System",
+        "inspect": [
+          { "id": "fuel-1", "text": "Tanks, mounting and labeling" },
+          { "id": "fuel-2", "text": "Fuel lines, fittings, filters and shut-offs" },
+          { "id": "fuel-3", "text": "Fill, vent and anti-siphon arrangements" },
+          { "id": "fuel-4", "text": "Conformance with ABYC / NFPA fuel-system standards" }
+        ],
+        "report_if": [
+          { "id": "fuel-r1", "text": "Fuel leaks, non-compliant lines/fittings, or improper tank installation" }
+        ]
+      },
+      {
+        "code": "electrical",
+        "name": "Electrical (AC & DC)",
+        "inspect": [
+          { "id": "elec-1", "text": "DC system: batteries, switches, fusing/breakers, wiring condition" },
+          { "id": "elec-2", "text": "AC system: shore power inlet, panel, GFCI/ELCI protection, polarity" },
+          { "id": "elec-3", "text": "Wiring runs, support, chafe protection and connections" },
+          { "id": "elec-4", "text": "Bonding and galvanic/cathodic protection system" },
+          { "id": "elec-5", "text": "Conformance with ABYC electrical standards (E-11 etc.)" }
+        ],
+        "report_if": [
+          { "id": "elec-r1", "text": "Improper/undersized wiring, missing overcurrent protection, AC reverse polarity, or unsafe shore-power connection" }
+        ]
+      },
+      {
+        "code": "plumbing",
+        "name": "Plumbing & Tankage",
+        "inspect": [
+          { "id": "plmb-1", "text": "Fresh water system, tanks, pumps and fixtures" },
+          { "id": "plmb-2", "text": "Bilge pumps (manual and automatic) and high-water alarms" },
+          { "id": "plmb-3", "text": "Marine sanitation device (MSD), holding tank and overboard valves" },
+          { "id": "plmb-4", "text": "Hoses, clamps and anti-siphon loops" }
+        ]
+      },
+      {
+        "code": "steering_control",
+        "name": "Steering & Controls",
+        "inspect": [
+          { "id": "str-1", "text": "Steering system (hydraulic/mechanical/cable) and play" },
+          { "id": "str-2", "text": "Rudder bearings, stuffing box and linkages" },
+          { "id": "str-3", "text": "Engine/throttle/shift controls" },
+          { "id": "str-4", "text": "Autopilot, if fitted" }
+        ]
+      },
+      {
+        "code": "ground_tackle",
+        "name": "Ground Tackle & Mooring",
+        "inspect": [
+          { "id": "grd-1", "text": "Anchor(s), rode, chain and connections" },
+          { "id": "grd-2", "text": "Windlass operation" },
+          { "id": "grd-3", "text": "Dock lines and fenders" }
+        ]
+      },
+      {
+        "code": "safety",
+        "name": "Safety Equipment (USCG / NFPA)",
+        "inspect": [
+          { "id": "safe-1", "text": "PFDs (count, type, condition)" },
+          { "id": "safe-2", "text": "Fire extinguishers / fixed suppression (charge, mounting, certification)" },
+          { "id": "safe-3", "text": "Flares and visual distress signals (in date)" },
+          { "id": "safe-4", "text": "Navigation lights and sound-signaling device" },
+          { "id": "safe-5", "text": "Required placards (oil, garbage, MSD), registration and HIN" },
+          { "id": "safe-6", "text": "CO detectors and propane/LPG system safety (if fitted)" },
+          { "id": "safe-7", "text": "EPIRB / liferaft, where applicable" }
+        ],
+        "report_if": [
+          { "id": "safe-r1", "text": "Missing/expired required safety equipment or non-compliance with USCG carriage requirements" }
+        ]
+      },
+      {
+        "code": "navigation",
+        "name": "Navigation & Electronics",
+        "inspect": [
+          { "id": "nav-1", "text": "GPS/chartplotter, radar, depth sounder, VHF (operability)" },
+          { "id": "nav-2", "text": "Compass and instrumentation" },
+          { "id": "nav-3", "text": "Antennas and mounting" }
+        ]
+      }
+    ],
+
+    "valuation_note": "Pre-purchase, insurance and appraisal surveys conclude with a value opinion (fair market value and/or replacement cost). For app purposes this is a separate report section from the condition findings; surveyors typically recommend sharing only the Findings & Recommendations with the seller, not the valuation."
+  }
+}
