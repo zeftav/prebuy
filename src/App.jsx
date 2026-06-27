@@ -9,6 +9,7 @@ import CreateShop from './pages/CreateShop.jsx'
 import NewInspection from './pages/NewInspection.jsx'
 import InspectionDetail from './pages/InspectionDetail.jsx'
 import OverviewCapture from './pages/OverviewCapture.jsx'
+import AircraftProfile from './pages/AircraftProfile.jsx'
 import LogbookAudit from './pages/LogbookAudit.jsx'
 import ReportView from './pages/ReportView.jsx'
 import Help from './pages/Help.jsx'
@@ -67,6 +68,14 @@ function App() {
         element={
           <ProtectedRoute>
             <OverviewCapture />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/inspections/:id/profile"
+        element={
+          <ProtectedRoute>
+            <AircraftProfile />
           </ProtectedRoute>
         }
       />

@@ -747,3 +747,69 @@
 .insp__year {
   max-width: 88px;
 }
+
+/* ── Aircraft profile editor ─────────────────────────────────────────────── */
+.insp__profileintro {
+  margin-top: -4px;
+}
+.auth__inlinelink {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.insp__summaryinput {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+.insp__profilegrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 14px;
+}
+.insp__rowedit {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.insp__rowedit .auth__field {
+  flex: 1;
+}
+.insp__rowedit--narrow {
+  flex: 0 0 120px;
+}
+.insp__rowdel {
+  margin-bottom: 1px;
+}
+.insp__profilesave {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+.insp__profilesave .auth__btn {
+  width: auto;
+  padding-left: 28px;
+  padding-right: 28px;
+}
+.insp__savedflash {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 14px;
+}
+@media (max-width: 540px) {
+  .insp__rowedit {
+    flex-wrap: wrap;
+  }
+  .insp__rowedit--narrow {
+    flex-basis: 100%;
+  }
+}

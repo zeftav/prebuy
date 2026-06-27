@@ -3,6 +3,25 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.13.0] — 2026-06-27
+
+### Added
+- **Aircraft Profile + two-part customer report.** The report is now a professional document:
+  Part 1 *Aircraft profile* (spec sheet) → Part 2 *Inspection findings*.
+  - `src/lib/profile.js` — canonical profile shape stored on `inspections.attributes.profile`
+    (no migration; `attributes` is an existing JSONB bag): narrative summary, specs & times,
+    currency/due dates, damage history, categorized equipment (avionics + additional). Pure
+    helpers — `normalizeProfile`, `isProfileEmpty`, `profileRows`, `formatSpecValue`,
+    `currencyStatus` (overdue / due-soon / ok) — with tests (`profile.test.js`, +12).
+  - `src/pages/AircraftProfile.jsx` — editor at `/app/inspections/:id/profile`; linked from the
+    inspection tools row. Inline help via `InfoDot`.
+  - `report` edge fn — now returns `inspection.profile` and the `logbook_events` (newest first) so
+    the report can render the spec sheet + a dated maintenance timeline. **Redeploy required (JWT OFF).**
+  - `src/pages/ReportView.jsx` — redesigned into the two-part layout: spec/currency cards (with
+    overdue/due-soon flags), explicit damage callout (or a clean "no damage history" note),
+    maintenance timeline, categorized equipment, photo gallery, then the existing findings. Part 1
+    blocks render only when they have data, so legacy reports degrade to just the findings.
+
 ## [0.12.1] — 2026-06-27
 
 ### Fixed

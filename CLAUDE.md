@@ -197,6 +197,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   the zip). Monthly cron keeps it fresh. AppFooter now global (version/What's-New on every page).
   **structure-logbook (JWT ON) + migration 009 deployed by Brett** (logbook OCR scan, v0.11.0).
   All deploy-checklist items now ✅ except pre-launch email (Resend SMTP) + the marketing landing page.
+- Session 2 cont. — **Aircraft Profile + two-part report redesign** (v0.13.0). `lib/profile.js` —
+  canonical profile on `inspections.attributes.profile` (**no migration**; JSONB bag): summary,
+  specs/times, currency/due dates, damage history, categorized equipment. Pure helpers (normalize,
+  isProfileEmpty, profileRows, formatSpecValue, **currencyStatus** overdue/due-soon/ok) +tests (+12).
+  `AircraftProfile.jsx` editor at `/app/inspections/:id/profile` (linked from detail tools).
+  `report` edge fn now returns `inspection.profile` + `logbook_events` (newest-first). `ReportView`
+  redesigned: **Part 1 Aircraft profile** (spec/currency cards w/ overdue flags, damage callout,
+  maintenance timeline from events, equipment, photos) → **Part 2 Inspection findings** (existing).
+  Part 1 blocks render only with data → legacy reports degrade cleanly. Lint + 84 tests + build green.
+  ⚠️ **REDEPLOY `report` (JWT OFF)** for the profile/timeline (no migration). **NEXT (v0.14.0):** extend
+  `structure-logbook` vision to auto-extract equipment/specs into the profile draft (backlog "extraction
+  targets"); then broker-style narrative generator, gear-rigging measurement forms, marketing page.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

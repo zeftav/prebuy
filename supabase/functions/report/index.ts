@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
     .maybeSingle()
   if (!insp || insp.status !== 'published') return json({ error: 'Report not found.' }, 404)
 
-  const [{ data: org }, { data: items }, { data: media }] = await Promise.all([
+  const [{ data: org }, { data: items }, { data: media }, { data: events }] = await Promise.all([
     admin.from('orgs').select('name').eq('id', insp.org_id).maybeSingle(),
     admin
       .from('inspection_items')
@@ -58,6 +58,10 @@ Deno.serve(async (req: Request) => {
     admin
       .from('media')
       .select('storage_path, kind, purpose, caption, inspection_item_id')
+      .eq('inspection_id', insp.id),
+    admin
+      .from('logbook_events')
+      .select('event_date, tach, category, title, description')
       .eq('inspection_id', insp.id),
   ])
 
@@ -98,6 +102,8 @@ Deno.serve(async (req: Request) => {
       location: insp.location,
       inspection_date: insp.inspection_date,
       published_at: insp.published_at,
+      // Spec-sheet ("Aircraft profile") block; null/legacy inspections degrade gracefully.
+      profile: insp.attributes?.profile ?? null,
     },
     items: (items ?? []).map((i) => ({
       id: i.id,
@@ -112,6 +118,16 @@ Deno.serve(async (req: Request) => {
       sort_order: i.sort_order,
       photos: photosByItem.get(i.id) ?? [],
     })),
+    // Dated maintenance chronology (broker-style highlights), newest first.
+    events: (events ?? [])
+      .map((e) => ({
+        event_date: e.event_date,
+        tach: e.tach,
+        category: e.category,
+        title: e.title,
+        description: e.description,
+      }))
+      .sort((a, b) => String(b.event_date ?? '').localeCompare(String(a.event_date ?? ''))),
     overview,
   })
 })

@@ -6,6 +6,17 @@
 
 export const releases = [
   {
+    version: '0.13.0',
+    date: '2026-06-27',
+    title: 'A professional, two-part report',
+    items: [
+      'New “Aircraft profile” on every inspection — record specs, times, currency/due dates, damage history, and a categorized equipment list.',
+      'The customer report is now a polished two-part document: the aircraft profile (spec sheet) first, then your inspection findings.',
+      'The report builds a dated maintenance timeline from your logbook events, flags overdue/due-soon items, and states damage history clearly.',
+      'Blank profile fields are simply left off — fill in as much or as little as you like.',
+    ],
+  },
+  {
     version: '0.12.1',
     date: '2026-06-27',
     title: 'What’s-new everywhere',

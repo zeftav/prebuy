@@ -30,6 +30,9 @@ Run in order. All are idempotent (safe to re-run).
 - [x] ✅ `structure-finding` — Verify JWT **ON**. Powers "Clean up with AI". (2026-06-27)
 - [x] ✅ `report` — Verify JWT **OFF**. Serves the public report at `/r/<token>`. (2026-06-27)
   - [x] ✅ Redeployed `report` for v0.12.0 (inspector/location/inspection-date). (2026-06-27)
+  - [ ] 🔁 **REDEPLOY `report` for v0.13.0** — now also returns `inspection.profile` + `logbook_events`
+        for the two-part report (Aircraft profile + maintenance timeline). JWT still **OFF**. No new
+        migration (profile lives in the existing `inspections.attributes` JSONB).
 - [x] ✅ `structure-logbook` — Verify JWT **ON**. Logbook OCR import (Claude vision). (2026-06-27)
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)

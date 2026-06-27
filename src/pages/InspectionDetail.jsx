@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText } from 'lucide-react'
 import {
   getInspection,
   ensureInspectionItems,
@@ -167,6 +167,9 @@ export default function InspectionDetail() {
       <InspectionMeta inspection={inspection} onSave={saveMeta} />
 
       <div className="insp__tools">
+        <Link to={`/app/inspections/${inspection.id}/profile`} className="auth__btn auth__btn--ghost insp__walkthrough">
+          <FileText size={15} aria-hidden="true" /> {cfg.key === 'marine' ? 'Vessel' : 'Aircraft'} profile
+        </Link>
         <Link to={`/app/inspections/${inspection.id}/overview`} className="auth__btn auth__btn--ghost insp__walkthrough">
           <Images size={15} aria-hidden="true" /> Photo walkthrough
         </Link>
