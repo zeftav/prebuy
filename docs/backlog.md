@@ -144,9 +144,18 @@ into the shop's org). RLS + ownership questions: who owns the file after handoff
 still see, and whether the broker keeps a (possibly redacted) copy. Decide privacy defaults — a broker
 may not want every internal note exposed, and a shop's findings may not flow back to the broker.
 
+**Listing-creation engine for amateur/occasional brokers (Brett, 2026-06-27).** Beyond pro brokers,
+this is a strong **listing-creation engine for amateur / one-off sellers** — an owner selling their own
+plane, or a part-time broker who lacks the tooling to produce a polished listing. PreBuy walks them
+through identify → scan logbooks → guided photos → AI narrative and hands back a **professional spec
+sheet + write-up** they'd otherwise pay a pro to assemble. Lowers the barrier, widens the top of the
+funnel, and seeds aircraft files into the database (feeds the report-resale asset below). Likely a
+**guided, very simple "create a listing" path** + a self-serve price point.
+
 **Persona / packaging questions (open):**
 - Is "broker" a **distinct role/account type**, or just a shop whose vertical/workflow is "listing prep"?
-  (Leans toward a role flag + a trimmed, capture-only UI — no checklist/findings for brokers.)
+  (Leans toward a role flag + a trimmed, capture-only UI — no checklist/findings for brokers.) Note the
+  **amateur/owner-seller** tier as well — even simpler, listing-only.
 - **Pricing:** broker-side listing-prep product vs shop-side pre-buy — one record, two entry points.
 - **Listing output:** brokers want a clean **spec sheet / listing** export (the v0.15 narrative + Part 1
   profile already most of the way there) — possibly a broker-branded variant of the public report.
@@ -155,6 +164,39 @@ may not want every internal note exposed, and a shop's findings may not flow bac
 guided overview photos, AI narrative, public report. **New work:** the aircraft-as-entity (A) or intake
 status (B), the cross-org handoff/claim + its RLS, and a broker role + capture-only UI. **Not now** —
 slot after the deploy batch + a look at the end-to-end report; revisit entity shape (A vs B) first.
+
+---
+
+## Pricing / data asset — retained reports + resale (Brett, 2026-06-27)
+
+**The idea.** Offer the **initial buyer a discount** on their pre-buy in exchange for letting their
+**report stay in our database**, and gain the right to **resell that report** if the aircraft comes
+back to market later (sale falls through, owner re-lists, flips, etc.). The pre-buy report becomes a
+**reusable data asset** tied to the aircraft, not a one-shot deliverable — a recurring-revenue layer on
+top of the per-inspection fee, and a compounding moat as the library of aircraft histories grows.
+
+**Why it's interesting.** Pre-buys are expensive and often "wasted" when a deal dies; a later buyer
+would value an existing recent inspection. We monetize the same artifact more than once, the discount
+lowers friction for the first buyer, and every retained report deepens the per-aircraft record (pairs
+with the aircraft-as-entity idea in the broker epic — the report attaches to the **aircraft file**).
+
+**Needs real thought (open questions):**
+- **Consent / privacy / ownership.** The buyer paid for it — retention + resale needs **explicit,
+  clear opt-in** (the discount is the incentive), plus terms on who owns the report and what a later
+  buyer receives. The **inspecting shop's** consent/stake matters too (their work, their liability).
+- **Staleness & framing.** An inspection ages fast (hours flown, new damage, deferred items done). Any
+  resold report must be clearly **stamped as-of (date + tach/hours)** and framed as a historical
+  snapshot, not a current condition — likely "records as of <date>, not re-verified."
+- **Liability.** Reselling an inspection to a party who didn't commission it carries real risk —
+  disclaimers, scope limits, and the shop's position on standing behind old findings.
+- **Revenue share.** Who gets paid on resale — PreBuy, the original buyer (credit/rebate?), the shop
+  that did the work? A split likely needed to keep shops onside.
+- **Data model.** Report retained against the **aircraft** (entity) with a visibility/license state
+  (private → retained-resaleable → sold-on); a marketplace/lookup ("is there a recent pre-buy on
+  N12345?") is the longer-term surface.
+
+**Not now** — pricing/legal-heavy; park until the aircraft-as-entity shape is decided (it's the
+substrate) and there's real inspection volume to resell against.
 
 ---
 
