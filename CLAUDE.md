@@ -55,11 +55,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 ## Current state
 - Session 1 (2026-06-26): Scaffolded Vite+React app. Installed stack deps. Wrote `001_init.sql`
   (schema + RLS), `lib/supabase.js`, `lib/risk.js` (+ tests), SPA `_redirects`, this file.
-  Local git initialized. **Not yet done:** GitHub remote, Supabase project + run migration,
-  Cloudflare Pages, app pages/auth, edge functions.
+  Git initialized + pushed to GitHub (zeftav/prebuy, SSH). **Not yet done:** Supabase project +
+  run migration, Cloudflare Pages, app pages/auth, edge functions.
+
+## Repo / access
+- GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
+  (added as a repo deploy key with write). No `gh` CLI installed yet.
 
 ## TODO / Known issues
-- [ ] Connect GitHub remote (gh CLI not installed on this Mac).
+- [x] Connect GitHub remote (SSH, pushed 2026-06-26).
+- [ ] (optional) Install `gh` CLI for the PR workflow / issue links.
 - [ ] Create Supabase project; run `001_init.sql`; set Site URL + Auth redirects.
 - [ ] Cloudflare Pages project (build `npm run build`, output `dist`, env vars).
 - [ ] N-number → make/model lookup (FAA releasable aircraft registration DB).
