@@ -192,9 +192,11 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   load-faa.mjs` (pg COPY → temp-staging-from-header → upsert trimmed cols, FK-safe, idempotent) +
   `.github/workflows/faa-load.yml` (manual + monthly cron; downloads FAA zip; needs repo secret
   `SUPABASE_DB_URL` = **direct/session** conn string, not the :6543 pooler). `docs/faa-load.md`. Full
-  ~300k load still ⬜ (Brett runs the Action). AppFooter now global (version/What's-New on every page).
-  ⚠️ **Outstanding edge-fn deploy: `structure-logbook` (JWT ON) + migration `009`** (logbook OCR scan,
-  built v0.11.0, in repo + deploy-checklist, not yet deployed).
+  ~300k load **done 2026-06-27** — secret = **Session pooler** string (runners are IPv4-only and the
+  Direct host is IPv6-only → `ENETUNREACH`; download also needs a browser User-Agent or the FAA 403s
+  the zip). Monthly cron keeps it fresh. AppFooter now global (version/What's-New on every page).
+  **structure-logbook (JWT ON) + migration 009 deployed by Brett** (logbook OCR scan, v0.11.0).
+  All deploy-checklist items now ✅ except pre-launch email (Resend SMTP) + the marketing landing page.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

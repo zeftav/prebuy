@@ -51,10 +51,10 @@ Run in order. All are idempotent (safe to re-run).
 
 ## 6. Optional / when ready
 
-- [ ] ⬜ **FAA full bulk-load** — now automated. Set repo secret `SUPABASE_DB_URL` (direct/session
-      connection string) → GitHub **Actions → "Load FAA registry" → Run workflow**. Downloads the FAA
-      zip + loads ~300k aircraft; re-runs monthly on a cron. Steps + local option in `docs/faa-load.md`.
-      The N3704A fixture covers testing until then.
+- [x] ✅ **FAA full bulk-load** — done (2026-06-27). Repo secret `SUPABASE_DB_URL` set to the
+      **Session pooler** string (IPv4-reachable from GitHub runners; the Direct host is IPv6-only and
+      hit `ENETUNREACH`). GitHub **Actions → "Load FAA registry"** loaded ~300k aircraft; re-runs
+      monthly on the cron. Steps + the 403/IPv6 gotchas in `docs/faa-load.md`.
 - [x] ✅ **`app.prebuy.app` live** (2026-06-27) — Cloudflare Pages custom domain added + Supabase Auth
       URLs updated. SPA now serves at `app.prebuy.app`; report links + auth redirects follow the origin
       automatically (no code change). Apex `prebuy.app` reserved for the marketing/landing page.
