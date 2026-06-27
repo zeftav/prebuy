@@ -28,6 +28,7 @@ Built multi-tenant from day one to resell.
 - Dictation: iPhone **Web Speech API** for live transcript → edge fn → **Claude** structures it into a
   finding. No audio storage to start. (iOS Safari reliability is a known risk — see native decision.)
 - Tracker: **Jira** (company already on it), not Linear. Until connected, backlog lives in `docs/backlog.md`.
+  ⚠️ The connected Linear workspace ("Yellowtag") is a **different company** — do NOT track PreBuy there.
 - Signup: **open self-serve** — anyone can sign up, create a shop (org), and become its owner.
 - Seeding: ship **both** an aircraft and a marine (boat) checklist to exercise the multi-asset engine.
 
