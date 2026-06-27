@@ -84,8 +84,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   run, RLS verified enforcing (unauth insert → 42501 denied). v0.1.0 (visible version + What's New
   panel) shipped. Cloudflare Pages live + verified at https://prebuy-2pm.pages.dev (build stamp shows
   real commit SHA; SPA fallback works). `docs/deploy.md` captures the full deploy setup.
-  **Not yet done:** app pages/auth, edge functions. Confirm Supabase Auth URLs include the pages.dev
-  domain (only localhost set so far).
+  Jira backlog stood up (PREB). **Paused** session 1 here to set up a Claude Code **web/cloud** project
+  (so prebuy is visible/workable from the Claude iOS app like Yellowtag; this was a *local* Mac session).
+
+**▶ NEXT (start here):** branch `feat/auth` for **PREB-3 Auth & onboarding** — PREB-20 email/password
+login + protected routes, PREB-21 `signup` edge fn (org+owner, **JWT OFF**, deliver as deploy-paste),
+PREB-22 self-serve create-shop UI, PREB-23 shared `Tooltip` + PREB-24 `/help` skeleton. Move issues to
+In Progress as you go; tests on pure logic; verify build before PR.
+
+**Not yet done:** app pages/auth, edge functions. Cloud project needs `VITE_SUPABASE_URL` +
+`VITE_SUPABASE_ANON_KEY` set as env vars (`.env` is gitignored) and a setup script (`npm ci`).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
