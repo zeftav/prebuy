@@ -1,7 +1,6 @@
 import { Plane } from 'lucide-react'
-
-// eslint-disable-next-line no-undef
-const BUILD_SHA = typeof __BUILD_SHA__ !== 'undefined' ? __BUILD_SHA__ : 'dev'
+import WhatsNew from '../components/WhatsNew.jsx'
+import { APP_VERSION, BUILD_SHA } from '../lib/version.js'
 
 export default function Home() {
   return (
@@ -22,7 +21,12 @@ export default function Home() {
         </p>
       </section>
 
-      <footer className="home__build">build {BUILD_SHA}</footer>
+      <footer className="home__footer">
+        <span className="home__build">
+          v{APP_VERSION} · build {BUILD_SHA}
+        </span>
+        <WhatsNew />
+      </footer>
     </main>
   )
 }

@@ -1,0 +1,124 @@
+.whatsnew__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  font: inherit;
+  font-size: 13px;
+  color: inherit;
+  opacity: 0.7;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.whatsnew__trigger:hover {
+  opacity: 1;
+}
+
+.whatsnew__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e0245e;
+  display: inline-block;
+}
+
+.whatsnew__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.whatsnew__panel {
+  width: 100%;
+  max-width: 440px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg, #fff);
+  color: var(--panel-fg, #1a1a1a);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+@media (prefers-color-scheme: dark) {
+  .whatsnew__panel {
+    background: var(--panel-bg, #1c1c1e);
+    color: var(--panel-fg, #f2f2f2);
+  }
+}
+
+.whatsnew__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+.whatsnew__header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.whatsnew__close {
+  display: inline-flex;
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+.whatsnew__close:hover {
+  opacity: 1;
+}
+
+.whatsnew__body {
+  padding: 8px 18px 18px;
+  overflow-y: auto;
+}
+
+.whatsnew__release {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+}
+.whatsnew__release:last-child {
+  border-bottom: none;
+}
+.whatsnew__release-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.whatsnew__version {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.whatsnew__date {
+  font-size: 12px;
+  opacity: 0.55;
+}
+.whatsnew__release h3 {
+  margin: 6px 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.whatsnew__release ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.whatsnew__release li {
+  font-size: 14px;
+  line-height: 1.45;
+}

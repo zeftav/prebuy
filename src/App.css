@@ -44,8 +44,17 @@
   font-size: 15px !important;
 }
 
+.home__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+  padding-top: 12px;
+}
+
 .home__build {
   font-size: 12px;
-  opacity: 0.4;
+  opacity: 0.45;
   font-variant-numeric: tabular-nums;
 }
