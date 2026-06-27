@@ -1,0 +1,10 @@
+{
+  "name": "faa-loader",
+  "private": true,
+  "type": "module",
+  "description": "One-off / scheduled loader for the FAA Releasable Aircraft Database. Not part of the app build.",
+  "dependencies": {
+    "pg": "^8.13.1",
+    "pg-copy-streams": "^6.0.6"
+  }
+}

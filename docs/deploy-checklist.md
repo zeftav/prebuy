@@ -52,10 +52,10 @@ Run in order. All are idempotent (safe to re-run).
 
 ## 6. Optional / when ready
 
-- [ ] ⬜ **FAA full bulk-load** — pour the full ~300k-aircraft dataset into `faa_registry` /
-      `faa_aircraft_ref`. Procedure is in the comments at the bottom of `004_faa_registry.sql`
-      (download FAA releasable ZIP → COPY MASTER/ACFTREF → upsert trimmed columns). The N3704A
-      fixture covers testing until then.
+- [ ] ⬜ **FAA full bulk-load** — now automated. Set repo secret `SUPABASE_DB_URL` (direct/session
+      connection string) → GitHub **Actions → "Load FAA registry" → Run workflow**. Downloads the FAA
+      zip + loads ~300k aircraft; re-runs monthly on a cron. Steps + local option in `docs/faa-load.md`.
+      The N3704A fixture covers testing until then.
 - [x] ✅ **`app.prebuy.app` live** (2026-06-27) — Cloudflare Pages custom domain added + Supabase Auth
       URLs updated. SPA now serves at `app.prebuy.app`; report links + auth redirects follow the origin
       automatically (no code change). Apex `prebuy.app` reserved for the marketing/landing page.

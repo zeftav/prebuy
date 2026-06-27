@@ -188,6 +188,13 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   inspection findings. Data dependency: **equipment/spec extraction** (extend `structure-logbook` →
   `inspections.attributes`). Then: marketing landing page · gear-rigging measurement form (needs Drive
   manuals) · invite teammates · server-side PDF · Resend SMTP.
+- Session 2 cont. — **FAA bulk-load automated** + **app-wide footer fix** (v0.12.1). `scripts/faa/
+  load-faa.mjs` (pg COPY → temp-staging-from-header → upsert trimmed cols, FK-safe, idempotent) +
+  `.github/workflows/faa-load.yml` (manual + monthly cron; downloads FAA zip; needs repo secret
+  `SUPABASE_DB_URL` = **direct/session** conn string, not the :6543 pooler). `docs/faa-load.md`. Full
+  ~300k load still ⬜ (Brett runs the Action). AppFooter now global (version/What's-New on every page).
+  ⚠️ **Outstanding edge-fn deploy: `structure-logbook` (JWT ON) + migration `009`** (logbook OCR scan,
+  built v0.11.0, in repo + deploy-checklist, not yet deployed).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

@@ -1,0 +1,36 @@
+name: Load FAA registry
+
+# Bulk-loads the FAA Releasable Aircraft Database into faa_aircraft_ref + faa_registry.
+# Runs on demand (Actions tab → Run workflow) and monthly to keep it fresh.
+# Requires repo secret SUPABASE_DB_URL = your Supabase DIRECT/session connection
+# string (postgres://postgres:<pw>@db.<ref>.supabase.co:5432/postgres). See docs/faa-load.md.
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 9 1 * *' # 09:00 UTC on the 1st of each month
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Download + unzip FAA releasable database
+        run: |
+          curl -fSL --retry 3 -o faa.zip https://registry.faa.gov/database/ReleasableAircraft.zip
+          unzip -o faa.zip MASTER.txt ACFTREF.txt -d faa
+          wc -l faa/MASTER.txt faa/ACFTREF.txt
+
+      - name: Install loader deps
+        run: npm --prefix scripts/faa install --no-audit --no-fund
+
+      - name: Load into Supabase
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/faa/load-faa.mjs faa/MASTER.txt faa/ACFTREF.txt
