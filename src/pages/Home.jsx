@@ -1,4 +1,5 @@
 import { Plane } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import WhatsNew from '../components/WhatsNew.jsx'
 import { APP_VERSION, BUILD_SHA } from '../lib/version.js'
 
@@ -8,6 +9,12 @@ export default function Home() {
       <header className="home__brand">
         <Plane size={28} aria-hidden="true" />
         <span>PreBuy</span>
+        <nav className="home__nav">
+          <Link to="/help">Help</Link>
+          <Link to="/login" className="home__signin">
+            Sign in
+          </Link>
+        </nav>
       </header>
 
       <section className="home__hero">
@@ -15,6 +22,11 @@ export default function Home() {
         <p>
           Enter an N-number, work the make/model checklist in financial-risk order, capture findings
           by voice and camera, and hand your customer a clean report.
+        </p>
+        <p>
+          <Link to="/login" className="home__cta">
+            Create your shop →
+          </Link>
         </p>
         <p className="home__status">
           Scaffolding in place — auth, the inspection flow, and the report view are next.

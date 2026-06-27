@@ -86,14 +86,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   real commit SHA; SPA fallback works). `docs/deploy.md` captures the full deploy setup.
   Jira backlog stood up (PREB). **Paused** session 1 here to set up a Claude Code **web/cloud** project
   (so prebuy is visible/workable from the Claude iOS app like Yellowtag; this was a *local* Mac session).
-
-**▶ NEXT (start here):** branch `feat/auth` for **PREB-3 Auth & onboarding** — PREB-20 email/password
-login + protected routes, PREB-21 `signup` edge fn (org+owner, **JWT OFF**, deliver as deploy-paste),
-PREB-22 self-serve create-shop UI, PREB-23 shared `Tooltip` + PREB-24 `/help` skeleton. Move issues to
-In Progress as you go; tests on pure logic; verify build before PR.
-
-**Not yet done:** app pages/auth, edge functions. Cloud project needs `VITE_SUPABASE_URL` +
-`VITE_SUPABASE_ANON_KEY` set as env vars (`.env` is gitignored) and a setup script (`npm ci`).
+- Session 2 (2026-06-27, **first cloud session**): Built **PREB-3 Auth & onboarding** on branch
+  `feat/auth`. v0.2.0. Supabase email/password sign-in/up (`lib/auth.jsx` `AuthProvider`/`useAuth`),
+  `ProtectedRoute`, `/login` (PREB-20). `signup` edge fn — service role, **JWT OFF**, own token check,
+  atomic org+owner with org-rollback + slug-collision retry (PREB-21). Create-shop UI + `lib/shops.js`
+  (validated; +tests) with Dashboard routing membership-less users to onboarding (PREB-22). Shared
+  accessible `Tooltip` + `InfoDot` (PREB-23). Data-driven `/help` FAQ (PREB-24). Home nav (Sign in /
+  Help / CTA). Lint+test (23) + build all green.
+  **Deploy still needed (Brett):** paste & deploy the `signup` edge fn with **Verify JWT OFF** (no
+  manual secrets — uses auto-injected `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`). Until then,
+  create-shop returns a network/_function-not-found_ error but auth + the rest work.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
@@ -115,7 +117,9 @@ In Progress as you go; tests on pure logic; verify build before PR.
 - [ ] Boat-survey vertical: marine checklist content; HIN/registration identifier (manual entry).
 - [ ] Decide native iOS vs PWA after field-testing dictation + offline at a real hangar/dock.
 - [ ] N-number → make/model lookup (FAA releasable aircraft registration DB).
-- [ ] Auth + org signup edge function; seed first global checklist template.
+- [x] Auth + org signup edge function (PREB-3, v0.2.0, 2026-06-27). ⚠️ `signup` edge fn still needs
+      deploying (Verify JWT OFF). Seed first global checklist template — still TODO.
+- [ ] Password reset flow (Login mentions it; `/help` says "coming shortly").
 - [ ] Capture flow (dictation + media), report view, PDF export.
-- [ ] Shared `Tooltip` component + `/help` FAQ page; populate/maintain alongside every feature.
+- [x] Shared `Tooltip` component + `/help` FAQ page (PREB-23/24, 2026-06-27); keep populating per feature.
 - [x] Jira: backlog stood up (project PREB, 10 epics / 35 stories, 2026-06-26).

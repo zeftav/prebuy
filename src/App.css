@@ -17,6 +17,36 @@
   letter-spacing: -0.01em;
 }
 
+.home__nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.home__nav a {
+  color: var(--text);
+  text-decoration: none;
+}
+.home__nav a:hover {
+  color: var(--text-h);
+}
+.home__signin {
+  color: var(--accent) !important;
+}
+
+.home__cta {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+.home__cta:hover {
+  text-decoration: underline;
+}
+
 .home__hero {
   flex-grow: 1;
   display: flex;

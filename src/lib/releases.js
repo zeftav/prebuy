@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.2.0',
+    date: '2026-06-27',
+    title: 'Accounts & your shop',
+    items: [
+      'Sign up and sign in with email and password.',
+      'Create your shop in one step — you become its owner.',
+      'New Help & FAQ page (find it in the top nav or any “Need a hand?” link).',
+    ],
+  },
+  {
     version: '0.1.0',
     date: '2026-06-26',
     title: 'Welcome to PreBuy',

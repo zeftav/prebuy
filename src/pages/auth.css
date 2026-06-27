@@ -1,0 +1,183 @@
+/* Shared styles for the auth + onboarding screens (login, create-shop,
+   dashboard). Mobile-first: a single centered column that stays comfortable on
+   a phone. */
+
+.auth {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 40px 20px 32px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+.auth-pending {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+}
+
+.auth__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-h);
+  text-decoration: none;
+}
+
+.auth__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.auth__heading h1 {
+  font-size: 26px;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.auth__heading p {
+  font-size: 15px;
+  opacity: 0.7;
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.auth__field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.auth__field input {
+  font: inherit;
+  font-size: 16px; /* 16px keeps iOS Safari from zooming on focus */
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text-h);
+  box-sizing: border-box;
+}
+.auth__field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.auth__hint {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.auth__btn {
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+.auth__btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.auth__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.auth__btn--ghost {
+  background: none;
+  color: var(--text-h);
+  border-color: var(--border);
+}
+
+.auth__toggle {
+  font: inherit;
+  font-size: 14px;
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.auth__error {
+  font-size: 14px;
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.25);
+  border-radius: 8px;
+  padding: 9px 11px;
+}
+
+.auth__notice {
+  font-size: 14px;
+  color: var(--text-h);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 9px 11px;
+}
+
+.auth__footer-link {
+  font-size: 13px;
+  opacity: 0.7;
+}
+.auth__footer-link a {
+  color: inherit;
+}
+
+/* Dashboard bits */
+.dash__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dash__orgs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dash__org {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.dash__org-name {
+  font-weight: 600;
+  color: var(--text-h);
+}
+.dash__role {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
