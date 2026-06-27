@@ -37,6 +37,10 @@ const FAQ = [
     a: 'Open an inspection from your dashboard. We build a checklist matched to the aircraft and order it by financial risk, so the biggest-dollar items come first. Mark each item OK, Monitor, Discrepancy, or N/A, and add notes — your progress saves automatically. Dictation and photos are coming next.',
   },
   {
+    q: 'Can I customize the checklist for a job?',
+    a: 'Yes. On an inspection, tap “Add item” to add your own checks (with a High/Medium/Low priority). Use the flag button on any item to mark it an owner-requested priority — those float to the top of the list so you hit them first. Customizations apply to that inspection only; the starter checklist stays intact.',
+  },
+  {
     q: 'How do I add photos?',
     a: 'Two ways. On any checklist item, tap “Add photo” to attach discrepancy photos to that finding. For big-picture documentation, open an inspection and tap “Photo walkthrough” — we’ll prompt you through a standard shot list (exterior angles, panel, engine, logbooks, and so on) so the report has consistent coverage. Photos are stored privately to your shop.',
   },

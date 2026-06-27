@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.8.0',
+    date: '2026-06-27',
+    title: 'Make the checklist yours',
+    items: [
+      'Add your own checklist items to any inspection.',
+      'Flag owner-requested priorities to float them to the top of the list.',
+      'Set a priority (High / Medium / Low) so custom items slot into the right place.',
+    ],
+  },
+  {
     version: '0.7.0',
     date: '2026-06-27',
     title: 'Photos — walkthrough & findings',

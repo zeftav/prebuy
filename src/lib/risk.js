@@ -32,6 +32,10 @@ export function orderByFinancialRisk(items) {
     const statusDelta = statusRank(a) - statusRank(b)
     if (statusDelta !== 0) return statusDelta
 
+    // Owner-requested priorities surface first within the same status band.
+    const ownerDelta = (b?.owner_priority ? 1 : 0) - (a?.owner_priority ? 1 : 0)
+    if (ownerDelta !== 0) return ownerDelta
+
     const scoreDelta = riskScore(b) - riskScore(a) // desc
     if (scoreDelta !== 0) return scoreDelta
 

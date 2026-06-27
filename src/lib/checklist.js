@@ -21,7 +21,7 @@ export async function getInspection(id) {
 export async function listInspectionItems(inspectionId) {
   const { data, error } = await supabase
     .from('inspection_items')
-    .select('id, category, title, description, sort_order, risk_weight, status, severity, findings, transcript')
+    .select('id, template_item_id, category, title, description, sort_order, risk_weight, owner_priority, status, severity, findings, transcript')
     .eq('inspection_id', inspectionId)
   return { data: data ?? [], error }
 }
@@ -80,13 +80,39 @@ export async function ensureInspectionItems(inspection) {
   return { data: reload.data, error: reload.error, templateMatched: true }
 }
 
-/** Update one inspection item (status / findings / severity). */
+/** Update one inspection item (status / findings / severity / owner_priority). */
 export async function updateInspectionItem(id, patch) {
   const { data, error } = await supabase
     .from('inspection_items')
     .update(patch)
     .eq('id', id)
-    .select('id, status, severity, findings')
+    .select('id, status, severity, findings, owner_priority')
     .single()
   return { data, error }
+}
+
+/** Add a shop/owner-custom item to an inspection (not from a template). */
+export async function addCustomItem(inspection, { category, title, risk_weight, owner_priority = false }) {
+  const t = String(title ?? '').trim()
+  if (!t) return { data: null, error: new Error('Give the item a title.') }
+  const { data, error } = await supabase
+    .from('inspection_items')
+    .insert({
+      inspection_id: inspection.id,
+      org_id: inspection.org_id,
+      category: String(category ?? '').trim() || 'Custom',
+      title: t,
+      risk_weight: Number.isFinite(Number(risk_weight)) ? Number(risk_weight) : 50,
+      owner_priority,
+      status: 'pending',
+    })
+    .select('id, template_item_id, category, title, description, sort_order, risk_weight, owner_priority, status, severity, findings, transcript')
+    .single()
+  return { data, error }
+}
+
+/** Delete an inspection item (used for custom, non-template items). */
+export async function deleteInspectionItem(id) {
+  const { error } = await supabase.from('inspection_items').delete().eq('id', id)
+  return { error }
 }

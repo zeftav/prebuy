@@ -251,6 +251,58 @@
   opacity: 0.55;
   font-weight: 700;
 }
+.insp__flag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  opacity: 0.7;
+  cursor: pointer;
+}
+.insp__flag:hover {
+  opacity: 1;
+}
+.insp__flag.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-bg);
+  opacity: 1;
+}
+.insp__ownertag {
+  margin-left: 8px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.insp__additem {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.insp__additem select {
+  font: inherit;
+  font-size: 16px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+.insp__ownercheck {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
 .insp__statusrow {
   display: flex;
   gap: 6px;

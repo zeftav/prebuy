@@ -6,8 +6,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X } from 'lucide-react'
-import { getInspection, ensureInspectionItems, updateInspectionItem } from '../lib/checklist.js'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X, Flag, Plus, Trash2 } from 'lucide-react'
+import {
+  getInspection,
+  ensureInspectionItems,
+  updateInspectionItem,
+  addCustomItem,
+  deleteInspectionItem,
+} from '../lib/checklist.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import { getVertical } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
@@ -71,6 +77,18 @@ export default function InspectionDetail() {
   function setItemStatus(item, status) {
     const next = status === item.status ? 'pending' : status // tap again to clear
     patchItem(item, { status: next })
+  }
+
+  async function addItem(draft) {
+    const { data, error } = await addCustomItem(inspection, draft)
+    if (!error && data) setItems((prev) => [...prev, data])
+    return error
+  }
+
+  async function removeItem(item) {
+    setItems((prev) => prev.filter((i) => i.id !== item.id))
+    const { error } = await deleteInspectionItem(item.id)
+    if (error) setItems((prev) => [...prev, item])
   }
 
   if (state === 'loading') {
@@ -146,15 +164,18 @@ export default function InspectionDetail() {
             inspection={inspection}
             onStatus={setItemStatus}
             onPatch={patchItem}
+            onRemove={removeItem}
             onMediaChange={refreshMedia}
           />
         ))}
       </ol>
+
+      <AddItem onAdd={addItem} />
     </main>
   )
 }
 
-function ItemRow({ item, media, inspection, onStatus, onPatch, onMediaChange }) {
+function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMediaChange }) {
   const [open, setOpen] = useState(false)
   const [findings, setFindings] = useState(item.findings ?? '')
   const [aiBusy, setAiBusy] = useState(false)
@@ -228,9 +249,26 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onMediaChange }) 
       <div className="insp__itemhead">
         <span className={`insp__riskdot insp__riskdot--${band}`} title={`Risk: ${band}`} aria-label={`Risk ${band}`} />
         <button type="button" className="insp__itemtitle" onClick={() => setOpen((o) => !o)}>
-          <span className="insp__itemcat">{item.category}</span>
+          <span className="insp__itemcat">
+            {item.category}
+            {item.owner_priority && <span className="insp__ownertag">★ owner priority</span>}
+          </span>
           <span>{item.title}</span>
         </button>
+        <button
+          type="button"
+          className={`insp__flag ${item.owner_priority ? 'is-on' : ''}`}
+          onClick={() => onPatch(item, { owner_priority: !item.owner_priority })}
+          aria-pressed={item.owner_priority}
+          title="Owner priority — float this item to the top"
+        >
+          <Flag size={15} aria-hidden="true" />
+        </button>
+        {!item.template_item_id && (
+          <button type="button" className="insp__flag" onClick={() => onRemove(item)} aria-label="Remove item" title="Remove custom item">
+            <Trash2 size={15} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       <div className="insp__statusrow" role="group" aria-label={`Status for ${item.title}`}>
@@ -317,5 +355,78 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onMediaChange }) 
         </div>
       )}
     </li>
+  )
+}
+
+// Priority bands map to a risk weight so custom items slot into the risk order.
+const PRIORITY_BANDS = [
+  { key: 'high', label: 'High', weight: 85 },
+  { key: 'medium', label: 'Medium', weight: 55 },
+  { key: 'low', label: 'Low', weight: 25 },
+]
+
+function AddItem({ onAdd }) {
+  const [open, setOpen] = useState(false)
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState('')
+  const [band, setBand] = useState('medium')
+  const [owner, setOwner] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  if (!open) {
+    return (
+      <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={() => setOpen(true)}>
+        <Plus size={15} aria-hidden="true" /> Add item
+      </button>
+    )
+  }
+
+  async function submit(e) {
+    e.preventDefault()
+    setError(null)
+    if (!title.trim()) return setError('Give the item a title.')
+    setBusy(true)
+    const weight = PRIORITY_BANDS.find((b) => b.key === band)?.weight ?? 55
+    const err = await onAdd({ title, category, risk_weight: weight, owner_priority: owner })
+    setBusy(false)
+    if (err) return setError(err.message)
+    setTitle('')
+    setCategory('')
+    setBand('medium')
+    setOwner(false)
+    setOpen(false)
+  }
+
+  return (
+    <form className="auth__form insp__additem" onSubmit={submit}>
+      <div className="auth__field">
+        <label htmlFor="add-title">New item</label>
+        <input id="add-title" type="text" placeholder="e.g. Owner asked: check the de-ice boots" value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+      <div className="insp__row2">
+        <div className="auth__field">
+          <label htmlFor="add-cat">Category</label>
+          <input id="add-cat" type="text" placeholder="Custom" value={category} onChange={(e) => setCategory(e.target.value)} />
+        </div>
+        <div className="auth__field">
+          <label htmlFor="add-band">Priority</label>
+          <select id="add-band" value={band} onChange={(e) => setBand(e.target.value)}>
+            {PRIORITY_BANDS.map((b) => (
+              <option key={b.key} value={b.key}>{b.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <label className="insp__ownercheck">
+        <input type="checkbox" checked={owner} onChange={(e) => setOwner(e.target.checked)} />
+        Owner-requested priority (float to top)
+      </label>
+      {error && <div className="auth__error" role="alert">{error}</div>}
+      <div className="insp__capture">
+        <button type="submit" className="auth__btn" disabled={busy}>{busy ? 'Adding…' : 'Add item'}</button>
+        <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setOpen(false)}>Cancel</button>
+      </div>
+    </form>
   )
 }

@@ -1,6 +1,24 @@
 import { describe, it, expect } from 'vitest'
 import { riskScore, orderByFinancialRisk, riskBand } from './risk.js'
 
+describe('orderByFinancialRisk — owner priority', () => {
+  it('floats an owner-priority item above higher-risk items in the same status band', () => {
+    const items = [
+      { id: 'big', status: 'pending', risk_weight: 95, sort_order: 1 },
+      { id: 'owner', status: 'pending', risk_weight: 30, sort_order: 2, owner_priority: true },
+    ]
+    expect(orderByFinancialRisk(items)[0].id).toBe('owner')
+  })
+
+  it('still keeps unresolved ahead of resolved, even for owner priorities', () => {
+    const items = [
+      { id: 'pending-normal', status: 'pending', risk_weight: 40 },
+      { id: 'ok-owner', status: 'ok', risk_weight: 90, owner_priority: true },
+    ]
+    expect(orderByFinancialRisk(items)[0].id).toBe('pending-normal')
+  })
+})
+
 describe('riskBand', () => {
   it('bands by weight', () => {
     expect(riskBand({ risk_weight: 90 })).toBe('high')

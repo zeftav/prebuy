@@ -3,6 +3,17 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.8.0] — 2026-06-27
+
+### Added
+- **Customization stage** — shops tailor the per-job checklist.
+  - `supabase/migrations/007_owner_priority.sql` — `inspection_items.owner_priority`.
+  - `src/lib/risk.js` — owner-priority items float to the top within their status band (+ tests).
+  - `src/lib/checklist.js` — `addCustomItem` / `deleteInspectionItem`; item select now carries
+    `template_item_id` + `owner_priority`.
+  - `InspectionDetail` — flag an item as owner priority, add a custom item (title/category/priority
+    band High·Med·Low → risk weight, optional owner-priority), and delete custom (non-template) items.
+
 ## [0.7.0] — 2026-06-27
 
 ### Added
