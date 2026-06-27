@@ -26,8 +26,16 @@ Built multi-tenant from day one to resell.
 - Customer report: **tokenized share link, no login**, read-only + PDF. Served by an edge function
   (service role), NOT by anon RLS.
 - Dictation: iPhone **Web Speech API** for live transcript → edge fn → **Claude** structures it into a
-  finding. No audio storage to start.
-- Tracker: **Jira** (company already on it), not Linear.
+  finding. No audio storage to start. (iOS Safari reliability is a known risk — see native decision.)
+- Tracker: **Jira** (company already on it), not Linear. Until connected, backlog lives in `docs/backlog.md`.
+
+**Product direction / open questions (see `docs/backlog.md`):**
+- **Multi-asset platform**, not aircraft-only: aircraft prebuy + **boat survey** are verticals 1 & 2,
+  architecture stays asset-typed. Engine (templates, risk order, capture, report) is asset-agnostic;
+  only the identifier + lookup differ (aircraft N-number→FAA; boat HIN, manual). Plan: migration `002`
+  adds `asset_type` + generic identifier **before any real data** (cheap now, painful later).
+- **Native iOS app: OPEN.** Web/PWA-first; native is a Phase-2 trigger if iOS Safari dictation or
+  field connectivity fail real-world testing → then a React Native/Expo capture app, web keeps reports.
 
 ## Stack
 - Frontend: React 19 + Vite 8 → Cloudflare Pages (push `main` = deploy). React Router 7.
@@ -81,6 +89,10 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - [x] Create Supabase project; run `001_init.sql` (RLS verified). (Auth redirect URLs: localhost only — revisit at Cloudflare time.)
 - [x] Cloudflare Pages project — live at prebuy-2pm.pages.dev (2026-06-26).
 - [ ] Add pages.dev domain to Supabase Auth Site URL + Redirect URLs (before auth ships).
+- [ ] Migration `002`: generalize `inspections`/`checklist_templates` to `asset_type` + generic
+      identifier (aircraft + boat), before real data lands. Fold in with the inspection-flow build.
+- [ ] Boat-survey vertical: marine checklist content; HIN/registration identifier (manual entry).
+- [ ] Decide native iOS vs PWA after field-testing dictation + offline at a real hangar/dock.
 - [ ] N-number → make/model lookup (FAA releasable aircraft registration DB).
 - [ ] Auth + org signup edge function; seed first global checklist template.
 - [ ] Capture flow (dictation + media), report view, PDF export.
