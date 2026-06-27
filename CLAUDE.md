@@ -59,17 +59,21 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 ## Current state
 - Session 1 (2026-06-26): Scaffolded Vite+React app. Installed stack deps. Wrote `001_init.sql`
   (schema + RLS), `lib/supabase.js`, `lib/risk.js` (+ tests), SPA `_redirects`, this file.
-  Git initialized + pushed to GitHub (zeftav/prebuy, SSH). **Not yet done:** Supabase project +
-  run migration, Cloudflare Pages, app pages/auth, edge functions.
+  Git initialized + pushed to GitHub (zeftav/prebuy, SSH). Supabase project created, `001_init.sql`
+  run, RLS verified enforcing (unauth insert → 42501 denied). **Not yet done:** Cloudflare Pages,
+  app pages/auth, edge functions, Auth URL config (only localhost set).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
   (added as a repo deploy key with write). No `gh` CLI installed yet.
+- Supabase: project ref `zttsdwclhykekoytrmxx`. Uses the new key format — client key is
+  `sb_publishable_…` (held in `.env` as `VITE_SUPABASE_ANON_KEY`); the secret key is `sb_secret_…`
+  (edge functions only, never in client/git). 7 tables + RLS as per `001_init.sql`.
 
 ## TODO / Known issues
 - [x] Connect GitHub remote (SSH, pushed 2026-06-26).
 - [ ] (optional) Install `gh` CLI for the PR workflow / issue links.
-- [ ] Create Supabase project; run `001_init.sql`; set Site URL + Auth redirects.
+- [x] Create Supabase project; run `001_init.sql` (RLS verified). (Auth redirect URLs: localhost only — revisit at Cloudflare time.)
 - [ ] Cloudflare Pages project (build `npm run build`, output `dist`, env vars).
 - [ ] N-number → make/model lookup (FAA releasable aircraft registration DB).
 - [ ] Auth + org signup edge function; seed first global checklist template.
