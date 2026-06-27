@@ -47,6 +47,15 @@ Likely leans on **dictation + AI structuring** and later document/photo upload o
 slot it as its own epic early in the inspection build. ABS checklist (Brett-supplied) is the reference
 for the aviation version — **cite/reference, don't embed** (copyrighted; kept out of the repo).
 
+**Built (v0.10.0, 2026-06-27):** structured tool — `logbooks` + `logbook_events` tables (migration
+`008`), `lib/logbooks.js` reconcile (per-type gap/overlap detection + tracked hours, tested), and the
+`/app/inspections/:id/logbooks` page (add logbooks, reconciliation panel, notable events). **Next:
+photo→OCR import.** Photograph log pages (or import scans) → extract entries automatically. Recommended
+path: reuse Storage (media) + **Claude vision** (an edge fn that takes page images → structured entries
++ events), since the AI/Storage plumbing already exists from capture. Could pre-fill logbook spans and
+events for the inspector to confirm. Open question Brett raised: per-page entry extraction vs. "scan the
+whole logs and extract everything" — lean to whole-log batch import with human review.
+
 ### Guided overview photo capture (Brett, 2026-06-27) — early-process
 Early in the inspection (around stage 1–2, before/alongside working items), walk the inspector through
 a **standard shot list** to document the whole asset for the report — **big-picture, not discrepancy**

@@ -3,6 +3,19 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.10.0] — 2026-06-27
+
+### Added
+- **Logbook audit / research tool** (structured first slice).
+  - `supabase/migrations/008_logbooks.sql` — `logbooks` (per-type, with date + tach spans) and
+    `logbook_events` tables, org-scoped RLS.
+  - `src/lib/logbooks.js` — `reconcileLogbooks` / `summarizeKind`: per-type sort + gap/overlap
+    detection + tracked-hours totals (+ tests); CRUD for logbooks and events.
+  - `src/pages/LogbookAudit.jsx` (`/app/inspections/:id/logbooks`) — add logbooks, a reconciliation
+    panel (tracked hours + gap/overlap warnings per type), and notable events (AD / 337 / overhaul /
+    prop-strike / damage). Linked from the inspection via a new tools row.
+  - `/help` logbook entry; backlog logs the **photo→OCR import** follow-up (Claude vision).
+
 ## [0.9.0] — 2026-06-27
 
 ### Added

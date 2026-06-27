@@ -23,6 +23,8 @@ Run in order. All are idempotent (safe to re-run).
       Storage bucket, and org-scoped Storage policies. Without it, photo upload fails.
 - [ ] ⬜ `007_owner_priority.sql` — `inspection_items.owner_priority` (customization). Without it,
       the owner-priority flag + custom-item priorities can't save.
+- [ ] ⬜ `008_logbooks.sql` — `logbooks` + `logbook_events` tables (logbook audit tool). Without it,
+      the logbook audit page can't save.
 
 ## 2. Edge functions (Supabase → Edge Functions)
 

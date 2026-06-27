@@ -160,7 +160,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   link in detail. Lint + 64 tests + build green; pushed `main`. **All 5 workflow stages now built.**
   ⚠️ **run migrations 005+006+007**, deploy **structure-finding** (JWT ON)+`ANTHROPIC_API_KEY` and
   **report** (JWT OFF). Full pending list: `docs/deploy-checklist.md`.
-  **▶ NEXT options:** logbook audit tool · server-side PDF (vs browser print) · invite teammates ·
+- Session 2 cont. — **Logbook audit tool** (v0.10.0). Migration `008` (`logbooks` +
+  `logbook_events`, org-scoped RLS). `lib/logbooks.js` `reconcileLogbooks`/`summarizeKind` —
+  per-type gap/overlap detection + tracked hours (+tests); CRUD. `LogbookAudit` page
+  (`/app/inspections/:id/logbooks`): add logbooks, reconciliation panel (gaps=missing-book,
+  overlaps=dup-time), notable events (AD/337/overhaul/prop-strike/damage). Linked from detail.
+  Lint + 70 tests + build green; pushed `main`. ⚠️ **run migration 008**. Backlog: **photo→OCR
+  log import** (Claude vision) is the next logbook step.
+  **▶ NEXT options:** logbook **OCR import** (Claude vision) · server-side PDF · invite teammates ·
   marine checklist content · FAA bulk-load · prebuy.app cutover · Resend SMTP.
 
 ## Repo / access

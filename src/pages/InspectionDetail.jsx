@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen } from 'lucide-react'
 import {
   getInspection,
   ensureInspectionItems,
@@ -157,9 +157,14 @@ export default function InspectionDetail() {
         <span className="auth__hint">Worked highest financial risk first.</span>
       </div>
 
-      <Link to={`/app/inspections/${inspection.id}/overview`} className="auth__btn auth__btn--ghost insp__walkthrough">
-        <Images size={15} aria-hidden="true" /> Photo walkthrough
-      </Link>
+      <div className="insp__tools">
+        <Link to={`/app/inspections/${inspection.id}/overview`} className="auth__btn auth__btn--ghost insp__walkthrough">
+          <Images size={15} aria-hidden="true" /> Photo walkthrough
+        </Link>
+        <Link to={`/app/inspections/${inspection.id}/logbooks`} className="auth__btn auth__btn--ghost insp__walkthrough">
+          <BookOpen size={15} aria-hidden="true" /> Logbook audit
+        </Link>
+      </div>
 
       <PublishBar inspection={inspection} onPublish={publish} onUnpublish={unpublish} />
 

@@ -8,6 +8,7 @@ import CreateShop from './pages/CreateShop.jsx'
 import NewInspection from './pages/NewInspection.jsx'
 import InspectionDetail from './pages/InspectionDetail.jsx'
 import OverviewCapture from './pages/OverviewCapture.jsx'
+import LogbookAudit from './pages/LogbookAudit.jsx'
 import ReportView from './pages/ReportView.jsx'
 import Help from './pages/Help.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
@@ -59,6 +60,14 @@ function App() {
         element={
           <ProtectedRoute>
             <OverviewCapture />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/inspections/:id/logbooks"
+        element={
+          <ProtectedRoute>
+            <LogbookAudit />
           </ProtectedRoute>
         }
       />

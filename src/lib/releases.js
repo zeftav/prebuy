@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.10.0',
+    date: '2026-06-27',
+    title: 'Logbook audit',
+    items: [
+      'New logbook audit: enter each logbook’s dates and tach times across the aircraft’s life.',
+      'We reconcile the hours and flag gaps (a possible missing logbook) or overlaps.',
+      'Record notable events — ADs, 337s, overhauls, prop strikes, damage — in one place.',
+    ],
+  },
+  {
     version: '0.9.0',
     date: '2026-06-27',
     title: 'Publish a customer report',
