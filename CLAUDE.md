@@ -142,9 +142,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   for model/SDK. Lint + 54 tests + build green; pushed `main`. ⚠️ **deploy `structure-finding`
   (JWT ON) + set `ANTHROPIC_API_KEY`** for dictation cleanup to work. Two new backlog epics:
   **logbook audit tool** + **guided overview photo capture** (prompted shot list).
-  **▶ NEXT options:** (a) capture part 2 — **photos** (Storage bucket + media) incl. guided overview
-  set; (b) customization stage (add/reprioritize items, owner priorities); (c) report (share + PDF).
-  FAA full bulk-load + prebuy.app cutover still pending (Brett).
+- Session 2 cont. — **Capture stage, part 2: photos** (v0.7.0). Migration `006` (`media.purpose` +
+  private `inspection-media` Storage bucket + org-scoped Storage policies). `lib/media.js`
+  (upload/list-with-signed-urls/delete; +tested pure helpers). **Guided overview capture**
+  (`/app/inspections/:id/overview`) — per-vertical prompted shot list (`verticals.overviewShots`).
+  **Per-item discrepancy photos** in InspectionDetail (Add photo + thumbnails). Lint + 59 tests +
+  build green; pushed `main`. ⚠️ **run migration 006** for photos to work.
+  **▶ Consolidated deploy list:** `docs/deploy-checklist.md` (single source for all pending manual
+  steps). Pending for Brett (mobile): migrations **005 + 006**, deploy **structure-finding** (JWT
+  ON) + **ANTHROPIC_API_KEY**; later Resend SMTP, FAA bulk-load, prebuy.app.
+  **▶ NEXT options:** (a) customization stage (add/reprioritize items, owner priorities); (b) report
+  (tokenized share link + PDF via `report` edge fn); (c) logbook audit tool.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

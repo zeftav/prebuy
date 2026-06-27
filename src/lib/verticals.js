@@ -19,6 +19,24 @@ export const VERTICALS = {
     makePlaceholder: 'Cessna',
     modelPlaceholder: '172S',
     hasLookup: true, // FAA registry prepopulation (see lib/aircraft.js)
+    // Guided overview shot list — big-picture documentation photos, taken early.
+    overviewShots: [
+      'Exterior — front 3/4 view',
+      'Exterior — left side',
+      'Exterior — right side',
+      'Exterior — tail / empennage',
+      'Instrument panel / avionics',
+      'Engine — left side',
+      'Engine — right side',
+      'Propeller / spinner',
+      'Left wing — leading edge',
+      'Right wing — leading edge',
+      'Landing gear — nose & mains',
+      'Interior — front seats / cockpit',
+      'Interior — rear / baggage',
+      'Logbooks (stack / spines)',
+      'Data plate / registration',
+    ],
   },
   marine: {
     key: 'marine',
@@ -32,6 +50,18 @@ export const VERTICALS = {
     makePlaceholder: 'Catalina',
     modelPlaceholder: '30',
     hasLookup: false, // no clean public HIN decoder — manual entry for now
+    overviewShots: [
+      'Exterior — bow',
+      'Exterior — port side',
+      'Exterior — starboard side',
+      'Exterior — stern / transom',
+      'Helm / cockpit',
+      'Engine / engine bay',
+      'Cabin — interior',
+      'Hull — visible bottom / waterline',
+      'Deck / rigging',
+      'HIN plate',
+    ],
   },
 }
 

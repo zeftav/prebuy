@@ -3,6 +3,21 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.7.0] — 2026-06-27
+
+### Added
+- **Capture — photos** (workflow stage 4, part 2): a private Storage bucket + two photo modes.
+  - `supabase/migrations/006_media_storage.sql` — adds `media.purpose` ('overview' | 'discrepancy'),
+    creates the private `inspection-media` bucket, and org-scoped Storage policies (object path
+    `<org_id>/<inspection_id>/<file>`).
+  - `src/lib/media.js` — upload (with orphan cleanup), list with signed URLs, delete; pure
+    `sanitizeFilename` / `mediaStoragePath` / `mediaKind` (+ tests).
+  - **Guided overview capture** (`/app/inspections/:id/overview`) — a prompted, per-vertical shot
+    list (aircraft ~15 angles; boat ~10) of big-picture documentation photos, with progress + retake.
+    Shot lists live on the vertical registry (`overviewShots`).
+  - **Per-item discrepancy photos** — "Add photo" on each checklist item with thumbnails + delete.
+  - `/help` photos entry.
+
 ## [0.6.0] — 2026-06-27
 
 ### Added

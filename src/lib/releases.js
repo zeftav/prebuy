@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.7.0',
+    date: '2026-06-27',
+    title: 'Photos — walkthrough & findings',
+    items: [
+      'New “Photo walkthrough”: we prompt you through a standard shot list to document the whole aircraft.',
+      'Attach photos to any discrepancy right on the checklist item.',
+      'Your photos are stored privately to your shop.',
+    ],
+  },
+  {
     version: '0.6.0',
     date: '2026-06-27',
     title: 'Dictate your findings',

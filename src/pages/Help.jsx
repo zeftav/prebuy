@@ -37,6 +37,10 @@ const FAQ = [
     a: 'Open an inspection from your dashboard. We build a checklist matched to the aircraft and order it by financial risk, so the biggest-dollar items come first. Mark each item OK, Monitor, Discrepancy, or N/A, and add notes — your progress saves automatically. Dictation and photos are coming next.',
   },
   {
+    q: 'How do I add photos?',
+    a: 'Two ways. On any checklist item, tap “Add photo” to attach discrepancy photos to that finding. For big-picture documentation, open an inspection and tap “Photo walkthrough” — we’ll prompt you through a standard shot list (exterior angles, panel, engine, logbooks, and so on) so the report has consistent coverage. Photos are stored privately to your shop.',
+  },
+  {
     q: 'Can I dictate my findings instead of typing?',
     a: 'Yes. Open a checklist item and tap “Dictate”, then speak your note — it transcribes live. Tap “Clean up with AI” and we’ll rewrite your spoken note into a clear, customer-ready finding and suggest a severity and status, which you can adjust. Dictation uses your browser’s speech recognition; if it isn’t available, just type. No audio is stored.',
   },

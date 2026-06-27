@@ -6,12 +6,13 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X } from 'lucide-react'
 import { getInspection, ensureInspectionItems, updateInspectionItem } from '../lib/checklist.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import { getVertical } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
 import { structureFinding } from '../lib/findings.js'
+import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
 import './auth.css'
 import './inspections.css'
 
@@ -26,6 +27,7 @@ export default function InspectionDetail() {
   const { id } = useParams()
   const [inspection, setInspection] = useState(null)
   const [items, setItems] = useState([])
+  const [media, setMedia] = useState([])
   const [state, setState] = useState('loading') // loading | ready | error | notfound
   const [note, setNote] = useState(null)
 
@@ -43,11 +45,18 @@ export default function InspectionDetail() {
       setItems(res.data)
       if (res.templateMatched === false) setNote('no-template')
       setState('ready')
+      const { data: m } = await listMedia(insp.id)
+      if (active) setMedia(m)
     })()
     return () => {
       active = false
     }
   }, [id])
+
+  async function refreshMedia() {
+    const { data } = await listMedia(id)
+    setMedia(data)
+  }
 
   const ordered = useMemo(() => orderByFinancialRisk(items), [items])
   const reviewed = items.filter((i) => i.status && i.status !== 'pending').length
@@ -117,6 +126,10 @@ export default function InspectionDetail() {
         <span className="auth__hint">Worked highest financial risk first.</span>
       </div>
 
+      <Link to={`/app/inspections/${inspection.id}/overview`} className="auth__btn auth__btn--ghost insp__walkthrough">
+        <Images size={15} aria-hidden="true" /> Photo walkthrough
+      </Link>
+
       {note === 'no-template' && (
         <div className="auth__notice">
           No checklist template matched {subtitle || 'this aircraft'} yet, so this inspection has no items.
@@ -126,21 +139,49 @@ export default function InspectionDetail() {
 
       <ol className="insp__items">
         {ordered.map((item) => (
-          <ItemRow key={item.id} item={item} onStatus={setItemStatus} onPatch={patchItem} />
+          <ItemRow
+            key={item.id}
+            item={item}
+            media={media.filter((m) => m.inspection_item_id === item.id)}
+            inspection={inspection}
+            onStatus={setItemStatus}
+            onPatch={patchItem}
+            onMediaChange={refreshMedia}
+          />
         ))}
       </ol>
     </main>
   )
 }
 
-function ItemRow({ item, onStatus, onPatch }) {
+function ItemRow({ item, media, inspection, onStatus, onPatch, onMediaChange }) {
   const [open, setOpen] = useState(false)
   const [findings, setFindings] = useState(item.findings ?? '')
   const [aiBusy, setAiBusy] = useState(false)
   const [aiError, setAiError] = useState(null)
+  const [photoBusy, setPhotoBusy] = useState(false)
   const dict = useDictation()
   const band = riskBand(item)
   const isDiscrepancy = item.status === 'discrepancy'
+
+  async function addPhoto(file) {
+    if (!file) return
+    setPhotoBusy(true)
+    const { error } = await uploadMedia({
+      orgId: inspection.org_id,
+      inspectionId: inspection.id,
+      inspectionItemId: item.id,
+      purpose: 'discrepancy',
+      file,
+    })
+    setPhotoBusy(false)
+    if (!error) onMediaChange()
+  }
+
+  async function removePhoto(row) {
+    await deleteMedia(row)
+    onMediaChange()
+  }
 
   // While dictating, mirror the live transcript into the findings field.
   useEffect(() => {
@@ -230,7 +271,32 @@ function ItemRow({ item, onStatus, onPatch }) {
               <Sparkles size={15} aria-hidden="true" />
               {aiBusy ? 'Cleaning…' : 'Clean up with AI'}
             </button>
+            <label className="insp__capturebtn">
+              <Camera size={15} aria-hidden="true" />
+              {photoBusy ? 'Uploading…' : 'Add photo'}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                disabled={photoBusy}
+                onChange={(e) => addPhoto(e.target.files?.[0])}
+              />
+            </label>
           </div>
+
+          {media.length > 0 && (
+            <div className="insp__thumbs">
+              {media.map((m) => (
+                <span key={m.id} className="insp__thumbwrap">
+                  {m.url && <img className="insp__thumb" src={m.url} alt="finding" loading="lazy" />}
+                  <button type="button" className="insp__thumbdel" onClick={() => removePhoto(m)} aria-label="Remove photo">
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
 
           {dict.listening && <span className="auth__hint">Listening… speak your note.</span>}
           {!dict.supported && <span className="auth__hint">Dictation isn’t supported on this browser — type your note.</span>}

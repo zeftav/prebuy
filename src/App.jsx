@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard.jsx'
 import CreateShop from './pages/CreateShop.jsx'
 import NewInspection from './pages/NewInspection.jsx'
 import InspectionDetail from './pages/InspectionDetail.jsx'
+import OverviewCapture from './pages/OverviewCapture.jsx'
 import Help from './pages/Help.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import './App.css'
@@ -48,6 +49,14 @@ function App() {
         element={
           <ProtectedRoute>
             <InspectionDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/inspections/:id/overview"
+        element={
+          <ProtectedRoute>
+            <OverviewCapture />
           </ProtectedRoute>
         }
       />
