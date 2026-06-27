@@ -3,8 +3,9 @@
 How PreBuy ships. Production is **git-connected**: merge to `main` → Cloudflare auto-deploys prod;
 any other branch pushed gets its own preview URL.
 
-- **Live (prod):** https://prebuy-2pm.pages.dev
+- **Live (prod):** https://app.prebuy.app (primary, 2026-06-27) · https://prebuy-2pm.pages.dev (Pages default)
 - **Repo:** `git@github.com:zeftav/prebuy.git` (`main` = production)
+- **Domains:** apex `prebuy.app` reserved for the marketing/landing page; `app.prebuy.app` = the SPA.
 
 ## Cloudflare Pages — build settings
 

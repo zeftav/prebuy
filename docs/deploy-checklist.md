@@ -54,11 +54,10 @@ Run in order. All are idempotent (safe to re-run).
       `faa_aircraft_ref`. Procedure is in the comments at the bottom of `004_faa_registry.sql`
       (download FAA releasable ZIP → COPY MASTER/ACFTREF → upsert trimmed columns). The N3704A
       fixture covers testing until then.
-- [ ] ⬜ **Migrate to `prebuy.app`** (bought via Cloudflare). Mirror the Yellowtag layout: **apex
-      `prebuy.app` = marketing/landing**, **`app.prebuy.app` = the SPA** (like `app.yellowtag.app`).
-      Steps: Cloudflare Pages → Custom domains → add `app.prebuy.app` (+ apex once the landing page
-      exists) → update Supabase Auth URL config (Site URL + redirect `https://app.prebuy.app/**`) →
-      verify `prebuy.app` in Resend. ~20 min. Full notes in `docs/deploy.md`.
+- [x] ✅ **`app.prebuy.app` live** (2026-06-27) — Cloudflare Pages custom domain added + Supabase Auth
+      URLs updated. SPA now serves at `app.prebuy.app`; report links + auth redirects follow the origin
+      automatically (no code change). Apex `prebuy.app` reserved for the marketing/landing page.
+      ⬜ Still: verify `prebuy.app` in Resend (for email); point the **apex** at the landing page once built.
 - [ ] ⬜ **Marketing/landing page** at the apex (basic product page, à la yellowtag.app) with a CTA
       into `app.prebuy.app`. See `docs/backlog.md` → Marketing site.
 
