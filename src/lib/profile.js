@@ -202,6 +202,82 @@ export function mergeProfileDraft(profile, draft) {
   return p
 }
 
+// ── Broker-style narrative (Claude via the generate-summary edge fn) ─────────
+
+/**
+ * Assemble the structured facts the summary writer needs, keeping only non-empty
+ * pieces so the prompt stays tight. Pure + testable. `items` are inspection_items,
+ * `events` are logbook_events.
+ */
+export function buildSummaryContext(inspection, profile, events, items) {
+  const n = normalizeProfile(profile)
+  const insp = inspection ?? {}
+
+  const nonEmpty = (obj, fields) => {
+    const out = {}
+    for (const f of fields) if (n[obj][f.key]) out[f.key] = formatSpecValue(n[obj][f.key], f.suffix)
+    return out
+  }
+  const specs = nonEmpty('specs', SPEC_FIELDS)
+  const currency = {}
+  for (const f of CURRENCY_FIELDS) if (n.currency[f.key]) currency[f.key] = n.currency[f.key]
+
+  const findingItems = (items ?? [])
+    .filter((i) => i.status === 'discrepancy' || i.status === 'monitor')
+    .map((i) => ({ status: i.status, category: i.category, title: i.title, finding: str(i.findings).trim() || undefined }))
+
+  const counts = { discrepancy: 0, monitor: 0, ok: 0, na: 0 }
+  for (const i of items ?? []) if (i.status in counts) counts[i.status] += 1
+
+  const ctx = {
+    asset: {
+      kind: insp.vertical === 'marine' ? 'vessel' : 'aircraft',
+      identifier: insp.identifier || undefined,
+      year: insp.year || undefined,
+      make: insp.make || undefined,
+      model: insp.model || undefined,
+      serial: insp.attributes?.serial || undefined,
+    },
+    findings_summary: counts,
+  }
+  if (Object.keys(specs).length) ctx.specs = specs
+  if (Object.keys(currency).length) ctx.currency = currency
+  if (n.damage.length) ctx.damage = n.damage
+  if (n.equipment.avionics.length) ctx.avionics = n.equipment.avionics
+  if (n.equipment.additional.length) ctx.additional_equipment = n.equipment.additional
+  if ((events ?? []).length) {
+    ctx.notable_maintenance = events.map((e) => ({
+      date: str(e.event_date).trim() || undefined,
+      category: e.category,
+      title: e.title,
+      detail: str(e.description).trim() || undefined,
+    }))
+  }
+  if (findingItems.length) ctx.findings = findingItems
+  return ctx
+}
+
+/** Generate a broker-style narrative summary from structured context. */
+export async function generateNarrative(context) {
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData.session?.access_token
+  if (!token) return { data: null, error: new Error('You must be signed in.') }
+
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-summary`
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ context }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }
+    return { data: { summary: String(body.summary ?? '').trim() }, error: null }
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e : new Error('Network error') }
+  }
+}
+
 /** Extract profile fields from photographed records (signed image URLs). */
 export async function extractProfile(imageUrls) {
   if (!imageUrls?.length) return { data: null, error: new Error('No images to read.') }

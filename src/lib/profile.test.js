@@ -8,6 +8,7 @@ import {
   currencyStatus,
   draftFromExtraction,
   mergeProfileDraft,
+  buildSummaryContext,
   SPEC_FIELDS,
   CURRENCY_FIELDS,
 } from './profile.js'
@@ -130,5 +131,43 @@ describe('mergeProfileDraft', () => {
     const merged = mergeProfileDraft(profile, draft)
     expect(merged.equipment.avionics).toHaveLength(2)
     expect(merged.equipment.avionics.map((r) => r.name)).toEqual(['GTN 750', 'GFC 500'])
+  })
+})
+
+describe('buildSummaryContext', () => {
+  const inspection = {
+    vertical: 'aviation',
+    identifier: 'N3704A',
+    year: 1970,
+    make: 'Beechcraft',
+    model: 'A36',
+    attributes: { serial: 'E-212' },
+  }
+  it('assembles asset + only non-empty blocks + finding counts', () => {
+    const profile = { specs: { total_time: '4200', engine_smoh: '' }, currency: { annual_due: '2026-04' } }
+    const events = [{ event_date: '2019-05', category: 'overhaul', title: 'Engine OH', description: 'RAM' }]
+    const items = [
+      { status: 'discrepancy', category: 'Engine', title: 'Low compression #4', findings: '60/80' },
+      { status: 'ok', category: 'Avionics', title: 'GPS', findings: '' },
+    ]
+    const ctx = buildSummaryContext(inspection, profile, events, items)
+    expect(ctx.asset.kind).toBe('aircraft')
+    expect(ctx.asset.serial).toBe('E-212')
+    expect(ctx.specs).toEqual({ total_time: '4200 hrs' })
+    expect('engine_smoh' in ctx.specs).toBe(false)
+    expect(ctx.currency.annual_due).toBe('2026-04')
+    expect(ctx.notable_maintenance).toHaveLength(1)
+    expect(ctx.findings).toHaveLength(1) // only discrepancy/monitor
+    expect(ctx.findings_summary).toEqual({ discrepancy: 1, monitor: 0, ok: 1, na: 0 })
+  })
+  it('omits absent blocks entirely', () => {
+    const ctx = buildSummaryContext(inspection, null, [], [])
+    expect('specs' in ctx).toBe(false)
+    expect('damage' in ctx).toBe(false)
+    expect('findings' in ctx).toBe(false)
+    expect(ctx.asset.model).toBe('A36')
+  })
+  it('treats marine as a vessel', () => {
+    expect(buildSummaryContext({ vertical: 'marine' }, null, [], []).asset.kind).toBe('vessel')
   })
 })

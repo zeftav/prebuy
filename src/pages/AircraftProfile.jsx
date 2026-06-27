@@ -8,13 +8,16 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, FileText, Plus, Trash2, Check, ScanLine } from 'lucide-react'
-import { getInspection } from '../lib/checklist.js'
+import { ChevronLeft, FileText, Plus, Trash2, Check, ScanLine, Sparkles } from 'lucide-react'
+import { getInspection, listInspectionItems } from '../lib/checklist.js'
+import { listEvents } from '../lib/logbooks.js'
 import {
   normalizeProfile,
   saveProfile,
   extractProfile,
   mergeProfileDraft,
+  buildSummaryContext,
+  generateNarrative,
   SPEC_FIELDS,
   CURRENCY_FIELDS,
 } from '../lib/profile.js'
@@ -43,6 +46,8 @@ export default function AircraftProfile() {
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [genBusy, setGenBusy] = useState(false)
+  const [genError, setGenError] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -82,6 +87,21 @@ export default function AircraftProfile() {
   function applyScan(filteredDraft) {
     setSaved(false)
     setProfile((p) => mergeProfileDraft(p, filteredDraft))
+  }
+
+  // Draft a broker-style narrative from the structured data into the summary field.
+  async function onGenerate() {
+    setGenBusy(true)
+    setGenError(null)
+    const [{ data: items }, { data: events }] = await Promise.all([
+      listInspectionItems(inspection.id),
+      listEvents(inspection.id),
+    ])
+    const ctx = buildSummaryContext(inspection, profile, events, items)
+    const { data, error } = await generateNarrative(ctx)
+    setGenBusy(false)
+    if (error) return setGenError(error.message)
+    edit((p) => { p.summary = data.summary })
   }
 
   async function onSave() {
@@ -134,15 +154,23 @@ export default function AircraftProfile() {
       {/* Narrative summary */}
       <section className="insp__section">
         <div className="insp__sectionhead">
-          <h2>Summary <InfoDot label="A short overview a buyer reads first — overall condition, standout points, anything notable. One short paragraph." /></h2>
+          <h2>Summary <InfoDot label="The overview a buyer reads first — overall condition, standout points, open items. Write it yourself, or draft it from your data with AI and edit." /></h2>
+          <button type="button" className="auth__btn auth__btn--ghost insp__genbtn" onClick={onGenerate} disabled={genBusy}>
+            <Sparkles size={15} aria-hidden="true" /> {genBusy ? 'Writing…' : 'Write with AI'}
+          </button>
         </div>
         <textarea
           className="insp__summaryinput"
-          rows={3}
+          rows={5}
           placeholder="e.g. A well-maintained, hangared A36 with mid-time engine, recent avionics upgrade, and no damage history."
           value={profile.summary}
           onChange={setSummary}
         />
+        <p className="auth__hint">
+          “Write with AI” drafts a balanced overview from this profile, the logbook events, and the
+          inspection findings — original prose grounded only in your data. Always review before saving.
+        </p>
+        {genError && <div className="auth__error" role="alert">{genError}</div>}
       </section>
 
       {/* Specs */}

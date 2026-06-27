@@ -49,6 +49,18 @@ const FAQ = [
     a: 'Open the inspection and tap “Publish report”. You’ll get a private share link you can copy and send — your customer opens it in any browser, no login needed, and can save it as a PDF. The link only works once you’ve published; tap “Unpublish” to turn it off again.',
   },
   {
+    q: 'What is the Aircraft profile, and what shows on the report?',
+    a: 'The Aircraft profile (tap it on an inspection) is the “spec sheet” half of the report: a short summary, specs and times, currency/due dates, damage history, and a categorized equipment list. The customer report is a two-part document — the profile first, then your inspection findings. Anything you leave blank is simply left off, so fill in as much or as little as you like. The report also builds a dated maintenance timeline automatically from your logbook events.',
+  },
+  {
+    q: 'Can I fill the profile from photos instead of typing?',
+    a: 'Yes (beta). On the Aircraft profile, tap “Scan to pre-fill” and photograph records — a weight & balance / equipment list, an avionics placard, or logbook pages. We propose specs, currency dates, and equipment for you to review and tick. We never overwrite anything you’ve already entered; picked fields drop into the form for you to check before saving.',
+  },
+  {
+    q: 'Can PreBuy write the report summary for me?',
+    a: 'Yes. On the Aircraft profile, tap “Write with AI” and we’ll draft a balanced, professional overview from your profile, logbook events, and inspection findings — original prose grounded only in your own data, never copied from a listing. It lands in the Summary box for you to edit; always review before saving.',
+  },
+  {
     q: 'Can I customize the checklist for a job?',
     a: 'Yes. On an inspection, tap “Add item” to add your own checks (with a High/Medium/Low priority). Use the flag button on any item to mark it an owner-requested priority — those float to the top of the list so you hit them first. Customizations apply to that inspection only; the starter checklist stays intact.',
   },

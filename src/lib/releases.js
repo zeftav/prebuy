@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.15.0',
+    date: '2026-06-27',
+    title: 'Let AI write the summary',
+    items: [
+      'New on the Aircraft profile: “Write with AI” drafts a professional, broker-style overview of the aircraft and the inspection.',
+      'It’s built only from your own data — the profile, logbook events, and findings — and never copied from any listing.',
+      'The draft lands in the Summary box (and the top of the report) for you to edit. Always review before saving.',
+    ],
+  },
+  {
     version: '0.14.0',
     date: '2026-06-27',
     title: 'Scan records to fill the profile',

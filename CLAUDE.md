@@ -214,8 +214,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   "Scan to pre-fill" section (photograph records → review specs/currency/equipment → merge into form →
   Save). Lint + 89 tests + build green. ⚠️ **Deploys pending (Brett, batched):** REDEPLOY **`report`
   (JWT OFF)** [v0.13.0] + **`structure-logbook` (JWT ON)** [v0.14.0]; both no-migration.
-  **NEXT:** broker-style narrative generator (Claude prose from the structured profile/findings); then
-  gear-rigging measurement forms, marketing landing page.
+- Session 2 cont. — **Broker-style narrative generator** (v0.15.0). New **`generate-summary`** edge fn
+  (**JWT ON**, `claude-opus-4-8` + structured `{summary}`, reuses `ANTHROPIC_API_KEY`; client sends the
+  context, no DB access). `lib/profile.js`: pure `buildSummaryContext` (+3 tests) + `generateNarrative`.
+  AircraftProfile "Write with AI" drafts the report's opening summary from profile + logbook events +
+  findings — original prose, balanced, grounded only in the data → editable Summary box. Help FAQ +3.
+  Lint + 92 tests + build green. ⚠️ **Deploys pending (Brett, batched, all no-migration):** REDEPLOY
+  **`report` (JWT OFF)** [v0.13.0] + **`structure-logbook` (JWT ON)** [v0.14.0]; DEPLOY new
+  **`generate-summary` (JWT ON)** [v0.15.0]. **NEXT:** gear-rigging measurement forms, marketing
+  landing page, invite teammates, server-side PDF.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

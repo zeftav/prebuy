@@ -3,6 +3,24 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.15.0] — 2026-06-27
+
+### Added
+- **Broker-style narrative generator** — "Write with AI" on the Aircraft profile drafts the report's
+  opening summary from the structured data.
+  - `supabase/functions/generate-summary/index.ts` — new edge fn (**JWT ON**, reuses
+    `ANTHROPIC_API_KEY`, `claude-opus-4-8` + structured output `{ summary }`). The client sends the
+    assembled context (no DB access in the fn). Original prose grounded only in the provided facts —
+    balanced (strengths + open discrepancies), no invented figures, never copied from a listing.
+    **Deploy required (JWT ON).** No migration.
+  - `src/lib/profile.js` — pure `buildSummaryContext(inspection, profile, events, items)` (assembles
+    asset + non-empty specs/currency/damage/equipment + notable maintenance + findings/counts; +3
+    tests) and `generateNarrative(context)` (edge call).
+  - `src/pages/AircraftProfile.jsx` — "Write with AI" button on the Summary section: lazily loads
+    items + events, builds the context, fills the editable Summary box (review before Save).
+  - `src/pages/Help.jsx` — FAQ entries for the Aircraft profile / two-part report, scan-to-pre-fill,
+    and AI summary.
+
 ## [0.14.0] — 2026-06-27
 
 ### Added

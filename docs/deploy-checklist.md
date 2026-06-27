@@ -37,6 +37,8 @@ Run in order. All are idempotent (safe to re-run).
   - [ ] 🔁 **REDEPLOY `structure-logbook` for v0.14.0** — vision now also extracts specs / currency /
         equipment for the Aircraft profile "Scan to pre-fill" (additive; logbook import unaffected).
         JWT still **ON**; reuses `ANTHROPIC_API_KEY`. No migration.
+- [ ] ⬜ **DEPLOY `generate-summary`** (new, v0.15.0) — Verify JWT **ON**. Powers "Write with AI" on the
+      Aircraft profile (broker-style narrative). Reuses `ANTHROPIC_API_KEY`; no migration.
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 

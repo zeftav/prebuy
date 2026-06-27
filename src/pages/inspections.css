@@ -786,6 +786,10 @@
 .insp__rowdel {
   margin-bottom: 1px;
 }
+.insp__genbtn {
+  width: auto;
+  flex-shrink: 0;
+}
 .insp__profilesave {
   display: flex;
   align-items: center;
