@@ -243,8 +243,12 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   engine-count + layout controls, a card per engine(+prop), scan review Engine/Prop groups (→ #1).
   ReportView: per-engine "Engines & propellers" blocks. Tests 98. ⚠️ **Still single-engine-only:**
   logbook position (per-engine reconcile) + per-engine checklist fan-out = next increment (backlog).
-  **NEXT:** marketing landing page (building now), gear-rigging measurement forms, invite teammates,
-  server-side PDF; plus logbook/checklist multi-engine + the inspection-knowledge research project.
+- Session 2 cont. — **Landing page** (v0.18.0, frontend-only). `Home.jsx` rebuilt into a real marketing
+  page (hero+CTA, 5-step "how it works", feature grid, who-it's-for, closing CTA); `App.css` styles.
+  Serves at `/` for app.prebuy.app + apex until a separate apex site exists. Backlog: noted inspection
+  **search/filter** for the Dashboard.
+  **NEXT:** gear-rigging measurement forms, invite teammates, server-side PDF, Resend SMTP (pre-beta);
+  plus logbook/checklist multi-engine, aircraft-as-entity + broker intake, and the research project.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

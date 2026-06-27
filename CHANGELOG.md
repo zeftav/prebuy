@@ -3,6 +3,17 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.18.0] — 2026-06-27
+
+### Added
+- **Landing page.** `src/pages/Home.jsx` rebuilt into a real marketing front page (hero + CTA, a
+  "how it works" 5-step flow, a feature grid, who-it's-for, and a closing CTA band); styles in
+  `App.css`. Serves at `/` for both `app.prebuy.app` and the apex until a separate site exists.
+  Frontend only.
+
+### Backlog
+- Noted **inspection search/filter** (Dashboard, for shops with many inspections) in `docs/backlog.md`.
+
 ## [0.17.0] — 2026-06-27
 
 ### Added

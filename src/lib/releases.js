@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.18.0',
+    date: '2026-06-27',
+    title: 'A proper front page',
+    items: [
+      'PreBuy has a real landing page now — what it does, how the workflow runs, and the headline features, with a clear path to create your shop.',
+    ],
+  },
+  {
     version: '0.17.0',
     date: '2026-06-27',
     title: 'Multi-engine aircraft',

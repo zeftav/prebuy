@@ -362,6 +362,15 @@ logbook scan, and the report):
 (Names as given — fill in contact details / shops as we line them up. Pre-launch email/auth must be on
 **Resend SMTP** before inviting them so confirm/reset emails work; see `docs/deploy.md` → Email.)
 
+## Inspection search / filter (Brett, 2026-06-27)
+Once a shop has many inspections, the Dashboard list needs **search + filter** to stay usable. Likely:
+text search (N-number/identifier, make/model, customer, inspector), plus filters by **status**
+(draft/in-progress/review/published), **date range**, and maybe **vertical** (for multi-shop logins).
+Sorting (newest, last-updated, status). Server-side `ilike`/filters on the existing `inspections` query
+(`listInspectionsForOrg`) with simple indexes; paginate when lists get long. Pairs with a future
+**aircraft-level view** (all inspections for one tail) if/when the aircraft-as-entity lands. Not now —
+trivial until there's real volume, but the beta shops will hit it quickly.
+
 ## Marketing site / landing page (Brett, 2026-06-27)
 Stand up a basic **product/landing page** at the apex `prebuy.app`, modeled on **yellowtag.app**, with
 the app living at **`app.prebuy.app`** (mirrors `app.yellowtag.app`). Landing = what PreBuy is (horizontal

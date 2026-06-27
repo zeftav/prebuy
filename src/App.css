@@ -9,9 +9,10 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-width: 720px;
+  max-width: 960px;
+  width: 100%;
   margin: 0 auto;
-  padding: 24px 20px 32px;
+  padding: 24px 20px 48px;
   text-align: left;
 }
 
@@ -28,7 +29,7 @@
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 18px;
   font-size: 14px;
   font-weight: 500;
 }
@@ -43,55 +44,162 @@
   color: var(--accent) !important;
 }
 
-.home__cta {
-  display: inline-block;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--accent);
-  text-decoration: none;
-}
-.home__cta:hover {
-  text-decoration: underline;
-}
-
+/* ── Hero ──────────────────────────────────────────────────────────────── */
 .home__hero {
-  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 16px;
-  padding: 48px 0;
+  gap: 18px;
+  padding: 56px 0 40px;
+  max-width: 720px;
 }
-
 .home__hero h1 {
-  font-size: clamp(28px, 6vw, 44px);
-  line-height: 1.1;
+  font-size: clamp(30px, 6vw, 48px);
+  line-height: 1.08;
   margin: 0;
+  letter-spacing: -0.02em;
 }
-
 .home__hero p {
   margin: 0;
   font-size: 18px;
-  line-height: 1.5;
-  max-width: 48ch;
+  line-height: 1.55;
+  max-width: 54ch;
 }
-
-.home__status {
+.home__ctarow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+.home__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+}
+.home__cta--primary {
+  background: var(--accent);
+  color: #fff;
+}
+.home__cta--primary:hover {
+  filter: brightness(1.07);
+}
+.home__cta--ghost {
+  color: var(--text);
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.35));
+}
+.home__cta--ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.home__note {
+  font-size: 14px !important;
   opacity: 0.6;
-  font-size: 15px !important;
 }
 
-.home__footer {
+/* ── Sections ──────────────────────────────────────────────────────────── */
+.home__section {
+  padding: 36px 0;
+  border-top: 1px solid rgba(128, 128, 128, 0.18);
+}
+.home__section h2 {
+  font-size: 24px;
+  margin: 0 0 24px;
+  letter-spacing: -0.01em;
+}
+
+.home__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 18px;
+  counter-reset: step;
+}
+.home__step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.home__stepnum {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+.home__stepicon {
+  color: var(--accent);
+}
+.home__step h3 {
+  font-size: 16px;
+  margin: 2px 0 0;
+}
+.home__step p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.82;
+}
+
+.home__features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px 24px;
+}
+.home__feature {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.home__featicon {
+  flex-shrink: 0;
+  color: var(--accent);
+  margin-top: 2px;
+}
+.home__feature h3 {
+  font-size: 15px;
+  margin: 0 0 2px;
+}
+.home__feature p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  opacity: 0.82;
+}
+
+.home__who {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  border-top: 1px solid rgba(128, 128, 128, 0.2);
-  padding-top: 12px;
+  gap: 14px;
+  padding: 22px;
+  margin: 36px 0;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  border-radius: 14px;
+  color: var(--accent);
+}
+.home__who p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
 }
 
-.home__build {
-  font-size: 12px;
-  opacity: 0.45;
-  font-variant-numeric: tabular-nums;
+.home__cta-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  text-align: center;
+  padding: 44px 0 12px;
+}
+.home__cta-band h2 {
+  font-size: clamp(22px, 4vw, 30px);
+  margin: 0;
+  letter-spacing: -0.01em;
 }
