@@ -16,7 +16,7 @@ State the **JWT verification** setting when deploying each function:
 | `signup` | OFF | **built** | Create org + owner membership atomically for the calling user. |
 | `invite` / `accept-invite` | OFF (accept) | planned | Add members to an org. |
 | `report` | OFF | planned | Return a published report by `share_token` for the no-login customer view. |
-| `structure-finding` | ON | planned | Take a raw dictation transcript → Claude → a clean, customer-facing finding. |
+| `structure-finding` | ON | **built** | Take a raw dictation transcript → Claude → a clean, customer-facing finding. |
 | `media-upload` | ON | planned | Service-role upload to Storage if RLS fights direct uploads. |
 | `export-pdf` | ON/OFF | planned | Render a report to PDF. |
 
@@ -35,3 +35,17 @@ role — the client can't, because those tables have no INSERT policy by design.
   manual secrets to set.
 - **Atomicity:** org then owner membership; the org is rolled back if the membership
   insert fails. Slug collisions retry with a short random suffix.
+
+### `structure-finding` (deploy: **Verify JWT ON**)
+
+Turns a mechanic's raw dictation about a checklist item into a clean, customer-facing
+finding via Claude (model `claude-opus-4-8`, structured outputs).
+
+- **Auth:** JWT ON — only logged-in users may call it (it spends Anthropic credits); the
+  gateway enforces the token.
+- **Secret:** set `ANTHROPIC_API_KEY` as an edge-function secret (Edge Functions → Secrets).
+  Uses the official Anthropic SDK via the `npm:` specifier.
+- **Request:** `POST` `{ "transcript": "...", "item": "Cylinder compression & borescope" }`
+- **Response:** `{ "finding": "...", "severity": 0-100, "suggested_status": "ok|monitor|discrepancy" }`
+- **Cost note:** `claude-opus-4-8` is the default. For this high-volume, low-latency task you may
+  prefer `claude-haiku-4-5` or `claude-sonnet-4-6` (cheaper/faster) — change the `model` string.

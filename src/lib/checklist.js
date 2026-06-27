@@ -21,7 +21,7 @@ export async function getInspection(id) {
 export async function listInspectionItems(inspectionId) {
   const { data, error } = await supabase
     .from('inspection_items')
-    .select('id, category, title, description, sort_order, risk_weight, status, severity, findings')
+    .select('id, category, title, description, sort_order, risk_weight, status, severity, findings, transcript')
     .eq('inspection_id', inspectionId)
   return { data: data ?? [], error }
 }

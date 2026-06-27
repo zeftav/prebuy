@@ -3,6 +3,24 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.6.0] — 2026-06-27
+
+### Added
+- **Capture — dictation + AI-structured findings** (workflow stage 4, part 1).
+  - `src/lib/dictation.js` — `useDictation` hook over the Web Speech API with graceful
+    fallback where unsupported (iOS-Safari risk), plus a pure `extractTranscript` (+ tests).
+    Live transcript only; no audio stored.
+  - `supabase/functions/structure-finding/index.ts` — edge fn (**Verify JWT ON**) that sends the
+    raw transcript to Claude (`claude-opus-4-8`, structured outputs) and returns a clean finding +
+    suggested severity + status. Needs `ANTHROPIC_API_KEY` edge-function secret.
+  - `src/lib/findings.js` — client for the edge fn.
+  - `InspectionDetail` items gain a **Dictate** mic and **Clean up with AI** button; the raw
+    transcript is saved to `inspection_items.transcript`, the cleaned text to `findings`, and the
+    AI's severity/status applied (you can override).
+  - `/help` entry on dictation.
+- **Backlog:** logged two more early-process epics — the **logbook audit/research tool** and the
+  **guided overview photo capture** (standard prompted shot list, big-picture not discrepancy).
+
 ## [0.5.0] — 2026-06-27
 
 ### Added

@@ -297,6 +297,34 @@
   line-height: 1.45;
   opacity: 0.8;
 }
+.insp__capture {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.insp__capturebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+.insp__capturebtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.insp__capturebtn.is-live {
+  border-color: #e0245e;
+  color: #e0245e;
+  background: rgba(224, 36, 94, 0.08);
+}
 .insp__findings {
   font: inherit;
   font-size: 14px;

@@ -47,6 +47,17 @@ Likely leans on **dictation + AI structuring** and later document/photo upload o
 slot it as its own epic early in the inspection build. ABS checklist (Brett-supplied) is the reference
 for the aviation version — **cite/reference, don't embed** (copyrighted; kept out of the repo).
 
+### Guided overview photo capture (Brett, 2026-06-27) — early-process
+Early in the inspection (around stage 1–2, before/alongside working items), walk the inspector through
+a **standard shot list** to document the whole asset for the report — **big-picture, not discrepancy**
+photos. Each shot is **prompted** ("Now photograph the instrument panel", "left wing leading edge",
+"engine — left side", "logbooks stack", "interior — front seats", …) so coverage is consistent and the
+report has a clean photo set. Per-vertical shot lists (aircraft has ~12–20 standard angles; boat/home
+differ). Distinct from the per-item discrepancy photos captured during the guided inspection. Stored as
+`media` (kind=photo) linked to the inspection (not necessarily an item); a `purpose`/`tag` (e.g.
+'overview' vs 'discrepancy') likely needed on `media`. Pairs naturally with the photo-capture build
+(stage 4b). Mobile camera capture → Storage. Log as part of the capture epic.
+
 **Open content/data questions (gating stage 1–2):**
 - **FAA data source:** ingest the FAA *releasable aircraft database* into our own tables (durable,
   free, fast, no rate limit — recommended; doubles as KB spine) vs. a live third-party API. Until

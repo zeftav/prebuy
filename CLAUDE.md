@@ -134,9 +134,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   ok/monitor/discrepancy/na + notes. `risk.js` `riskBand()` (+test). Lint + 51 tests + build green;
   pushed to `main`. ⚠️ **run migrations 004 + 005** (paste from chat) for lookup + the A36 checklist.
   New backlog epic: **logbook audit/research tool** (records/AD/damage/NTSB/title) — early, high value.
-  **▶ NEXT options:** (a) capture — dictation (Web Speech → edge fn → Claude) + photos to Storage;
-  (b) customization stage (add/reprioritize items, owner priorities); (c) report (share link + PDF);
-  (d) logbook audit tool. FAA full bulk-load + prebuy.app cutover still pending (Brett).
+- Session 2 cont. — **Capture stage, part 1: dictation + AI findings** (v0.6.0). `lib/dictation.js`
+  `useDictation` (Web Speech, graceful fallback, +tested `extractTranscript`); `structure-finding`
+  edge fn (**Verify JWT ON**, `claude-opus-4-8` + structured outputs, needs `ANTHROPIC_API_KEY`
+  secret) via `lib/findings.js`; InspectionDetail items get Dictate + Clean-up-with-AI; raw →
+  `transcript`, cleaned → `findings`, AI severity/status applied. Consulted the `claude-api` skill
+  for model/SDK. Lint + 54 tests + build green; pushed `main`. ⚠️ **deploy `structure-finding`
+  (JWT ON) + set `ANTHROPIC_API_KEY`** for dictation cleanup to work. Two new backlog epics:
+  **logbook audit tool** + **guided overview photo capture** (prompted shot list).
+  **▶ NEXT options:** (a) capture part 2 — **photos** (Storage bucket + media) incl. guided overview
+  set; (b) customization stage (add/reprioritize items, owner priorities); (c) report (share + PDF).
+  FAA full bulk-load + prebuy.app cutover still pending (Brett).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

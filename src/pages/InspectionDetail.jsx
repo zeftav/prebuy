@@ -1,15 +1,17 @@
 // Guided inspection detail. Loads the inspection, instantiates its checklist from
 // the matching global template on first open, and walks the items in financial-
-// risk order (risk.js) — highest-dollar-risk first, unresolved ahead of resolved.
-// Each item can be marked ok / monitor / discrepancy / n-a with a finding note.
-// (Dictation + photos come later; this is the structured spine.)
+// risk order (risk.js). Each item: mark ok/monitor/discrepancy/na, dictate a note
+// (Web Speech), and "Clean up with AI" → the structure-finding edge fn (Claude)
+// turns the raw dictation into a customer-facing finding + suggested severity/status.
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles } from 'lucide-react'
 import { getInspection, ensureInspectionItems, updateInspectionItem } from '../lib/checklist.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import { getVertical } from '../lib/verticals.js'
+import { useDictation } from '../lib/dictation.js'
+import { structureFinding } from '../lib/findings.js'
 import './auth.css'
 import './inspections.css'
 
@@ -37,10 +39,7 @@ export default function InspectionDetail() {
       setInspection(insp)
       const res = await ensureInspectionItems(insp)
       if (!active) return
-      if (res.error) {
-        setState('error')
-        return
-      }
+      if (res.error) return setState('error')
       setItems(res.data)
       if (res.templateMatched === false) setNote('no-template')
       setState('ready')
@@ -53,20 +52,16 @@ export default function InspectionDetail() {
   const ordered = useMemo(() => orderByFinancialRisk(items), [items])
   const reviewed = items.filter((i) => i.status && i.status !== 'pending').length
 
-  async function setItemStatus(item, status) {
-    const next = status === item.status ? 'pending' : status // tap again to clear
-    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, status: next } : i)))
-    const { error } = await updateInspectionItem(item.id, { status: next })
-    if (error) {
-      // revert on failure
-      setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, status: item.status } : i)))
-    }
+  // Optimistic patch with revert-on-failure.
+  async function patchItem(item, patch) {
+    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, ...patch } : i)))
+    const { error } = await updateInspectionItem(item.id, patch)
+    if (error) setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)))
   }
 
-  async function saveFindings(item, findings) {
-    if (findings === (item.findings ?? '')) return
-    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, findings } : i)))
-    await updateInspectionItem(item.id, { findings: findings || null })
+  function setItemStatus(item, status) {
+    const next = status === item.status ? 'pending' : status // tap again to clear
+    patchItem(item, { status: next })
   }
 
   if (state === 'loading') {
@@ -131,17 +126,61 @@ export default function InspectionDetail() {
 
       <ol className="insp__items">
         {ordered.map((item) => (
-          <ItemRow key={item.id} item={item} onStatus={setItemStatus} onSaveFindings={saveFindings} />
+          <ItemRow key={item.id} item={item} onStatus={setItemStatus} onPatch={patchItem} />
         ))}
       </ol>
     </main>
   )
 }
 
-function ItemRow({ item, onStatus, onSaveFindings }) {
+function ItemRow({ item, onStatus, onPatch }) {
   const [open, setOpen] = useState(false)
+  const [findings, setFindings] = useState(item.findings ?? '')
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiError, setAiError] = useState(null)
+  const dict = useDictation()
   const band = riskBand(item)
   const isDiscrepancy = item.status === 'discrepancy'
+
+  // While dictating, mirror the live transcript into the findings field.
+  useEffect(() => {
+    if (dict.listening) {
+      setFindings([dict.transcript, dict.interim].filter(Boolean).join(' ').trim())
+    }
+  }, [dict.transcript, dict.interim, dict.listening])
+
+  function toggleMic() {
+    if (dict.listening) {
+      dict.stop()
+      const text = dict.transcript.trim()
+      if (text) onPatch(item, { findings: text, transcript: text })
+    } else {
+      setOpen(true)
+      dict.setTranscript(findings)
+      dict.start()
+    }
+  }
+
+  async function cleanUp() {
+    setAiError(null)
+    setAiBusy(true)
+    const { data, error } = await structureFinding(findings, item.title)
+    setAiBusy(false)
+    if (error) return setAiError(error.message)
+    setFindings(data.finding)
+    onPatch(item, {
+      findings: data.finding,
+      transcript: item.transcript || findings || null,
+      severity: data.severity,
+      status: data.suggested_status,
+    })
+  }
+
+  function saveFindings() {
+    const v = findings.trim()
+    if (v === (item.findings ?? '')) return
+    onPatch(item, { findings: v || null })
+  }
 
   return (
     <li className={`insp__item insp__item--${item.status || 'pending'}`}>
@@ -170,13 +209,45 @@ function ItemRow({ item, onStatus, onSaveFindings }) {
       {(open || isDiscrepancy || item.findings) && (
         <div className="insp__itembody">
           {item.description && <p className="insp__itemdesc">{item.description}</p>}
+
+          <div className="insp__capture">
+            {dict.supported && (
+              <button
+                type="button"
+                className={`insp__capturebtn ${dict.listening ? 'is-live' : ''}`}
+                onClick={toggleMic}
+              >
+                <Mic size={15} aria-hidden="true" />
+                {dict.listening ? 'Stop' : 'Dictate'}
+              </button>
+            )}
+            <button
+              type="button"
+              className="insp__capturebtn"
+              onClick={cleanUp}
+              disabled={aiBusy || !findings.trim()}
+            >
+              <Sparkles size={15} aria-hidden="true" />
+              {aiBusy ? 'Cleaning…' : 'Clean up with AI'}
+            </button>
+          </div>
+
+          {dict.listening && <span className="auth__hint">Listening… speak your note.</span>}
+          {!dict.supported && <span className="auth__hint">Dictation isn’t supported on this browser — type your note.</span>}
+          {aiError && <span className="auth__hint">{aiError}</span>}
+
           <textarea
             className="insp__findings"
             placeholder={isDiscrepancy ? 'Describe the discrepancy…' : 'Notes / findings (optional)'}
-            defaultValue={item.findings ?? ''}
-            onBlur={(e) => onSaveFindings(item, e.target.value.trim())}
+            value={findings}
+            onChange={(e) => setFindings(e.target.value)}
+            onBlur={saveFindings}
             rows={isDiscrepancy ? 3 : 2}
           />
+
+          {isDiscrepancy && typeof item.severity === 'number' && (
+            <span className="auth__hint">AI severity estimate: {item.severity}/100</span>
+          )}
         </div>
       )}
     </li>

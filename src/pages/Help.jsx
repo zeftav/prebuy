@@ -37,6 +37,10 @@ const FAQ = [
     a: 'Open an inspection from your dashboard. We build a checklist matched to the aircraft and order it by financial risk, so the biggest-dollar items come first. Mark each item OK, Monitor, Discrepancy, or N/A, and add notes — your progress saves automatically. Dictation and photos are coming next.',
   },
   {
+    q: 'Can I dictate my findings instead of typing?',
+    a: 'Yes. Open a checklist item and tap “Dictate”, then speak your note — it transcribes live. Tap “Clean up with AI” and we’ll rewrite your spoken note into a clear, customer-ready finding and suggest a severity and status, which you can adjust. Dictation uses your browser’s speech recognition; if it isn’t available, just type. No audio is stored.',
+  },
+  {
     q: 'Where does the checklist come from?',
     a: 'Each aircraft model has a starter pre-purchase checklist built into PreBuy, with items weighted by how much they typically cost to fix. The Beech A36 Bonanza is included to start; more models follow. You’ll soon be able to customize and re-prioritize items for your shop or a specific buyer.',
   },

@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.6.0',
+    date: '2026-06-27',
+    title: 'Dictate your findings',
+    items: [
+      'Tap the mic on any checklist item and speak your note — no typing.',
+      '“Clean up with AI” turns your spoken note into a clear, customer-ready finding.',
+      'It also suggests a severity and status so you can confirm and move on.',
+    ],
+  },
+  {
     version: '0.5.0',
     date: '2026-06-27',
     title: 'Guided checklist — work the inspection',
