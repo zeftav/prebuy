@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.16.0',
+    date: '2026-06-27',
+    title: 'A checklist for every aircraft',
+    items: [
+      'No model-specific checklist? PreBuy now starts you on a thorough general aircraft survey instead of a blank inspection — then customize it per job.',
+      'Adding your own checklist item now has a “Notes / what to check” field for context or the owner’s concern.',
+    ],
+  },
+  {
     version: '0.15.1',
     date: '2026-06-27',
     title: 'Take a photo or choose one',

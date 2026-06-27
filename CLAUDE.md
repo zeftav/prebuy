@@ -219,10 +219,23 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   context, no DB access). `lib/profile.js`: pure `buildSummaryContext` (+3 tests) + `generateNarrative`.
   AircraftProfile "Write with AI" drafts the report's opening summary from profile + logbook events +
   findings — original prose, balanced, grounded only in the data → editable Summary box. Help FAQ +3.
-  Lint + 92 tests + build green. ⚠️ **Deploys pending (Brett, batched, all no-migration):** REDEPLOY
-  **`report` (JWT OFF)** [v0.13.0] + **`structure-logbook` (JWT ON)** [v0.14.0]; DEPLOY new
-  **`generate-summary` (JWT ON)** [v0.15.0]. **NEXT:** gear-rigging measurement forms, marketing
-  landing page, invite teammates, server-side PDF.
+  Lint + 92 tests + build green. **Deployed by Brett** (report/structure-logbook/generate-summary).
+- Session 2 cont. — **Capture UX + checklist coverage** (v0.15.1 + v0.16.0). v0.15.1: shared
+  `PhotoPicker` (take-photo OR upload/choose, desktop+mobile) replaces the `capture`-forced inputs in
+  all four capture points (frontend only). v0.16.0: **generic fallback checklist** — migration `011`
+  seeds a model-agnostic "General Aircraft — Pre-Purchase Survey" (`vertical='aviation'`, `model IS
+  NULL`, ~27 items); `findTemplateFor` falls back model-specific→generic, `ensureInspectionItems`
+  threads a `generic` flag (detail shows a "started you on the general survey" notice). Add-item form
+  gained a **Notes/what-to-check** field (→ item `description`). ⚠️ **Run migration 011.**
+  Lint + 92 tests + build green.
+- **⚠️ DESIGN DEBT — single vs MULTI-ENGINE (Brett, 2026-06-27).** The data model is implicitly
+  single-engine (one `engine_smoh`/`prop_*` in the profile; logbook `kind` has no position). Aircraft
+  can be 1..N engines/props and we must account for it across logbooks, profile specs, checklist
+  (per-engine compressions etc.), `structure-logbook` extraction, and the report. **Convention: left
+  engine = #1, right = #2.** Edge case: **push-pull (Cessna 337)** = front #1 / rear #2. Full design +
+  touchpoints captured in `docs/backlog.md` → "Multi-engine". **NEXT:** gear-rigging measurement forms,
+  marketing landing page, invite teammates, server-side PDF; plus the multi-engine model + the
+  inspection-knowledge research project (both in backlog).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

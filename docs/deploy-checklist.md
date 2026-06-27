@@ -23,6 +23,8 @@ Run in order. All are idempotent (safe to re-run).
 - [x] ✅ `008_logbooks.sql` — `logbooks` + `logbook_events` tables. (2026-06-27)
 - [x] ✅ `009_media_logbook_purpose.sql` — allow `media.purpose = 'logbook'` (OCR page scans). (2026-06-27)
 - [x] ✅ `010_inspection_meta.sql` — `inspections.inspector_name` / `location` / `inspection_date`. (2026-06-27)
+- [ ] ⬜ `011_generic_aviation_checklist.sql` — model-agnostic "General Aircraft" fallback template
+      (used when no model-specific checklist matches). **Run in the SQL editor.**
 
 ## 2. Edge functions (Supabase → Edge Functions)
 

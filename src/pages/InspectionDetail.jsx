@@ -53,6 +53,7 @@ export default function InspectionDetail() {
       if (res.error) return setState('error')
       setItems(res.data)
       if (res.templateMatched === false) setNote('no-template')
+      else if (res.generic) setNote('generic-template')
       setState('ready')
       const { data: m } = await listMedia(insp.id)
       if (active) setMedia(m)
@@ -185,6 +186,13 @@ export default function InspectionDetail() {
         <div className="auth__notice">
           No checklist template matched {subtitle || 'this aircraft'} yet, so this inspection has no items.
           A matching template needs seeding for its make/model.
+        </div>
+      )}
+
+      {note === 'generic-template' && (
+        <div className="auth__notice">
+          No model-specific checklist for {subtitle || 'this aircraft'} yet — started you on the
+          <strong> general aircraft survey</strong>. Add or re-prioritize items below to tailor it.
         </div>
       )}
 
@@ -505,6 +513,7 @@ function AddItem({ onAdd }) {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('')
+  const [notes, setNotes] = useState('')
   const [band, setBand] = useState('medium')
   const [owner, setOwner] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -524,11 +533,12 @@ function AddItem({ onAdd }) {
     if (!title.trim()) return setError('Give the item a title.')
     setBusy(true)
     const weight = PRIORITY_BANDS.find((b) => b.key === band)?.weight ?? 55
-    const err = await onAdd({ title, category, risk_weight: weight, owner_priority: owner })
+    const err = await onAdd({ title, category, description: notes, risk_weight: weight, owner_priority: owner })
     setBusy(false)
     if (err) return setError(err.message)
     setTitle('')
     setCategory('')
+    setNotes('')
     setBand('medium')
     setOwner(false)
     setOpen(false)
@@ -539,6 +549,17 @@ function AddItem({ onAdd }) {
       <div className="auth__field">
         <label htmlFor="add-title">New item</label>
         <input id="add-title" type="text" placeholder="e.g. Owner asked: check the de-ice boots" value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+      <div className="auth__field">
+        <label htmlFor="add-notes">Notes / what to check (optional)</label>
+        <textarea
+          id="add-notes"
+          className="insp__summaryinput"
+          rows={2}
+          placeholder="Context, the owner's concern, what to look for…"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
       </div>
       <div className="insp__row2">
         <div className="auth__field">

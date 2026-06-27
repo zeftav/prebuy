@@ -26,18 +26,36 @@ export async function listInspectionItems(inspectionId) {
   return { data: data ?? [], error }
 }
 
-/** Find the best global template for an inspection (by vertical + model). */
+/**
+ * Find the best global template for an inspection: a model-specific one if it
+ * exists, otherwise the vertical's generic fallback (model IS NULL, e.g. the
+ * "General Aircraft" survey). Returns { data, error, generic }.
+ */
 export async function findTemplateFor({ vertical, make, model }) {
-  if (!model) return { data: null, error: null }
-  let q = supabase
+  // 1. Model-specific match (e.g. Beech A36).
+  if (model) {
+    let q = supabase
+      .from('checklist_templates')
+      .select('id, make, model, name')
+      .eq('is_global', true)
+      .eq('vertical', vertical)
+      .ilike('model', model)
+    if (make) q = q.ilike('make', make)
+    const { data, error } = await q.limit(1).maybeSingle()
+    if (error) return { data: null, error, generic: false }
+    if (data) return { data, error: null, generic: false }
+  }
+
+  // 2. Generic fallback for the vertical (one template with model IS NULL).
+  const { data, error } = await supabase
     .from('checklist_templates')
     .select('id, make, model, name')
     .eq('is_global', true)
     .eq('vertical', vertical)
-    .ilike('model', model)
-  if (make) q = q.ilike('make', make)
-  const { data, error } = await q.limit(1).maybeSingle()
-  return { data, error }
+    .is('model', null)
+    .limit(1)
+    .maybeSingle()
+  return { data, error, generic: !!data }
 }
 
 /**
@@ -47,18 +65,18 @@ export async function findTemplateFor({ vertical, make, model }) {
  */
 export async function ensureInspectionItems(inspection) {
   const existing = await listInspectionItems(inspection.id)
-  if (existing.error) return { data: [], error: existing.error, templateMatched: null }
-  if (existing.data.length > 0) return { data: existing.data, error: null, templateMatched: null }
+  if (existing.error) return { data: [], error: existing.error, templateMatched: null, generic: false }
+  if (existing.data.length > 0) return { data: existing.data, error: null, templateMatched: null, generic: false }
 
-  const { data: template, error: tErr } = await findTemplateFor(inspection)
-  if (tErr) return { data: [], error: tErr, templateMatched: null }
-  if (!template) return { data: [], error: null, templateMatched: false }
+  const { data: template, error: tErr, generic } = await findTemplateFor(inspection)
+  if (tErr) return { data: [], error: tErr, templateMatched: null, generic: false }
+  if (!template) return { data: [], error: null, templateMatched: false, generic: false }
 
   const { data: tItems, error: tiErr } = await supabase
     .from('template_items')
     .select('id, category, title, description, sort_order, risk_weight, est_cost_low, est_cost_high, ata_chapter')
     .eq('template_id', template.id)
-  if (tiErr) return { data: [], error: tiErr, templateMatched: null }
+  if (tiErr) return { data: [], error: tiErr, templateMatched: null, generic }
 
   const rows = (tItems ?? []).map((ti) => ({
     inspection_id: inspection.id,
@@ -71,13 +89,13 @@ export async function ensureInspectionItems(inspection) {
     risk_weight: ti.risk_weight,
     status: 'pending',
   }))
-  if (rows.length === 0) return { data: [], error: null, templateMatched: true }
+  if (rows.length === 0) return { data: [], error: null, templateMatched: true, generic }
 
   const { error: insErr } = await supabase.from('inspection_items').insert(rows)
-  if (insErr) return { data: [], error: insErr, templateMatched: true }
+  if (insErr) return { data: [], error: insErr, templateMatched: true, generic }
 
   const reload = await listInspectionItems(inspection.id)
-  return { data: reload.data, error: reload.error, templateMatched: true }
+  return { data: reload.data, error: reload.error, templateMatched: true, generic }
 }
 
 /** Update one inspection item (status / findings / severity / owner_priority). */
@@ -92,7 +110,7 @@ export async function updateInspectionItem(id, patch) {
 }
 
 /** Add a shop/owner-custom item to an inspection (not from a template). */
-export async function addCustomItem(inspection, { category, title, risk_weight, owner_priority = false }) {
+export async function addCustomItem(inspection, { category, title, description, risk_weight, owner_priority = false }) {
   const t = String(title ?? '').trim()
   if (!t) return { data: null, error: new Error('Give the item a title.') }
   const { data, error } = await supabase
@@ -102,6 +120,7 @@ export async function addCustomItem(inspection, { category, title, risk_weight, 
       org_id: inspection.org_id,
       category: String(category ?? '').trim() || 'Custom',
       title: t,
+      description: String(description ?? '').trim() || null,
       risk_weight: Number.isFinite(Number(risk_weight)) ? Number(risk_weight) : 50,
       owner_priority,
       status: 'pending',

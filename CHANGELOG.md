@@ -3,7 +3,19 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
-## [0.15.1] — 2026-06-27
+## [0.16.0] — 2026-06-27
+
+### Added
+- **Generic fallback checklist** — every aircraft inspection now gets a checklist.
+  - `supabase/migrations/011_generic_aviation_checklist.sql` — a model-agnostic, risk-weighted
+    "General Aircraft — Pre-Purchase Survey" global template (identified by `vertical='aviation'` +
+    `model IS NULL`), ~27 original items (records → engine → prop → structure → gear → systems → flight).
+    **Needs running.**
+  - `lib/checklist.js` `findTemplateFor` now falls back: model-specific template first (e.g. A36),
+    else the vertical's generic template. `ensureInspectionItems` threads a `generic` flag; the
+    inspection shows a "started you on the general aircraft survey" notice when the fallback is used.
+- **Notes field on custom items** — the "Add item" form now has a "Notes / what to check" textarea
+  (maps to the item's `description`, shown as guidance on the item). `addCustomItem` accepts it.
 
 ### Changed
 - **Photo inputs: take OR upload, on desktop + mobile.** New shared `src/components/PhotoPicker.jsx`
