@@ -60,8 +60,11 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - Session 1 (2026-06-26): Scaffolded Vite+React app. Installed stack deps. Wrote `001_init.sql`
   (schema + RLS), `lib/supabase.js`, `lib/risk.js` (+ tests), SPA `_redirects`, this file.
   Git initialized + pushed to GitHub (zeftav/prebuy, SSH). Supabase project created, `001_init.sql`
-  run, RLS verified enforcing (unauth insert → 42501 denied). **Not yet done:** Cloudflare Pages,
-  app pages/auth, edge functions, Auth URL config (only localhost set).
+  run, RLS verified enforcing (unauth insert → 42501 denied). v0.1.0 (visible version + What's New
+  panel) shipped. Cloudflare Pages live + verified at https://prebuy-2pm.pages.dev (build stamp shows
+  real commit SHA; SPA fallback works). `docs/deploy.md` captures the full deploy setup.
+  **Not yet done:** app pages/auth, edge functions. Confirm Supabase Auth URLs include the pages.dev
+  domain (only localhost set so far).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
@@ -69,12 +72,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - Supabase: project ref `zttsdwclhykekoytrmxx`. Uses the new key format — client key is
   `sb_publishable_…` (held in `.env` as `VITE_SUPABASE_ANON_KEY`); the secret key is `sb_secret_…`
   (edge functions only, never in client/git). 7 tables + RLS as per `001_init.sql`.
+- Cloudflare Pages: live at https://prebuy-2pm.pages.dev. `main` → prod auto-deploy. Env vars +
+  build settings documented in `docs/deploy.md`. Node pinned to 22 (`.nvmrc` + `NODE_VERSION`).
 
 ## TODO / Known issues
 - [x] Connect GitHub remote (SSH, pushed 2026-06-26).
 - [ ] (optional) Install `gh` CLI for the PR workflow / issue links.
 - [x] Create Supabase project; run `001_init.sql` (RLS verified). (Auth redirect URLs: localhost only — revisit at Cloudflare time.)
-- [ ] Cloudflare Pages project (build `npm run build`, output `dist`, env vars).
+- [x] Cloudflare Pages project — live at prebuy-2pm.pages.dev (2026-06-26).
+- [ ] Add pages.dev domain to Supabase Auth Site URL + Redirect URLs (before auth ships).
 - [ ] N-number → make/model lookup (FAA releasable aircraft registration DB).
 - [ ] Auth + org signup edge function; seed first global checklist template.
 - [ ] Capture flow (dictation + media), report view, PDF export.
