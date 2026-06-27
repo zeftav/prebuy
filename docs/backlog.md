@@ -277,6 +277,81 @@ pass/fail}. Generalizes to other measured checks (compression readings, control-
 tensions). Pairs with the per-model checklist content; Brett to supply the spec values. Output feeds the
 report.
 
+## Multi-engine aircraft — engines/props as a set (Brett, 2026-06-27)
+
+**The gap.** The data model is implicitly **single-engine**: the profile has one `engine_smoh` /
+`prop_*`, and a logbook's `kind` (`airframe|engine|propeller|other`) has no **position**. Real aircraft
+have **1..N engines and props**, and a pre-buy must track each independently (times, SMOH, compressions,
+prop overhauls, ADs).
+
+**Convention (Brett):** **left engine = #1, right engine = #2.** Edge case: **push-pull centerline
+twins (Cessna 337 Skymaster)** number **front = #1, rear = #2**. So position is an ordinal (1, 2, …)
+with a per-airframe **layout** label (conventional L/R vs front/rear) so the UI shows the right words.
+
+**Where it touches (account for engine count everywhere):**
+- **Aircraft identity:** an `engine_count` (and prop count; usually equal) on the aircraft/inspection —
+  ideally derived from the **FAA `faa_aircraft_ref.num_eng`** at lookup, overridable. Add a `layout`
+  hint (conventional / centerline-push-pull) to drive #1/#2 labels.
+- **Logbooks:** `logbooks.kind` stays, add a **`position`** (1..N, null for airframe). Reconciliation
+  (gaps/overlaps, tracked hours) runs **per engine/prop**, not lumped. Engine #1 and #2 each have their
+  own book set.
+- **Profile specs:** engine/prop specs become a **per-position array** (engine #1: SMOH/notes/TBO;
+  engine #2: …; prop #1/#2). Report renders an engine block per side. Single-engine = one entry (no UI
+  regression — collapse when count = 1).
+- **Checklist:** engine/prop items should **fan out per engine** (e.g. "Cylinder compression — Engine
+  #1", "#2"), or carry a position field. The generic + model templates need an engine-count-aware
+  instantiation (duplicate engine-category items per position when count > 1).
+- **`structure-logbook` extraction:** schema/prompt must attribute extracted times/events to an
+  **engine position** when discernible (book labeled "L Engine" / "Engine #2" / "Rear").
+- **Report:** spec sheet shows per-engine columns; maintenance timeline tags which engine; findings
+  reference the engine.
+
+**Approach (proposed):** model **engines/props as an indexed collection** keyed by position, not flat
+fields — `engine_count` + `layout` on the aircraft, arrays in `attributes.profile`, a `position` on
+`logbooks` and on engine/prop `inspection_items`. Migration + `lib/profile.js`/`lib/logbooks.js`/
+`lib/checklist.js` updates + report. Sizable, cross-cutting — **do as a dedicated pass**, ideally
+alongside the **aircraft-as-entity** decision (broker epic), since engine count is core aircraft data.
+Until then, single-engine is correct for the A36 lead case; **twins are under-served** (one engine/prop
+slot only) — note this so we don't ship twin pre-buys thinking they're complete.
+
+## Inspection-knowledge research project — per make/model expertise (Brett, 2026-06-27)
+
+**Goal.** Build a **knowledge base of what to inspect / look out for / known problems** for as many
+**make/models** as possible, so PreBuy's checklists and guidance aren't limited to hand-authored
+templates (A36) or the generic fallback. Feeds: smarter per-model checklists, "watch-outs" surfaced on
+relevant items, and the model-specific trouble-spots a good pre-buy mechanic knows by heart.
+
+**Source signals (public / licensable):**
+- **FAA ADs** (Airworthiness Directives) per make/model — authoritative recurring/terminating actions.
+- **FAA Service Difficulty Reports (SDRs)** + **NTSB** accident data — real-world failure patterns by
+  type (mine for frequency: "what breaks on this model").
+- **Manufacturer Service Bulletins / Letters** (often referenced publicly even when the doc is gated).
+- **Type clubs / owner associations** (ABS, Cessna Pilots, Mooney, Cirrus…) — the richest "known
+  trouble spots" knowledge; **partner/license** rather than scrape where terms require it.
+- **Maintenance forums / communities** (BeechTalk, COPA, etc.) and A&P/IA writeups — directional, noisy;
+  treat as leads to verify, not facts.
+- Our own **FAA registry** (already loaded) for make/model normalization + engine/prop reference.
+
+**Approach (phased, build-vs-research split):**
+1. **Research harness (deep-research):** a fan-out per make/model that pulls AD lists + SDR/NTSB
+   patterns + type-club trouble spots, then **adversarially verifies** and synthesizes a structured
+   per-model record. (The `deep-research` skill is the natural engine; or a scheduled batch.)
+2. **Schema:** a `kb_*` set — e.g. `kb_models` (make/model + aliases) → `kb_inspection_points`
+   `{model, category, title, what_to_check, why_it_matters, severity, sources[]}` and `kb_ads`. **Every
+   point carries citations** (AD number, SDR id, source URL) — provenance is the product.
+3. **Provenance + originality:** store sources; **author original wording** (don't reproduce
+   copyrighted checklists/manuals verbatim — same rule as the ABS content).
+4. **Surface it:** (a) seed/augment per-model checklist templates from `kb_inspection_points`; (b) on an
+   inspection item, show relevant "known issues for this model" with sources; (c) feed the AI summary
+   and the broker listing with model context.
+5. **Freshness:** ADs/SDRs update — a scheduled refresh (like the FAA monthly cron) keeps it current.
+
+**Open questions:** scope (start with high-volume GA singles/twins), licensing vs scraping per source
+(respect type-club terms — partnerships are likely better and a selling point), verification bar before
+a "known issue" is shown to a customer (must be defensible — cite or don't show), and human review of
+generated guidance. **Big, high-differentiation effort** — plan as its own track; the deep-research
+harness can prototype one model (e.g. A36) end-to-end to prove the pipeline before scaling.
+
 ## Marketing site / landing page (Brett, 2026-06-27)
 Stand up a basic **product/landing page** at the apex `prebuy.app`, modeled on **yellowtag.app**, with
 the app living at **`app.prebuy.app`** (mirrors `app.yellowtag.app`). Landing = what PreBuy is (horizontal
