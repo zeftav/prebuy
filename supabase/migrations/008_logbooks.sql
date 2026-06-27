@@ -45,6 +45,9 @@ create index if not exists logbook_events_org_idx on public.logbook_events(org_i
 alter table public.logbooks        enable row level security;
 alter table public.logbook_events  enable row level security;
 
+drop policy if exists logbooks_all on public.logbooks;
+drop policy if exists logbook_events_all on public.logbook_events;
+
 create policy logbooks_all on public.logbooks
   for all using (org_id in (select public.user_org_ids()))
   with check    (org_id in (select public.user_org_ids()));
