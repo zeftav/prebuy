@@ -88,7 +88,7 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - [ ] (optional) Install `gh` CLI for the PR workflow / issue links.
 - [x] Create Supabase project; run `001_init.sql` (RLS verified). (Auth redirect URLs: localhost only — revisit at Cloudflare time.)
 - [x] Cloudflare Pages project — live at prebuy-2pm.pages.dev (2026-06-26).
-- [ ] Add pages.dev domain to Supabase Auth Site URL + Redirect URLs (before auth ships).
+- [x] Supabase Auth URLs set (pages.dev) + Cloudflare env vars confirmed (2026-06-26).
 - [ ] Migration `002`: generalize `inspections`/`checklist_templates` to `asset_type` + generic
       identifier (aircraft + boat), before real data lands. Fold in with the inspection-flow build.
 - [ ] Boat-survey vertical: marine checklist content; HIN/registration identifier (manual entry).
