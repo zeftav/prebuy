@@ -3,6 +3,20 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.9.0] — 2026-06-27
+
+### Added
+- **Report stage** — publish an inspection to a customer-facing report (workflow stage 5).
+  - `supabase/functions/report/index.ts` — public edge fn (**Verify JWT OFF**, service role) that
+    returns a *published* inspection by `share_token` (drafts 404), with media as signed URLs.
+  - `src/lib/report.js` — `publishInspection` / `unpublishInspection`, `reportUrl`, `fetchReport`,
+    and a pure `reportSummary` (+ tests). `getInspection` now selects `share_token` + `published_at`.
+  - `src/pages/ReportView.jsx` (`/r/:token`, public) — read-only report: summary counts, findings
+    grouped (discrepancies → monitor → checked-OK) and risk-ordered, per-finding + overview photos,
+    "Print / Save PDF" via the browser. Print-optimized (`report.css`).
+  - `InspectionDetail` — Publish / Unpublish bar with a copyable share link + "View report".
+  - `/help` report entry.
+
 ## [0.8.0] — 2026-06-27
 
 ### Added

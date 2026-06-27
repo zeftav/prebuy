@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X, Flag, Plus, Trash2 } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Camera, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink } from 'lucide-react'
 import {
   getInspection,
   ensureInspectionItems,
@@ -19,6 +19,7 @@ import { getVertical } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
 import { structureFinding } from '../lib/findings.js'
 import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
+import { publishInspection, unpublishInspection, reportUrl } from '../lib/report.js'
 import './auth.css'
 import './inspections.css'
 
@@ -91,6 +92,18 @@ export default function InspectionDetail() {
     if (error) setItems((prev) => [...prev, item])
   }
 
+  async function publish() {
+    const { data, error } = await publishInspection(inspection.id)
+    if (!error && data) {
+      setInspection((p) => ({ ...p, status: 'published', published_at: data.published_at, share_token: data.share_token ?? p.share_token }))
+    }
+  }
+
+  async function unpublish() {
+    const { error } = await unpublishInspection(inspection.id)
+    if (!error) setInspection((p) => ({ ...p, status: 'in_progress', published_at: null }))
+  }
+
   if (state === 'loading') {
     return (
       <main className="auth-pending" aria-busy="true">
@@ -147,6 +160,8 @@ export default function InspectionDetail() {
       <Link to={`/app/inspections/${inspection.id}/overview`} className="auth__btn auth__btn--ghost insp__walkthrough">
         <Images size={15} aria-hidden="true" /> Photo walkthrough
       </Link>
+
+      <PublishBar inspection={inspection} onPublish={publish} onUnpublish={unpublish} />
 
       {note === 'no-template' && (
         <div className="auth__notice">
@@ -355,6 +370,63 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
         </div>
       )}
     </li>
+  )
+}
+
+function PublishBar({ inspection, onPublish, onUnpublish }) {
+  const [copied, setCopied] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const published = inspection.status === 'published'
+  const link = reportUrl(inspection.share_token)
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(link)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      /* clipboard blocked — the field is selectable as a fallback */
+    }
+  }
+
+  async function act(fn) {
+    setBusy(true)
+    await fn()
+    setBusy(false)
+  }
+
+  if (!published) {
+    return (
+      <div className="insp__publish">
+        <div>
+          <strong>Share with your customer</strong>
+          <p className="auth__hint">Publish to create a read-only report link (and PDF).</p>
+        </div>
+        <button type="button" className="auth__btn" disabled={busy} onClick={() => act(onPublish)}>
+          <Share2 size={15} aria-hidden="true" /> {busy ? 'Publishing…' : 'Publish report'}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="insp__publish is-published">
+      <div className="insp__publishtop">
+        <span className="insp__status insp__status--published">published</span>
+        <a href={link} target="_blank" rel="noreferrer" className="auth__toggle">
+          View report <ExternalLink size={13} aria-hidden="true" />
+        </a>
+      </div>
+      <div className="insp__sharebar">
+        <input readOnly value={link} onFocus={(e) => e.target.select()} aria-label="Share link" />
+        <button type="button" className="insp__capturebtn" onClick={copy}>
+          <Copy size={14} aria-hidden="true" /> {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <button type="button" className="auth__toggle" disabled={busy} onClick={() => act(onUnpublish)}>
+        Unpublish
+      </button>
+    </div>
   )
 }
 

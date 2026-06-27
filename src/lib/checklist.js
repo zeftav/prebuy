@@ -11,7 +11,7 @@ import { supabase } from './supabase.js'
 export async function getInspection(id) {
   const { data, error } = await supabase
     .from('inspections')
-    .select('id, org_id, vertical, identifier, make, model, year, customer_name, customer_email, status, attributes, created_at')
+    .select('id, org_id, vertical, identifier, make, model, year, customer_name, customer_email, status, attributes, share_token, published_at, created_at')
     .eq('id', id)
     .maybeSingle()
   return { data, error }

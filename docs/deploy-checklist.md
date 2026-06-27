@@ -21,12 +21,16 @@ Run in order. All are idempotent (safe to re-run).
       Without it, opening an aircraft inspection shows "no template matched".
 - [ ] ⬜ `006_media_storage.sql` — **photos**: `media.purpose`, the private `inspection-media`
       Storage bucket, and org-scoped Storage policies. Without it, photo upload fails.
+- [ ] ⬜ `007_owner_priority.sql` — `inspection_items.owner_priority` (customization). Without it,
+      the owner-priority flag + custom-item priorities can't save.
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
 - [x] ✅ `signup` — Verify JWT **OFF**. (Deployed; redeployed for `vertical`.)
 - [ ] ⬜ `structure-finding` — Verify JWT **ON**. Paste from `supabase/functions/structure-finding/index.ts`.
       Powers "Clean up with AI" on findings. **Requires the secret below.**
+- [ ] ⬜ `report` — Verify JWT **OFF**. Paste from `supabase/functions/report/index.ts`. Serves the
+      public customer report at `/r/<token>`. No secret (uses auto-injected service role).
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 

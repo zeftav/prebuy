@@ -389,6 +389,50 @@
   text-decoration: none;
 }
 
+.insp__publish {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+.insp__publish.is-published {
+  flex-direction: column;
+  align-items: stretch;
+  border-color: rgba(40, 170, 90, 0.4);
+  background: rgba(40, 170, 90, 0.04);
+}
+.insp__publish .auth__btn {
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.insp__publishtop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.insp__sharebar {
+  display: flex;
+  gap: 8px;
+}
+.insp__sharebar input {
+  flex: 1;
+  font: inherit;
+  font-size: 13px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  min-width: 0;
+}
+
 /* Thumbnails (per-item discrepancy photos) */
 .insp__thumbs {
   display: flex;

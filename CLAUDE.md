@@ -151,8 +151,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   **▶ Consolidated deploy list:** `docs/deploy-checklist.md` (single source for all pending manual
   steps). Pending for Brett (mobile): migrations **005 + 006**, deploy **structure-finding** (JWT
   ON) + **ANTHROPIC_API_KEY**; later Resend SMTP, FAA bulk-load, prebuy.app.
-  **▶ NEXT options:** (a) customization stage (add/reprioritize items, owner priorities); (b) report
-  (tokenized share link + PDF via `report` edge fn); (c) logbook audit tool.
+- Session 2 cont. — **Customization (stage 3, v0.8.0)** + **Report (stage 5, v0.9.0)**. Migration
+  `007` (`inspection_items.owner_priority`); `risk.js` floats owner priorities to top (+tests);
+  `addCustomItem`/`deleteInspectionItem`; InspectionDetail flag + add-item form + delete. Report:
+  `report` edge fn (**JWT OFF**, service role, by `share_token`, published-only, signed media URLs);
+  `lib/report.js` publish/unpublish/fetch + pure `reportSummary` (+tests); **public `/r/:token`**
+  `ReportView` (read-only, risk-grouped findings + photos, Print/Save-PDF); publish bar with copyable
+  link in detail. Lint + 64 tests + build green; pushed `main`. **All 5 workflow stages now built.**
+  ⚠️ **run migrations 005+006+007**, deploy **structure-finding** (JWT ON)+`ANTHROPIC_API_KEY` and
+  **report** (JWT OFF). Full pending list: `docs/deploy-checklist.md`.
+  **▶ NEXT options:** logbook audit tool · server-side PDF (vs browser print) · invite teammates ·
+  marine checklist content · FAA bulk-load · prebuy.app cutover · Resend SMTP.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

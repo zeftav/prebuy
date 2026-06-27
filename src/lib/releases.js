@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.9.0',
+    date: '2026-06-27',
+    title: 'Publish a customer report',
+    items: [
+      'Publish any inspection to a clean, read-only report — share by link, no login for your customer.',
+      'Findings are grouped by priority, with your photos, and a “Save PDF” button.',
+      'Unpublish any time to switch the link off.',
+    ],
+  },
+  {
     version: '0.8.0',
     date: '2026-06-27',
     title: 'Make the checklist yours',
