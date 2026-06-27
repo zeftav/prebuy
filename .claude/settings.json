@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "mcp__Atlassian_Rovo"
+      "mcp__Atlassian_Rovo",
+      "mcp__github",
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)"
     ]
   }
 }
