@@ -6,27 +6,38 @@ keep only the big-rock summaries mirrored in `CLAUDE.md`. Build-task checklist l
 
 ---
 
-## EPIC: Multi-asset platform (aircraft + marine, extensible)
+## EPIC: Multi-vertical platform (go big)
 
-PreBuy is a pre-purchase **inspection platform**, asset-typed — not aircraft-only. Aircraft prebuy
-and **boat surveys** are the first two verticals; architecture should not assume aircraft.
+PreBuy is a **horizontal pre-purchase inspection platform**. Each domain is a pluggable **vertical**;
+architecture must not assume aviation. Roadmap of verticals (aviation is the lead/reference):
 
-**Shared engine (asset-agnostic):** checklist-template library, financial-risk ordering (`risk.js`),
+| Vertical | Identifier | Resolver | Notes |
+|---|---|---|---|
+| **Aviation** (lead) | N-number | FAA releasable aircraft registration DB | Brett's expertise. |
+| **Marine / yacht** | HIN + state reg | mostly manual (no clean public decoder) | Boat-surveyor SME. |
+| **Home / property** | Address | manual now; property-data API later | Home-inspector SME. |
+| **Automotive** | VIN | NHTSA vPIC (free public API) | Mechanic SME. |
+| *(extensible)* | … | … | RVs, heavy equipment, etc. |
+
+**Shared engine (vertical-agnostic):** checklist-template library, financial-risk ordering (`risk.js`),
 dictation→AI findings, photo/video capture, published report + PDF, multi-tenancy/RLS.
 
-**Asset-specific:**
-- Identifier + lookup: aircraft = N-number → FAA registration DB; boat = HIN (Hull ID Number) +
-  state registration, **no clean public decoder → likely manual entry**.
-- Checklist content: airframe/engine/avionics/ADs vs. hull/engine/rigging/systems.
+**Per-vertical:** the identifier + its resolver adapter, and the checklist content.
 
-**Cheap-now design move (do with the inspection-flow build, migration `002`, before real data):**
-- Add `asset_type` to `inspections` and `checklist_templates` ('aircraft' | 'boat' | …).
-- Generalize the identifier: keep a generic `registration` + optional `hin`; the aircraft `n_number`
-  path stays working.
-- Tag the template library by `asset_type` + make/model.
-- Lookups become pluggable per asset_type (FAA for aircraft; manual for boats to start).
+**Go-big principle:** build aviation *concretely* on a *vertical-agnostic core*; adding a vertical =
+config + a small resolver adapter + a seeded checklist, NOT a rewrite. Don't over-abstract ahead of the
+2nd–3rd real vertical (no dynamic form-builder yet).
 
-Status: **planned**, fold into migration `002`. Boat checklist content = separate later task.
+**Cheap-now design move — migration `002`, before any real data:**
+- Add `vertical` to `inspections` + `checklist_templates`.
+- Generic subject: a typed `identifier` + broadly-common columns (make/model/year) + a **JSONB
+  `attributes`** bag for the long tail (serial, VIN details, sqft, beds/baths, hull material…), so
+  plane/boat/house/car all fit one schema with no per-vertical migrations.
+- Checklist library keyed by `vertical` + subtype.
+- Identifier resolvers = pluggable per-vertical adapters (FAA / NHTSA / manual).
+
+Status: **planned**, fold into migration `002`. Per-vertical checklist content = separate later tasks
+(SMEs: boat surveyor, home inspector, mechanic).
 
 ---
 

@@ -14,11 +14,15 @@
 
 ## What this is
 
-Multi-tenant SaaS for **aircraft pre-purchase inspection shops / A&Ps**. A mechanic enters an
-N-number, the app pulls the matching make/model checklist, guides them through it in **financial-risk
-priority order** (highest-dollar items first), captures findings via **dictation (Web Speech API) +
-photo/video** on an iPhone, and publishes a polished **customer-facing report** (share link + PDF).
-Built multi-tenant from day one to resell.
+Multi-tenant SaaS: a **horizontal pre-purchase _inspection platform_**. Each domain
+(**aviation, marine/yacht, home, automotive, …**) is a pluggable **vertical**; **aviation is vertical #1**
+(Brett's expertise → lead/reference implementation). Core flow, identical across verticals: enter an
+**identifier** → pull the matching **checklist** → guide the inspector through it in **financial-risk
+priority order** → capture findings via **dictation (Web Speech API) + photo/video** on a phone →
+publish a polished **customer-facing report** (share link + PDF). Built multi-tenant from day one to resell.
+
+**Go-big principle:** build the aviation vertical *concretely* on a *vertical-agnostic core*, so adding a
+vertical = config + a small adapter, NOT a rewrite. Don't over-abstract ahead of the 2nd–3rd real vertical.
 
 **Decisions locked (session 1, 2026-06-26):**
 - Plain **JavaScript** (not TS).
@@ -33,10 +37,14 @@ Built multi-tenant from day one to resell.
 - Seeding: ship **both** an aircraft and a marine (boat) checklist to exercise the multi-asset engine.
 
 **Product direction / open questions (see `docs/backlog.md`):**
-- **Multi-asset platform**, not aircraft-only: aircraft prebuy + **boat survey** are verticals 1 & 2,
-  architecture stays asset-typed. Engine (templates, risk order, capture, report) is asset-agnostic;
-  only the identifier + lookup differ (aircraft N-number→FAA; boat HIN, manual). Plan: migration `002`
-  adds `asset_type` + generic identifier **before any real data** (cheap now, painful later).
+- **Multi-vertical platform** (aviation lead; marine, home, automotive, … to follow). The engine
+  (templates, risk order, capture, report) is vertical-agnostic; only the **identifier + its resolver**
+  and the **checklist content** differ per vertical:
+  - aviation → N-number → FAA registry · automotive → VIN → NHTSA vPIC (free) · marine → HIN (manual) ·
+    home → address (manual now, property API later).
+- Migration `002` (before any real data): add `vertical` + generic `identifier` + JSONB `attributes`
+  bag on the subject, so plane/boat/house/car all fit one schema (no per-vertical migrations).
+  Checklist library keyed by `vertical` + subtype. Identifier resolvers = pluggable per-vertical adapters.
 - **Native iOS app: OPEN.** Web/PWA-first; native is a Phase-2 trigger if iOS Safari dictation or
   field connectivity fail real-world testing → then a React Native/Expo capture app, web keeps reports.
 
