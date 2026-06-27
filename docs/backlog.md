@@ -109,6 +109,55 @@ differ). Distinct from the per-item discrepancy photos captured during the guide
 
 ---
 
+## EPIC: Broker intake → portable "aircraft file" (Brett, 2026-06-27)
+
+**The idea.** A second entry point aimed at **aircraft brokers** (a new persona, distinct from the
+inspecting shop). A broker listing an aircraft can **start a file for the aircraft up front** —
+identify it (N-number → FAA), **scan the logbooks** (existing OCR → logbook spans + events + profile
+specs/currency/equipment), shoot the **guided overview photos**, and let AI draft the **narrative
+summary**. That produces a rich, portable **aircraft record** the broker uses for the listing — and
+that the **inspecting shop later picks up and amends** when it goes to pre-buy, instead of starting
+from a blank inspection. The aircraft file becomes the through-line from listing → sale.
+
+**Why it's strong.** Almost all the capture machinery already exists (logbook OCR v0.11/0.14, profile
+extraction v0.14, guided overview photos v0.7, AI narrative v0.15). This is mostly **re-packaging +
+a shared/portable record + a handoff**, not new capture tech. It also widens the funnel (brokers bring
+aircraft in) and creates a moat: the same record serves two customer types across the deal lifecycle.
+
+**Core architectural question — make the "aircraft" a first-class entity.** Today the profile,
+logbooks, events, media, and findings all hang off a single `inspection` (and `attributes.profile`).
+A broker's file should outlive/precede any one inspection and be **handed to another org**. Two shapes:
+- **(A) First-class `subject`/`aircraft` entity** (cleaner long-term): the broker creates the
+  **aircraft record** (identifier + attributes/profile + logbooks/events + overview media); an
+  **inspection references it**. The shop's pre-buy is a new inspection attached to the same aircraft,
+  inheriting the broker's groundwork. Fits the multi-vertical `subject` idea (migration `002` already
+  generalized identifier/attributes). Bigger migration: move profile/logbooks/events/media FKs from
+  `inspection_id` → `subject_id` (or dual-link).
+- **(B) Lightweight "intake" inspection** (faster to ship): broker creates an inspection in an
+  `intake`/`listing` status with the profile + logbooks + photos but no checklist findings; the shop
+  **claims/clones** it into a working pre-buy. Less schema churn; risks duplicating the record.
+
+**Cross-org handoff / sharing (the hard part).** Broker's org ≠ shop's org. Need a mechanism to grant
+the shop access to the aircraft file — options: a **tokenized transfer/claim link** (like the report
+share, but read-write claim), an **invite the shop to the file**, or a **copy-on-handoff** (snapshot
+into the shop's org). RLS + ownership questions: who owns the file after handoff, what the broker can
+still see, and whether the broker keeps a (possibly redacted) copy. Decide privacy defaults — a broker
+may not want every internal note exposed, and a shop's findings may not flow back to the broker.
+
+**Persona / packaging questions (open):**
+- Is "broker" a **distinct role/account type**, or just a shop whose vertical/workflow is "listing prep"?
+  (Leans toward a role flag + a trimmed, capture-only UI — no checklist/findings for brokers.)
+- **Pricing:** broker-side listing-prep product vs shop-side pre-buy — one record, two entry points.
+- **Listing output:** brokers want a clean **spec sheet / listing** export (the v0.15 narrative + Part 1
+  profile already most of the way there) — possibly a broker-branded variant of the public report.
+
+**Reuses, mostly as-is:** identify (FAA lookup), logbook OCR + audit, profile + scan-to-pre-fill,
+guided overview photos, AI narrative, public report. **New work:** the aircraft-as-entity (A) or intake
+status (B), the cross-org handoff/claim + its RLS, and a broker role + capture-only UI. **Not now** —
+slot after the deploy batch + a look at the end-to-end report; revisit entity shape (A vs B) first.
+
+---
+
 ## EPIC: Multi-vertical platform (go big)
 
 PreBuy is a **horizontal pre-purchase inspection platform**. Each domain is a pluggable **vertical**;
