@@ -6,6 +6,44 @@ keep only the big-rock summaries mirrored in `CLAUDE.md`. Build-task checklist l
 
 ---
 
+## Canonical inspection workflow (Brett, 2026-06-27)
+
+The end-to-end flow, in order. Stages are vertical-agnostic; only the resolver + knowledge-base
+content differ per vertical. **Entry point is the identifier, not a blank form.**
+
+1. **Identify** — first screen for a new job: enter the identifier (aviation → N-number; marine → HIN;
+   home → address). Hit an external source to **prepopulate** everything we can.
+   - Aviation: **FAA registry** lookup. e.g. `N3704A` → 1970 **A36 Bonanza**, S/N **E-212**, engine, etc.
+   - This becomes a server-side **resolver** (edge fn) per vertical; result fills make/model/year/serial
+     + `attributes`.
+2. **Assemble from knowledge base** — use the resolved make/model(/year) to pull the relevant
+   **PreBuy knowledge base** for that type and build the working checklist:
+   - model-specific **base checklist** (e.g. a Bonanza pre-purchase template),
+   - **common ADs / known trouble spots** (e.g. Bonanza landing-gear components),
+   - each item carries a **financial-risk weight** (drives `risk.js` ordering).
+   - Maps onto existing schema: a **global `checklist_templates` row** per make/model + `template_items`
+     (already have `risk_weight`, `ata_chapter`, `est_cost_*`). Instantiate into `inspection_items`.
+3. **Customize / prioritize** — the shop adds or re-prioritizes items (their own focus points) and
+   folds in **owner-requested priorities** before starting. Per-job, on the instantiated
+   `inspection_items` (they're an editable copy); shops can also customize their cloned template.
+4. **Inspect (capture)** — walk items in risk order; **dictation** (Web Speech API) → edge fn → Claude
+   structures the finding; **photos/videos** to Storage. Mark ok / monitor / discrepancy + severity.
+5. **Report** — tokenized share link (no login) + PDF, served by the `report` edge fn.
+
+**Open content/data questions (gating stage 1–2):**
+- **FAA data source:** ingest the FAA *releasable aircraft database* into our own tables (durable,
+  free, fast, no rate limit — recommended; doubles as KB spine) vs. a live third-party API. Until
+  ingested, back the resolver with a small **seed fixture** (incl. `N3704A` test case) so the flow is
+  end-to-end testable. Resolver interface stays identical either way.
+- **Checklist content / ABS:** the **ABS** (American Bonanza Society) pre-purchase checklist is
+  copyrighted — don't copy verbatim. Near-term: **PreBuy-authored** A36 checklist informed by public
+  ADs + type knowledge. Longer-term: **partner/license** with type clubs ("official ABS checklist" as a
+  selling point), and/or let shops import their own.
+- **ADs / trouble spots:** fold key model AD-checks into the seeded checklist now; a structured `kb_ads`
+  table can come later.
+
+---
+
 ## EPIC: Multi-vertical platform (go big)
 
 PreBuy is a **horizontal pre-purchase inspection platform**. Each domain is a pluggable **vertical**;
