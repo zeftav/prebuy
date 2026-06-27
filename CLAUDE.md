@@ -125,10 +125,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   the file). `lib/aircraft.js` `lookupAircraft` (+tests). NewInspection is identifier-first: aviation
   "Look up" prefills make/model/year/serial; serial → `attributes`. Lint + 50 tests + build green;
   pushed to `main`. ⚠️ **migration 004 must be run** before lookup works (fixtures load with it).
-  **▶ NEXT:** Stage 2 — seed an **A36 pre-purchase checklist** (PreBuy-authored; Brett to send ABS
-  checklist as learning material) into a global `checklist_templates` row + `template_items` (risk
-  weighted), instantiate into `inspection_items` on create, then the guided detail view (`risk.js`
-  order). FAA full bulk-load = Brett, when wanted (trimmed ≈ <100 MB; lookups are single indexed reads).
+  FAA full bulk-load = Brett, when wanted (trimmed ≈ <100 MB; lookups are single indexed reads).
+- Session 2 cont. — **Stages assemble + inspect** (v0.5.0). Brett supplied the **ABS** Bonanza
+  prepurchase checklist as reference (kept OUT of repo — copyrighted). Authored an original
+  risk-weighted **Beech A36** checklist: migration `005` seeds a global template + ~30 `template_items`.
+  `lib/checklist.js` instantiates the matching template into `inspection_items` on first open;
+  `InspectionDetail` (`/app/inspections/:id`) walks items in `risk.js` order, mark
+  ok/monitor/discrepancy/na + notes. `risk.js` `riskBand()` (+test). Lint + 51 tests + build green;
+  pushed to `main`. ⚠️ **run migrations 004 + 005** (paste from chat) for lookup + the A36 checklist.
+  New backlog epic: **logbook audit/research tool** (records/AD/damage/NTSB/title) — early, high value.
+  **▶ NEXT options:** (a) capture — dictation (Web Speech → edge fn → Claude) + photos to Storage;
+  (b) customization stage (add/reprioritize items, owner priorities); (c) report (share link + PDF);
+  (d) logbook audit tool. FAA full bulk-load + prebuy.app cutover still pending (Brett).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

@@ -33,6 +33,14 @@ const FAQ = [
     a: 'Yes — for aircraft, enter the N-number and click “Look up”. We pull the make, model, year, and serial number from the FAA registry so you don’t have to type them (you can still edit anything). Boats are entered manually for now, since there’s no public hull-number decoder.',
   },
   {
+    q: 'How do I work through an inspection?',
+    a: 'Open an inspection from your dashboard. We build a checklist matched to the aircraft and order it by financial risk, so the biggest-dollar items come first. Mark each item OK, Monitor, Discrepancy, or N/A, and add notes — your progress saves automatically. Dictation and photos are coming next.',
+  },
+  {
+    q: 'Where does the checklist come from?',
+    a: 'Each aircraft model has a starter pre-purchase checklist built into PreBuy, with items weighted by how much they typically cost to fix. The Beech A36 Bonanza is included to start; more models follow. You’ll soon be able to customize and re-prioritize items for your shop or a specific buyer.',
+  },
+  {
     q: 'Does my shop do aircraft or boats?',
     a: 'Each shop inspects one type, chosen when you create the shop — so the whole app (identifiers, checklists, reports) is tailored to it. If you inspect more than one type, create a separate shop for each; they all share your login and you can switch between them on the dashboard.',
   },

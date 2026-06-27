@@ -167,19 +167,21 @@ function InspectionList({ orgId }) {
       {state.status === 'ready' && state.rows.length > 0 && (
         <ul className="insp__list">
           {state.rows.map((row) => (
-            <li key={row.id} className="insp__row">
-              <span className="insp__icon" aria-hidden="true">
-                {row.vertical === 'marine' ? <Ship size={18} /> : <Plane size={18} />}
-              </span>
-              <span className="insp__main">
-                <span className="insp__id">{row.identifier}</span>
-                <span className="insp__sub">
-                  {[getVertical(row.vertical)?.label, [row.make, row.model].filter(Boolean).join(' '), row.customer_name]
-                    .filter(Boolean)
-                    .join(' · ')}
+            <li key={row.id}>
+              <Link to={`/app/inspections/${row.id}`} className="insp__row insp__rowlink">
+                <span className="insp__icon" aria-hidden="true">
+                  {row.vertical === 'marine' ? <Ship size={18} /> : <Plane size={18} />}
                 </span>
-              </span>
-              <span className={`insp__status insp__status--${row.status}`}>{row.status}</span>
+                <span className="insp__main">
+                  <span className="insp__id">{row.identifier}</span>
+                  <span className="insp__sub">
+                    {[getVertical(row.vertical)?.label, [row.make, row.model].filter(Boolean).join(' '), row.customer_name]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                </span>
+                <span className={`insp__status insp__status--${row.status}`}>{row.status}</span>
+              </Link>
             </li>
           ))}
         </ul>

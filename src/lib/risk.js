@@ -39,6 +39,17 @@ export function orderByFinancialRisk(items) {
   })
 }
 
+/**
+ * Coarse risk band for UI labelling/colour: 'high' | 'medium' | 'low'.
+ * Thresholds chosen so big-dollar deal-killers read as "high".
+ */
+export function riskBand(item) {
+  const w = clamp(num(item?.risk_weight), 0, 100)
+  if (w >= 75) return 'high'
+  if (w >= 45) return 'medium'
+  return 'low'
+}
+
 function statusRank(item) {
   const s = item?.status
   return s in STATUS_PENDING_RANK ? STATUS_PENDING_RANK[s] : 0

@@ -6,6 +6,17 @@
 
 export const releases = [
   {
+    version: '0.5.0',
+    date: '2026-06-27',
+    title: 'Guided checklist — work the inspection',
+    items: [
+      'Open an inspection to get a checklist tailored to the aircraft.',
+      'Items are ordered by financial risk — the big-dollar items come first.',
+      'Mark each OK / Monitor / Discrepancy / N/A and jot your findings as you go.',
+      'Beech A36 Bonanza pre-purchase checklist included to start.',
+    ],
+  },
+  {
     version: '0.4.0',
     date: '2026-06-27',
     title: 'Look up an aircraft by N-number',

@@ -6,6 +6,7 @@ import ResetPassword from './pages/ResetPassword.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import CreateShop from './pages/CreateShop.jsx'
 import NewInspection from './pages/NewInspection.jsx'
+import InspectionDetail from './pages/InspectionDetail.jsx'
 import Help from './pages/Help.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import './App.css'
@@ -39,6 +40,14 @@ function App() {
         element={
           <ProtectedRoute>
             <NewInspection />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/inspections/:id"
+        element={
+          <ProtectedRoute>
+            <InspectionDetail />
           </ProtectedRoute>
         }
       />

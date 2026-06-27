@@ -3,6 +3,22 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.5.0] — 2026-06-27
+
+### Added
+- **Guided inspection detail view + first checklist content** (workflow stages assemble → inspect).
+  - `supabase/migrations/005_seed_a36_checklist.sql` — PreBuy-authored **Beech A36 Bonanza**
+    pre-purchase checklist as a global template + ~30 risk-weighted `template_items` (records, engine,
+    structure, gear, prop, systems, flight). Original wording, structured after — and informed by —
+    the ABS survey checklist (reference only; not embedded).
+  - `src/lib/checklist.js` — instantiate the matching global template into per-job `inspection_items`
+    on first open (`ensureInspectionItems`), plus item updates.
+  - `src/lib/risk.js` — `riskBand()` helper (+ test).
+  - `src/pages/InspectionDetail.jsx` (`/app/inspections/:id`) — walks items in `risk.js` order
+    (highest financial risk first, unresolved ahead of resolved); mark ok/monitor/discrepancy/na +
+    finding notes; progress counter. Dashboard rows link here.
+  - `/help` updated; backlog gains the **logbook audit/research tool** epic + workflow provenance.
+
 ## [0.4.0] — 2026-06-27
 
 ### Added

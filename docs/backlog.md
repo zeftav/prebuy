@@ -30,6 +30,23 @@ content differ per vertical. **Entry point is the identifier, not a blank form.*
    structures the finding; **photos/videos** to Storage. Mark ok / monitor / discrepancy + severity.
 5. **Report** — tokenized share link (no login) + PDF, served by the `report` edge fn.
 
+### Logbook audit / research tool (Brett, 2026-06-27) — early-process, high value
+A standout early step (it's **Section I** of the ABS prepurchase survey and where deals are made or
+broken). Before/alongside the physical inspection, a guided **records audit**:
+- **Completeness** — airframe/engine/prop logs present since manufacture; reconcile total time &
+  SMOH/SPOH vs. advertised vs. tach/Hobbs; annual + IFR cert currency (static/transponder 24-mo, ELT,
+  VOR 30-day).
+- **AD/SB compliance** — pull the applicable AD list and crosscheck logs for compliance (recurring vs.
+  terminating); flag open ADs. (Future: structured `kb_ads` per make/model + automated crosscheck.)
+- **Damage & prop-strike forensics** — damage history + 337s; crosscheck any prop-strike against
+  engine logs (teardown?) and airframe logs (gear-up/collapse + proper repair).
+- **External research** — NTSB accident history, FAA title/lien search, registration chain.
+- **Output** — a records-findings section that feeds the report + negotiation points.
+This is a vertical-agnostic pattern (boats/homes have records too) but aviation is the deep case.
+Likely leans on **dictation + AI structuring** and later document/photo upload of the logs. Big rock;
+slot it as its own epic early in the inspection build. ABS checklist (Brett-supplied) is the reference
+for the aviation version — **cite/reference, don't embed** (copyrighted; kept out of the repo).
+
 **Open content/data questions (gating stage 1–2):**
 - **FAA data source:** ingest the FAA *releasable aircraft database* into our own tables (durable,
   free, fast, no rate limit — recommended; doubles as KB spine) vs. a live third-party API. Until

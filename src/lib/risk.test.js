@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { riskScore, orderByFinancialRisk } from './risk.js'
+import { riskScore, orderByFinancialRisk, riskBand } from './risk.js'
+
+describe('riskBand', () => {
+  it('bands by weight', () => {
+    expect(riskBand({ risk_weight: 90 })).toBe('high')
+    expect(riskBand({ risk_weight: 75 })).toBe('high')
+    expect(riskBand({ risk_weight: 60 })).toBe('medium')
+    expect(riskBand({ risk_weight: 45 })).toBe('medium')
+    expect(riskBand({ risk_weight: 20 })).toBe('low')
+    expect(riskBand({})).toBe('low')
+  })
+})
 
 describe('riskScore', () => {
   it('is driven mainly by risk_weight', () => {
