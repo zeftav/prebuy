@@ -57,17 +57,32 @@ events for the inspector to confirm. Open question Brett raised: per-page entry 
 whole logs and extract everything" — lean to whole-log batch import with human review. **Decided:
 whole-batch import** (Brett, 2026-06-27).
 
-**Extraction targets (Brett, 2026-06-27) — beyond logbook spans:**
-- **Notable maintenance events, highlighted.** Parse the logs for the events a broker would call out by
-  hand — major repairs/alterations (337s), engine/prop overhauls, **prop strikes & teardowns**, damage
-  history, AD compliance, major mods/STCs, recent big-ticket maintenance. This is high-value (brokers do
-  it manually). **Brett to paste a real broker listing** as the target format → tune the event taxonomy
-  + summary style to match it. Already the `logbook_events` model; refine categories/copy from the example.
-- **Summarized equipment list (as an aside).** Whenever the logs / 337s / equipment list reveal installed
-  equipment (avionics stack, autopilot, ADS-B, engine/prop models, mods), extract a clean **equipment
-  summary**. Storage TBD — likely `inspections.attributes.equipment` (JSONB array) or a small table;
-  surface on the inspection + report. Add an `equipment` field to the `structure-logbook` vision schema
-  when building this.
+**Extraction targets (Brett, 2026-06-27) — beyond logbook spans.** Target format derived from a real
+broker listing Brett supplied (1980 58P Baron) — *reference only, listing text NOT stored in repo*. A
+high-value listing/records-summary contains these blocks; PreBuy should be able to produce them:
+- **Spec & currency summary:** TT, engine SMOH (+ shop/notes, e.g. "RAM to new limits, new cams, date"),
+  prop SNEW (+ date), weights (MGTOW/BEW/useful/fuel/CG), and currency dates — **annual due, ELT battery,
+  IFR 91.411/.413 due, O2 hydro, AD compliance**.
+- **Notable maintenance — dated chronology.** A reverse-chronological list of significant entries, each
+  `{date, description}` with an action verb (new / replaced / OH / repaired / SB / AD complied). This is
+  the broker's "Miscellaneous Maintenance" block and is the high-value, manually-done piece. Coarser
+  `logbook_events.category` (ad/337/overhaul/prop_strike/damage/other) is the highlight layer on top.
+- **Damage history — explicit callout.** What happened, when, and crucially **what was / was not affected**
+  (e.g. "2018 bird strike to RH cowl nose; prop/engine not impacted"). Brokers always state this.
+- **Equipment list — categorized, with condition notes.** Two groups: **Avionics** (GPS/nav/comm,
+  autopilot + modes, audio panel, transponder/ADS-B, engine monitor, radar, stormscope…) and **Additional
+  equipment** (FIKI/known-ice, GAMIjectors, O2, A/C, winglets/VGs, long-range fuel…). Capture per-item
+  **condition notes** ("engine-monitor display unreadable"). Storage TBD — likely
+  `inspections.attributes.equipment` (JSONB, grouped) or a small table; surface on the inspection + report.
+  Add an `equipment` array to the `structure-logbook` vision schema when building this.
+- **Per-cylinder compressions** (e.g. "77,76,76,75,76,75") = a **structured measurement set** — ties to the
+  gear-rigging measurement-forms item below (same {value, limit, pass/fail} pattern).
+
+**Idea — broker-style summary / listing generator.** PreBuy already captures most of the above (times via
+logbook reconcile, equipment via scan, findings, photos). A premium **report mode** could generate a clean,
+broker-style write-up + spec sheet from the inspection data — narrative summary, spec/currency block,
+maintenance highlights, damage callout, categorized equipment, photo gallery. High differentiation; pairs
+with the report stage. (Generate original prose from structured data — Claude — not copied from any listing.)
 
 ### Guided overview photo capture (Brett, 2026-06-27) — early-process
 Early in the inspection (around stage 1–2, before/alongside working items), walk the inspector through
@@ -142,6 +157,34 @@ real multi-vertical demand. Until then, verticals stay code-defined in `lib/vert
 the `vertical` CHECK constraint.
 
 ---
+
+## Reference library — manuals/expertise via Google Drive (Brett, 2026-06-27)
+Brett to create a **Google Drive folder** of source material (shop/maintenance manuals, type-club
+guides like the ABS landing-gear guide, SME notes) for Claude to **learn from** when authoring PreBuy
+content. The Google Drive MCP connector is available in interactive sessions (`search_files`,
+`read_file_content`, `download_file_content`), so Claude can read the folder during a session.
+**Rules of the road:**
+- **Reference, don't embed.** Most of this is copyrighted (Textron/Beech shop manuals, ABS guides).
+  Use it to produce **original** PreBuy artifacts (checklists, measurement forms, risk weights, copy) —
+  never commit the source docs or verbatim text to the repo. Same discipline as the ABS checklist.
+- **Durable output lives in the repo, not the chat.** Knowledge from Drive only persists across sessions
+  via what we commit (seed migrations, `lib/*`, docs). So the loop is: read Drive → author original →
+  commit. Note the source (e.g. "informed by Beech A36 shop manual ch. X") in code comments, not the text.
+- **Caveat:** the Drive connector may be absent in headless/cron runs (interactive auth); fine for
+  normal working sessions.
+Once the folder exists and is shared, point Claude at it (name/link) and it can verify access + start
+pulling from it.
+
+## Structured measurement forms — gear rigging first (Brett, 2026-06-27)
+Some inspection items need **structured numeric capture against a spec**, not just ok/monitor/discrepancy
++ free text. First case: a **Beechcraft landing-gear rigging chart** — all pertinent measurements taken
+during a gear rigging check (down-lock tensions, free play, uplock clearances, transit times, drag/side
+brace dimensions, etc.), each with its **limit/tolerance** so the app can flag out-of-spec values. Source:
+**Beech shop manuals + the ABS landing-gear guide** (reference → author original; see Reference library
+above). Implies a new item/“measurement set” type: a labeled grid of {measurement, value, unit, min, max,
+pass/fail}. Generalizes to other measured checks (compression readings, control-surface travel, cable
+tensions). Pairs with the per-model checklist content; Brett to supply the spec values. Output feeds the
+report.
 
 ## Marketing site / landing page (Brett, 2026-06-27)
 Stand up a basic **product/landing page** at the apex `prebuy.app`, modeled on **yellowtag.app**, with
