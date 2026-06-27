@@ -3,6 +3,14 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.12.1] — 2026-06-27
+
+### Fixed
+- **Version + "What's new" footer is now app-wide.** Extracted it into `src/components/AppFooter.jsx`
+  and render it once globally in `App.jsx` (pinned to the bottom via an `.app__content` flex wrapper),
+  so every in-app page carries it — previously it was only on Home. Hidden on the public report
+  (`/r/:token`). Removed Home's duplicate footer + stale status line.
+
 ## [0.12.0] — 2026-06-27
 
 ### Added

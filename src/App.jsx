@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
+import AppFooter from './components/AppFooter.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
@@ -15,14 +16,20 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 import './App.css'
 
 function App() {
+  // The public customer report is standalone — no in-app chrome/footer.
+  const location = useLocation()
+  const showFooter = !location.pathname.startsWith('/r/')
+
   return (
-    <Routes>
+    <>
+      <div className="app__content">
+        <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/forgot" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/help" element={<Help />} />
-      <Route path="/r/:token" element={<ReportView />} />
+          <Route path="/r/:token" element={<ReportView />} />
       <Route
         path="/app"
         element={
@@ -71,7 +78,10 @@ function App() {
           </ProtectedRoute>
         }
       />
-    </Routes>
+        </Routes>
+      </div>
+      {showFooter && <AppFooter />}
+    </>
   )
 }
 

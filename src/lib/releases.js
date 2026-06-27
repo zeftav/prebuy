@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.12.1',
+    date: '2026-06-27',
+    title: 'What’s-new everywhere',
+    items: [
+      'The version and “What’s new” footer now shows on every page, not just the home screen.',
+    ],
+  },
+  {
     version: '0.12.0',
     date: '2026-06-27',
     title: 'Who, where & when',

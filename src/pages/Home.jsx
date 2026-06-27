@@ -1,7 +1,5 @@
 import { Plane } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import WhatsNew from '../components/WhatsNew.jsx'
-import { APP_VERSION, BUILD_SHA } from '../lib/version.js'
 
 export default function Home() {
   return (
@@ -28,17 +26,7 @@ export default function Home() {
             Create your shop →
           </Link>
         </p>
-        <p className="home__status">
-          Scaffolding in place — auth, the inspection flow, and the report view are next.
-        </p>
       </section>
-
-      <footer className="home__footer">
-        <span className="home__build">
-          v{APP_VERSION} · build {BUILD_SHA}
-        </span>
-        <WhatsNew />
-      </footer>
     </main>
   )
 }
