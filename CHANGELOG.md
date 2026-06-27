@@ -3,6 +3,22 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.2.1] — 2026-06-27
+
+### Added
+- **Self-serve password reset.** "Forgot your password?" on the sign-in screen → `/forgot`
+  (request a link; same confirmation shown whether or not the account exists, so account
+  existence isn't leaked) → `/reset-password` sets a new password from the recovery session.
+  - `src/lib/auth.jsx` — `sendPasswordReset` + `updatePassword` helpers.
+  - `src/lib/password.js` — shared `validatePassword` / `passwordsMatch` rules (+ tests),
+    reused by signup and reset so the minimum stays in one place.
+  - `/help` "I forgot my password" answer now describes the real flow.
+
+### Docs
+- `docs/deploy.md` — **Email (Resend)** section: Supabase custom-SMTP setup for auth email
+  (confirm/reset/invite) plus the separate edge-function Resend-API path for app email; noted
+  the `/reset-password` redirect is covered by the existing wildcard.
+
 ## [0.2.0] — 2026-06-27
 
 ### Added

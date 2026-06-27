@@ -30,7 +30,7 @@ const FAQ = [
   },
   {
     q: 'I forgot my password.',
-    a: 'Password reset is coming shortly. For now, contact support and we’ll help you get back in.',
+    a: 'On the sign-in screen, click “Forgot your password?”, enter your email, and we’ll send a reset link. Follow it to choose a new password — you’ll be signed in once it’s saved. Check your spam folder if it doesn’t arrive within a few minutes.',
   },
 ]
 

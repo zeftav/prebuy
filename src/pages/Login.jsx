@@ -116,6 +116,12 @@ export default function Login() {
         </button>
       </form>
 
+      {!isSignup && (
+        <Link to="/forgot" className="auth__toggle">
+          Forgot your password?
+        </Link>
+      )}
+
       <button
         type="button"
         className="auth__toggle"

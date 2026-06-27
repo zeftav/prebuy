@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.2.1',
+    date: '2026-06-27',
+    title: 'Password reset',
+    items: [
+      'Forgot your password? Reset it yourself from the sign-in screen.',
+      'We’ll email you a secure link to choose a new one.',
+    ],
+  },
+  {
     version: '0.2.0',
     date: '2026-06-27',
     title: 'Accounts & your shop',

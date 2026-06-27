@@ -96,6 +96,11 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   **Deploy still needed (Brett):** paste & deploy the `signup` edge fn with **Verify JWT OFF** (no
   manual secrets — uses auto-injected `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`). Until then,
   create-shop returns a network/_function-not-found_ error but auth + the rest work.
+  Also added **password reset** (v0.2.1): `/forgot` (request link, no account-existence leak) →
+  `/reset-password` (recovery session → set new password); `lib/password.js` shared rules (+tests).
+  Documented **email** in `docs/deploy.md`: two channels — auth email via Supabase **custom SMTP
+  (Resend)**, app email via edge-fn **Resend API**. Reset works on Supabase's built-in sender for
+  your own account; wire Resend SMTP before real shops sign up. Lint + 29 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
@@ -119,7 +124,9 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - [ ] N-number → make/model lookup (FAA releasable aircraft registration DB).
 - [x] Auth + org signup edge function (PREB-3, v0.2.0, 2026-06-27). ⚠️ `signup` edge fn still needs
       deploying (Verify JWT OFF). Seed first global checklist template — still TODO.
-- [ ] Password reset flow (Login mentions it; `/help` says "coming shortly").
+- [x] Password reset flow (v0.2.1, 2026-06-27).
+- [ ] Wire Resend SMTP in Supabase for production auth email (confirm/reset/invite); verify
+      `prebuy.app` domain in Resend. See `docs/deploy.md` → Email. (Built-in sender OK for testing.)
 - [ ] Capture flow (dictation + media), report view, PDF export.
 - [x] Shared `Tooltip` component + `/help` FAQ page (PREB-23/24, 2026-06-27); keep populating per feature.
 - [x] Jira: backlog stood up (project PREB, 10 epics / 35 stories, 2026-06-26).

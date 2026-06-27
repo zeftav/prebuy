@@ -44,6 +44,14 @@ export function AuthProvider({ children }) {
         supabase.auth.signInWithPassword({ email, password }),
       signUp: (email, password) => supabase.auth.signUp({ email, password }),
       signOut: () => supabase.auth.signOut(),
+      // Sends the reset email; the link lands the user on /reset-password, where
+      // supabase-js parses the recovery token and establishes a session.
+      sendPasswordReset: (email) =>
+        supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        }),
+      // Sets a new password for the (recovery- or normally-) authenticated user.
+      updatePassword: (password) => supabase.auth.updateUser({ password }),
     }),
     [session, loading],
   )
