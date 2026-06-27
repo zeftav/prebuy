@@ -352,6 +352,16 @@ a "known issue" is shown to a customer (must be defensible — cite or don't sho
 generated guidance. **Big, high-differentiation effort** — plan as its own track; the deep-research
 harness can prototype one model (e.g. A36) end-to-end to prove the pipeline before scaling.
 
+## Beta testers (Brett, 2026-06-27)
+Early real-world testers to put the tool in front of (gather feedback on the capture flow, dictation,
+logbook scan, and the report):
+- **Nick / Neal**
+- **Jim @ Falcon**
+- **Danny**
+
+(Names as given — fill in contact details / shops as we line them up. Pre-launch email/auth must be on
+**Resend SMTP** before inviting them so confirm/reset emails work; see `docs/deploy.md` → Email.)
+
 ## Marketing site / landing page (Brett, 2026-06-27)
 Stand up a basic **product/landing page** at the apex `prebuy.app`, modeled on **yellowtag.app**, with
 the app living at **`app.prebuy.app`** (mirrors `app.yellowtag.app`). Landing = what PreBuy is (horizontal
