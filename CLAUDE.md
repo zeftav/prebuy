@@ -51,6 +51,10 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - RLS: SECURITY DEFINER helpers (no self-referential recursion); UPDATE policies need WITH CHECK;
   edge-fn JWT OFF for pre-login flows. Membership/org writes go through the signup/invite edge fns.
 - Snapshot before structural migrations. Tests (Vitest) on dangerous pure logic; CI gates build+test.
+- **UX / help-from-the-onset (Brett's rule):** every user-facing feature ships with inline help —
+  tooltips on non-obvious controls + an entry in the in-app **Help / FAQ**. Treat help text as part
+  of "done," not a follow-up. Keep it current as features change (same discipline as "What's new").
+  Use the shared `Tooltip` component and the `/help` page.
 
 ## Current state
 - Session 1 (2026-06-26): Scaffolded Vite+React app. Installed stack deps. Wrote `001_init.sql`
@@ -70,4 +74,5 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - [ ] N-number → make/model lookup (FAA releasable aircraft registration DB).
 - [ ] Auth + org signup edge function; seed first global checklist template.
 - [ ] Capture flow (dictation + media), report view, PDF export.
+- [ ] Shared `Tooltip` component + `/help` FAQ page; populate/maintain alongside every feature.
 - [ ] Jira: stand up the backlog and mirror big items here.
