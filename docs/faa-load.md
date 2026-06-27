@@ -28,9 +28,11 @@ log; it prints staged counts and the final `faa_registry` total. Re-runs are saf
 ## B. Locally
 
 ```bash
-# 1. Download + unzip the FAA releasable DB (MASTER.txt + ACFTREF.txt):
-curl -fSL -o faa.zip https://registry.faa.gov/database/ReleasableAircraft.zip
-unzip faa.zip MASTER.txt ACFTREF.txt -d faa
+# 1. Download + unzip the FAA releasable DB (MASTER.txt + ACFTREF.txt).
+#    The FAA 403s non-browser requests, so send a browser User-Agent (-A):
+curl -fSL -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36' \
+  -o faa.zip https://registry.faa.gov/database/ReleasableAircraft.zip
+unzip faa.zip -d faa
 
 # 2. Install loader deps + run (use the DIRECT/session connection string):
 npm --prefix scripts/faa install
@@ -50,5 +52,8 @@ SUPABASE_DB_URL='postgres://postgres:<pw>@db.<ref>.supabase.co:5432/postgres' \
 - **Caveat:** the loader uses CSV parsing. The FAA export is normally clean, but
   if a row ever contains an unescaped comma in a text field, COPY will reject that
   row — re-run, and if it recurs, flag it and we'll add a tolerant fallback.
+- **The FAA blocks non-browser requests** — the download must send a browser
+  `User-Agent` (curl `-A ...`), or it returns **403** (curl exits 22). Both the
+  workflow and the local command above already do this.
 - The FAA download URL is occasionally changed by the agency; if the download step
-  404s, update the URL in the workflow / command above.
+  starts 404ing, update the URL in the workflow / command above.

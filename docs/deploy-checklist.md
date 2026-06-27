@@ -21,7 +21,7 @@ Run in order. All are idempotent (safe to re-run).
 - [x] ✅ `006_media_storage.sql` — photos: `media.purpose` + private bucket + Storage policies. (2026-06-27)
 - [x] ✅ `007_owner_priority.sql` — `inspection_items.owner_priority`. (2026-06-27)
 - [x] ✅ `008_logbooks.sql` — `logbooks` + `logbook_events` tables. (2026-06-27)
-- [ ] ⬜ `009_media_logbook_purpose.sql` — allow `media.purpose = 'logbook'` (for OCR page scans).
+- [x] ✅ `009_media_logbook_purpose.sql` — allow `media.purpose = 'logbook'` (OCR page scans). (2026-06-27)
 - [x] ✅ `010_inspection_meta.sql` — `inspections.inspector_name` / `location` / `inspection_date`. (2026-06-27)
 
 ## 2. Edge functions (Supabase → Edge Functions)
@@ -30,8 +30,7 @@ Run in order. All are idempotent (safe to re-run).
 - [x] ✅ `structure-finding` — Verify JWT **ON**. Powers "Clean up with AI". (2026-06-27)
 - [x] ✅ `report` — Verify JWT **OFF**. Serves the public report at `/r/<token>`. (2026-06-27)
   - [x] ✅ Redeployed `report` for v0.12.0 (inspector/location/inspection-date). (2026-06-27)
-- [ ] ⬜ `structure-logbook` — Verify JWT **ON**. Paste from `supabase/functions/structure-logbook/index.ts`.
-      Logbook OCR import (Claude vision). Reuses `ANTHROPIC_API_KEY` (no new secret).
+- [x] ✅ `structure-logbook` — Verify JWT **ON**. Logbook OCR import (Claude vision). (2026-06-27)
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 

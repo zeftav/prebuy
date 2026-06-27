@@ -23,8 +23,12 @@ jobs:
 
       - name: Download + unzip FAA releasable database
         run: |
-          curl -fSL --retry 3 -o faa.zip https://registry.faa.gov/database/ReleasableAircraft.zip
-          unzip -o faa.zip MASTER.txt ACFTREF.txt -d faa
+          # The FAA 403s non-browser requests, so send a browser User-Agent.
+          curl -fSL --retry 3 \
+            -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36' \
+            -o faa.zip https://registry.faa.gov/database/ReleasableAircraft.zip
+          unzip -o faa.zip -d faa
+          ls -la faa/
           wc -l faa/MASTER.txt faa/ACFTREF.txt
 
       - name: Install loader deps
