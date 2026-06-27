@@ -54,9 +54,10 @@ export function pickActiveOrg(memberships) {
 /**
  * Create a shop (org) and make the current user its owner. Calls the `signup`
  * edge function with the user's access token; the function verifies the token
- * with the service role and writes org + owner membership atomically.
+ * with the service role and writes org + owner membership atomically. The shop's
+ * `vertical` (what it inspects) is set once here and inherited by its inspections.
  */
-export async function createShop(name) {
+export async function createShop(name, vertical = 'aviation') {
   const { valid, value, error } = validateShopName(name)
   if (!valid) return { data: null, error: new Error(error) }
 
@@ -72,7 +73,7 @@ export async function createShop(name) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ name: value }),
+      body: JSON.stringify({ name: value, vertical }),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) {
@@ -88,6 +89,6 @@ export async function createShop(name) {
 export async function fetchMemberships() {
   const { data, error } = await supabase
     .from('memberships')
-    .select('id, org_id, role, created_at, orgs(name, slug)')
+    .select('id, org_id, role, created_at, orgs(name, slug, vertical)')
   return { data: data ?? [], error }
 }

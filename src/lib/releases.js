@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.3.1',
+    date: '2026-06-27',
+    title: 'Shops have a type',
+    items: [
+      'When you create a shop, you now pick what it inspects (aircraft or boat).',
+      'New inspections use your shop’s type automatically — no need to choose each time.',
+      'Run more than one kind of inspection? Create a shop for each and switch between them.',
+    ],
+  },
+  {
     version: '0.3.0',
     date: '2026-06-27',
     title: 'Inspections — aircraft & boats',

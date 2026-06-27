@@ -1,5 +1,6 @@
-// Create a draft inspection. Pick the vertical (aircraft / boat); the identifier
-// field + labels adapt to it. Lands the user back on the dashboard list.
+// Create a draft inspection. The vertical comes from the SHOP (set at shop
+// creation) — not chosen here — so the identifier field + labels are fixed to
+// what this shop inspects. Lands the user back on the dashboard list.
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -7,7 +8,7 @@ import { Plane, Ship } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { fetchMemberships, pickActiveOrg } from '../lib/shops.js'
 import { createInspection } from '../lib/inspections.js'
-import { VERTICAL_OPTIONS, getVertical, validateIdentifier } from '../lib/verticals.js'
+import { getVertical, validateIdentifier } from '../lib/verticals.js'
 import Tooltip, { InfoDot } from '../components/Tooltip.jsx'
 import './auth.css'
 import './inspections.css'
@@ -16,11 +17,12 @@ export default function NewInspection() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
+  const wantedOrg = params.get('org')
 
-  const [orgId, setOrgId] = useState(params.get('org') || null)
-  const [orgReady, setOrgReady] = useState(Boolean(params.get('org')))
+  // Resolve the shop (and therefore the vertical) before showing the form.
+  const [shop, setShop] = useState(null) // { org_id, vertical, name }
+  const [shopReady, setShopReady] = useState(false)
 
-  const [vertical, setVertical] = useState('aviation')
   const [identifier, setIdentifier] = useState('')
   const [make, setMake] = useState('')
   const [model, setModel] = useState('')
@@ -30,27 +32,29 @@ export default function NewInspection() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
-  // If we weren't handed an org in the URL, resolve the user's active one.
   useEffect(() => {
-    if (orgId) return
     let active = true
     fetchMemberships().then(({ data }) => {
       if (!active) return
-      setOrgId(pickActiveOrg(data)?.org_id ?? null)
-      setOrgReady(true)
+      const m = (wantedOrg && data.find((x) => x.org_id === wantedOrg)) || pickActiveOrg(data)
+      setShop(m ? { org_id: m.org_id, vertical: m.orgs?.vertical || 'aviation', name: m.orgs?.name } : null)
+      setShopReady(true)
     })
     return () => {
       active = false
     }
-  }, [orgId])
+  }, [wantedOrg])
 
-  const cfg = getVertical(vertical)
-  const idCheck = useMemo(() => validateIdentifier(vertical, identifier), [vertical, identifier])
+  const cfg = getVertical(shop?.vertical) ?? getVertical('aviation')
+  const idCheck = useMemo(
+    () => validateIdentifier(shop?.vertical ?? 'aviation', identifier),
+    [shop, identifier],
+  )
 
   async function onSubmit(e) {
     e.preventDefault()
     setError(null)
-    if (!orgId) {
+    if (!shop?.org_id) {
       setError('No shop selected. Go back and pick a shop.')
       return
     }
@@ -60,8 +64,8 @@ export default function NewInspection() {
     }
     setBusy(true)
     const { error } = await createInspection(
-      orgId,
-      { vertical, identifier, make, model, year, customerName, customerEmail },
+      shop.org_id,
+      { vertical: shop.vertical, identifier, make, model, year, customerName, customerEmail },
       user?.id,
     )
     setBusy(false)
@@ -72,23 +76,29 @@ export default function NewInspection() {
     navigate('/app', { replace: true })
   }
 
+  if (shopReady && !shop) {
+    return (
+      <main className="auth">
+        <div className="auth__notice">
+          You don’t have a shop yet. <Link to="/app/create-shop">Create one first</Link>.
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="auth">
       <span className="auth__brand">
-        <Plane size={22} aria-hidden="true" />
+        {cfg.key === 'marine' ? <Ship size={22} aria-hidden="true" /> : <Plane size={22} aria-hidden="true" />}
         PreBuy
       </span>
 
       <div className="auth__heading">
-        <h1>New inspection</h1>
-        <p>Pick what you’re inspecting, then enter its identifier.</p>
+        <h1>New {cfg.noun} inspection</h1>
+        <p>
+          {shop?.name ? `${shop.name} · ` : ''}Enter the {cfg.identifierLabel} to start a draft.
+        </p>
       </div>
-
-      {orgReady && !orgId && (
-        <div className="auth__notice">
-          You don’t have a shop yet. <Link to="/app/create-shop">Create one first</Link>.
-        </div>
-      )}
 
       {error && (
         <div className="auth__error" role="alert">
@@ -97,28 +107,6 @@ export default function NewInspection() {
       )}
 
       <form className="auth__form" onSubmit={onSubmit}>
-        <div className="auth__field">
-          <span className="insp__fieldlabel">What are you inspecting?</span>
-          <div className="insp__verticals" role="radiogroup" aria-label="Vertical">
-            {VERTICAL_OPTIONS.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                role="radio"
-                aria-checked={vertical === v.key}
-                className={`insp__verticalbtn ${vertical === v.key ? 'is-active' : ''}`}
-                onClick={() => {
-                  setVertical(v.key)
-                  setError(null)
-                }}
-              >
-                {v.key === 'marine' ? <Ship size={18} aria-hidden="true" /> : <Plane size={18} aria-hidden="true" />}
-                {v.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         <div className="auth__field">
           <label htmlFor="identifier">
             {cfg.identifierLabel}

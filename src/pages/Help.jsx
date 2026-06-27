@@ -26,11 +26,11 @@ const FAQ = [
   },
   {
     q: 'How do I start an inspection?',
-    a: 'From your dashboard, click “New inspection”, choose what you’re inspecting (aircraft or boat), and enter its identifier — an N-number for aircraft, or a HIN (Hull Identification Number) for boats. Add the make/model and customer details if you have them. It’s saved as a draft you can work through next.',
+    a: 'From your dashboard, click “New inspection” and enter the identifier — for an aircraft shop that’s the N-number; for a boat shop it’s the HIN. Add make/model and customer details if you have them. It’s saved as a draft you can work through next.',
   },
   {
-    q: 'My shop inspects boats (or planes) — is that supported?',
-    a: 'Yes. PreBuy is a multi-vertical platform: aircraft and boats are supported today, with more verticals (home, automotive) on the roadmap. The identifier and checklist adapt to what you’re inspecting.',
+    q: 'Does my shop do aircraft or boats?',
+    a: 'Each shop inspects one type, chosen when you create the shop — so the whole app (identifiers, checklists, reports) is tailored to it. If you inspect more than one type, create a separate shop for each; they all share your login and you can switch between them on the dashboard.',
   },
   {
     q: 'Who can see my data?',

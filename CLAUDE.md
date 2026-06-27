@@ -112,8 +112,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   inspection flow** (v0.3.0): migration `002` (verticals/identifier/attributes), `lib/verticals.js`
   (aviation N-number + marine HIN, +tests), `lib/inspections.js` (+tests), Dashboard→inspection list
   with shop switcher, `/app/inspections/new` create form. Lint + 45 tests + build green; pushed to
-  `main`. ⚠️ **migration 002 must be run** (SQL paste) before create-inspection works. Brett bought
-  `prebuy.app` via Cloudflare — cutover pending (steps in `docs/deploy.md`).
+  `main`. Brett bought `prebuy.app` via Cloudflare — cutover pending (steps in `docs/deploy.md`).
+  **Course-correct (Brett):** vertical belongs to the **shop**, not the inspection — a shop does one
+  vertical; multiple verticals = multiple shops per login. v0.3.1: migration `003` (`orgs.vertical`),
+  `signup` edge fn sets it (**redeploy**), CreateShop picks it, NewInspection derives it from the shop.
+  Brett **ran 002** in SQL editor (confirmed). ⚠️ **003 must be run** + **signup edge fn redeployed**.
+  Next test case: **A36 Beech Bonanza** — building the concrete aircraft path (checklist + guided
+  detail in risk order). Future idea logged in `docs/backlog.md`: self-serve "add an industry"
+  (shop builds own checklist/report, or concierge build) — not now.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

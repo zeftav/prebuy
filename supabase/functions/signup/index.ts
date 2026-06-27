@@ -19,6 +19,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SHOP_NAME_MIN = 2
 const SHOP_NAME_MAX = 60
+const VERTICALS = ['aviation', 'marine', 'home', 'automotive']
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -65,7 +66,7 @@ Deno.serve(async (req: Request) => {
   const user = userData.user
 
   // --- validate input ---
-  let payload: { name?: unknown }
+  let payload: { name?: unknown; vertical?: unknown }
   try {
     payload = await req.json()
   } catch {
@@ -75,6 +76,8 @@ Deno.serve(async (req: Request) => {
   if (name.length < SHOP_NAME_MIN || name.length > SHOP_NAME_MAX) {
     return json({ error: `Shop name must be ${SHOP_NAME_MIN}-${SHOP_NAME_MAX} characters.` }, 400)
   }
+  // A shop does one vertical; defaults to aviation if unspecified.
+  const vertical = VERTICALS.includes(String(payload.vertical)) ? String(payload.vertical) : 'aviation'
 
   // --- create org (retry slug on collision) ---
   const base = slugify(name) || 'shop'
@@ -83,8 +86,8 @@ Deno.serve(async (req: Request) => {
     const slug = attempt === 0 ? base : `${base}-${randomSuffix()}`
     const { data, error } = await admin
       .from('orgs')
-      .insert({ name, slug })
-      .select('id, name, slug')
+      .insert({ name, slug, vertical })
+      .select('id, name, slug, vertical')
       .single()
     if (!error) {
       org = data

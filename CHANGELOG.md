@@ -3,6 +3,19 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.3.1] — 2026-06-27
+
+### Changed
+- **Vertical is now a property of the shop, not the inspection** (decision: a shop does one
+  vertical; multiple verticals = multiple shops under one login).
+  - `supabase/migrations/003_shop_vertical.sql` — adds `orgs.vertical` (default `aviation`).
+  - `supabase/functions/signup/index.ts` — accepts + sets `vertical` on the new org (**redeploy**,
+    still Verify JWT OFF; defaults to aviation so it's backward-compatible).
+  - `CreateShop` now picks the shop's type; `NewInspection` derives the vertical from the shop
+    (identifier field/labels fixed to it) instead of asking each time.
+  - `lib/shops.js` — `createShop(name, vertical)`; `fetchMemberships` returns `orgs.vertical`.
+  - `/help` updated to explain one-type-per-shop.
+
 ## [0.3.0] — 2026-06-27
 
 ### Added

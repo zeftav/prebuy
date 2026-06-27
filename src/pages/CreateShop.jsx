@@ -3,16 +3,19 @@
 
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plane } from 'lucide-react'
+import { Plane, Ship } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { createShop, validateShopName, slugifyShopName } from '../lib/shops.js'
+import { VERTICAL_OPTIONS } from '../lib/verticals.js'
 import Tooltip, { InfoDot } from '../components/Tooltip.jsx'
 import './auth.css'
+import './inspections.css'
 
 export default function CreateShop() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
+  const [vertical, setVertical] = useState('aviation')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
@@ -27,7 +30,7 @@ export default function CreateShop() {
       return
     }
     setBusy(true)
-    const { error } = await createShop(name)
+    const { error } = await createShop(name, vertical)
     setBusy(false)
     if (error) {
       setError(error.message)
@@ -58,6 +61,30 @@ export default function CreateShop() {
       )}
 
       <form className="auth__form" onSubmit={onSubmit}>
+        <div className="auth__field">
+          <span className="insp__fieldlabel">
+            What does this shop inspect?
+            <Tooltip text="A shop inspects one type of asset. If you do more than one (say aircraft and boats), create a separate shop for each — they share your login.">
+              <InfoDot label="Why one type per shop?" />
+            </Tooltip>
+          </span>
+          <div className="insp__verticals" role="radiogroup" aria-label="Shop type">
+            {VERTICAL_OPTIONS.map((v) => (
+              <button
+                key={v.key}
+                type="button"
+                role="radio"
+                aria-checked={vertical === v.key}
+                className={`insp__verticalbtn ${vertical === v.key ? 'is-active' : ''}`}
+                onClick={() => setVertical(v.key)}
+              >
+                {v.key === 'marine' ? <Ship size={18} aria-hidden="true" /> : <Plane size={18} aria-hidden="true" />}
+                {v.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="auth__field">
           <label htmlFor="shop">
             Shop name

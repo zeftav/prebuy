@@ -36,8 +36,22 @@ config + a small resolver adapter + a seeded checklist, NOT a rewrite. Don't ove
 - Checklist library keyed by `vertical` + subtype.
 - Identifier resolvers = pluggable per-vertical adapters (FAA / NHTSA / manual).
 
-Status: **planned**, fold into migration `002`. Per-vertical checklist content = separate later tasks
-(SMEs: boat surveyor, home inspector, mechanic).
+Status: migration `002` **done** (v0.3.0); vertical moved to the **shop** level in `003` (v0.3.1) —
+a shop inspects one vertical, multiple verticals = multiple shops per login. Per-vertical checklist
+content = separate later tasks (SMEs: boat surveyor, home inspector, mechanic).
+
+### Future: self-serve "add an industry" (Brett, 2026-06-27)
+Eventually a shop should be able to **add a new industry/vertical themselves** and either:
+- **build their own** checklist + report template within the PreBuy framework (a guided
+  vertical/checklist builder — identifier field, categories, risk weights, report layout), or
+- **request a concierge build** (we build the vertical/checklist for them).
+
+This is the monetizable end-state of the pluggable-vertical architecture: the engine stays
+vertical-agnostic; customers extend it without code. Implies a **custom-vertical** data model
+(verticals as rows, not a hardcoded enum/registry), a template/report builder UI, and a "request a
+build" intake. **Not now** — revisit after the aviation path (capture → report) is proven and there's
+real multi-vertical demand. Until then, verticals stay code-defined in `lib/verticals.js` +
+the `vertical` CHECK constraint.
 
 ---
 
