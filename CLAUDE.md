@@ -31,7 +31,9 @@ vertical = config + a small adapter, NOT a rewrite. Don't over-abstract ahead of
   (service role), NOT by anon RLS.
 - Dictation: iPhone **Web Speech API** for live transcript → edge fn → **Claude** structures it into a
   finding. No audio storage to start. (iOS Safari reliability is a known risk — see native decision.)
-- Tracker: **Jira** (company already on it), not Linear. Until connected, backlog lives in `docs/backlog.md`.
+- Tracker: **Jira** — connected. Site `zeftingaviation.atlassian.net`, project **PREB** (cloudId
+  `d4270249-adb4-4ffc-ae91-bf5acfba0ad8`). 10 epics (PREB-1…10) + 35 stories (PREB-11…45) seeded;
+  Foundation epic + its 6 stories marked Done. `docs/backlog.md` stays the home for design detail.
   ⚠️ The connected Linear workspace ("Yellowtag") is a **different company** — do NOT track PreBuy there.
 - Signup: **open self-serve** — anyone can sign up, create a shop (org), and become its owner.
 - Seeding: ship **both** an aircraft and a marine (boat) checklist to exercise the multi-asset engine.
@@ -108,4 +110,4 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - [ ] Auth + org signup edge function; seed first global checklist template.
 - [ ] Capture flow (dictation + media), report view, PDF export.
 - [ ] Shared `Tooltip` component + `/help` FAQ page; populate/maintain alongside every feature.
-- [ ] Jira: stand up the backlog and mirror big items here.
+- [x] Jira: backlog stood up (project PREB, 10 epics / 35 stories, 2026-06-26).
