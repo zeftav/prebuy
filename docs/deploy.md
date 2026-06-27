@@ -107,7 +107,12 @@ commit on `main` and let it redeploy.)
 
 ## Not yet set up
 
-- Custom domain (plan: apex for marketing, `app.` subdomain for the SPA).
+- **Custom domain — `prebuy.app` purchased via Cloudflare (2026-06-27), cutover pending.** Plan:
+  apex for marketing, `app.` subdomain for the SPA. When migrating: (1) Cloudflare Pages → the
+  project → Custom domains → add `app.prebuy.app` (and/or apex); (2) update Supabase Auth → URL
+  Configuration: set Site URL to the new domain and add `https://app.prebuy.app/**` to redirect URLs
+  (keep pages.dev + localhost until fully switched); (3) verify `prebuy.app` in Resend for auth/app
+  email (see Email). Low-risk, ~20 min.
 - **Resend SMTP for auth email** (see Email → channel 1) — required before real shops sign up; until
   then auth email uses Supabase's rate-limited built-in sender.
 - App-email + Stripe edge-function secrets (`RESEND_API_KEY`, Stripe keys) when those features land.

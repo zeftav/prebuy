@@ -1,50 +1,72 @@
-// Authenticated landing. Loads the user's shop memberships:
-//   - none  → send them to create-shop (open self-serve onboarding)
-//   - some  → list them (the inspection workspace lands here later)
+// Authenticated home = the active shop's inspection list.
+//   - no membership → create-shop (onboarding)
+//   - has shop(s)   → list that shop's inspections, with a switcher if >1 shop
 // Rendered inside <ProtectedRoute>, so a session is guaranteed.
 
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { Plane, LogOut } from 'lucide-react'
+import { Plane, LogOut, Plus, Ship } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
-import { fetchMemberships } from '../lib/shops.js'
+import { fetchMemberships, pickActiveOrg } from '../lib/shops.js'
+import { listInspectionsForOrg } from '../lib/inspections.js'
+import { getVertical } from '../lib/verticals.js'
 import './auth.css'
+import './inspections.css'
+
+const ACTIVE_ORG_KEY = 'prebuy:activeOrg'
 
 export default function Dashboard() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  const [state, setState] = useState({ status: 'loading', memberships: [], error: null })
+  const [memberships, setMemberships] = useState(null) // null = loading
+  const [activeOrgId, setActiveOrgId] = useState(null)
+  const [loadError, setLoadError] = useState(null)
 
+  // Load memberships once, then choose an active org (remembered or best pick).
   useEffect(() => {
     let active = true
     fetchMemberships().then(({ data, error }) => {
       if (!active) return
-      if (error) setState({ status: 'error', memberships: [], error })
-      else setState({ status: 'ready', memberships: data, error: null })
+      if (error) {
+        setLoadError(error)
+        setMemberships([])
+        return
+      }
+      setMemberships(data)
+      if (data.length) {
+        const remembered = safeGet(ACTIVE_ORG_KEY)
+        const valid = data.some((m) => m.org_id === remembered)
+        setActiveOrgId(valid ? remembered : pickActiveOrg(data)?.org_id ?? null)
+      }
     })
     return () => {
       active = false
     }
   }, [])
 
+  function chooseOrg(id) {
+    setActiveOrgId(id)
+    safeSet(ACTIVE_ORG_KEY, id)
+  }
+
   async function onSignOut() {
     await signOut()
     navigate('/login', { replace: true })
   }
 
-  if (state.status === 'loading') {
+  if (memberships === null) {
     return (
       <main className="auth-pending" aria-busy="true">
-        <p>Loading your shops…</p>
+        <p>Loading…</p>
       </main>
     )
   }
 
-  if (state.status === 'error') {
+  if (loadError) {
     return (
       <main className="auth">
         <div className="auth__error" role="alert">
-          Couldn’t load your shops. {state.error?.message || ''}
+          Couldn’t load your shops. {loadError.message || ''}
         </div>
         <button className="auth__btn auth__btn--ghost" onClick={() => window.location.reload()}>
           Retry
@@ -53,44 +75,130 @@ export default function Dashboard() {
     )
   }
 
-  // No shop yet → onboarding.
-  if (state.memberships.length === 0) {
-    return <Navigate to="/app/create-shop" replace />
-  }
+  if (memberships.length === 0) return <Navigate to="/app/create-shop" replace />
+
+  const activeMembership = memberships.find((m) => m.org_id === activeOrgId) ?? memberships[0]
 
   return (
-    <main className="auth">
+    <main className="insp">
       <div className="dash__topbar">
         <span className="auth__brand">
           <Plane size={22} aria-hidden="true" />
           PreBuy
         </span>
-        <button className="auth__toggle" onClick={onSignOut}>
-          <LogOut size={14} aria-hidden="true" /> Sign out
-        </button>
+        <span className="insp__user">
+          {user?.email}
+          <button className="auth__toggle" onClick={onSignOut}>
+            <LogOut size={14} aria-hidden="true" /> Sign out
+          </button>
+        </span>
       </div>
 
-      <div className="auth__heading">
-        <h1>Your shops</h1>
-        <p>Signed in as {user?.email}.</p>
+      <div className="insp__shopbar">
+        {memberships.length > 1 ? (
+          <label className="insp__shopselect">
+            <span>Shop</span>
+            <select value={activeMembership.org_id} onChange={(e) => chooseOrg(e.target.value)}>
+              {memberships.map((m) => (
+                <option key={m.org_id} value={m.org_id}>
+                  {m.orgs?.name || 'Unnamed shop'}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          <h1 className="insp__shopname">{activeMembership.orgs?.name || 'Your shop'}</h1>
+        )}
+        <Link to="/app/create-shop" className="auth__toggle">
+          + New shop
+        </Link>
       </div>
 
-      <div className="dash__orgs">
-        {state.memberships.map((m) => (
-          <div className="dash__org" key={m.id}>
-            <span className="dash__org-name">{m.orgs?.name || 'Unnamed shop'}</span>
-            <span className="dash__role">{m.role}</span>
-          </div>
-        ))}
-      </div>
-
-      <Link to="/app/create-shop" className="auth__toggle">
-        + Create another shop
-      </Link>
+      <InspectionList orgId={activeMembership.org_id} />
 
       <p className="auth__footer-link">
         Need a hand? See <Link to="/help">Help &amp; FAQ</Link>.
       </p>
     </main>
   )
+}
+
+function InspectionList({ orgId }) {
+  const [state, setState] = useState({ status: 'loading', rows: [] })
+
+  useEffect(() => {
+    let active = true
+    setState({ status: 'loading', rows: [] })
+    listInspectionsForOrg(orgId).then(({ data, error }) => {
+      if (!active) return
+      setState({ status: error ? 'error' : 'ready', rows: data, error })
+    })
+    return () => {
+      active = false
+    }
+  }, [orgId])
+
+  return (
+    <section className="insp__section">
+      <div className="insp__sectionhead">
+        <h2>Inspections</h2>
+        <Link to={`/app/inspections/new?org=${orgId}`} className="auth__btn insp__new">
+          <Plus size={15} aria-hidden="true" /> New inspection
+        </Link>
+      </div>
+
+      {state.status === 'loading' && <p className="auth__hint">Loading inspections…</p>}
+
+      {state.status === 'error' && (
+        <div className="auth__error" role="alert">
+          Couldn’t load inspections. {state.error?.message || ''}
+        </div>
+      )}
+
+      {state.status === 'ready' && state.rows.length === 0 && (
+        <div className="insp__empty">
+          <p>No inspections yet.</p>
+          <p className="auth__hint">
+            Start your first — pick aircraft or boat, enter its identifier, and you’re off.
+          </p>
+        </div>
+      )}
+
+      {state.status === 'ready' && state.rows.length > 0 && (
+        <ul className="insp__list">
+          {state.rows.map((row) => (
+            <li key={row.id} className="insp__row">
+              <span className="insp__icon" aria-hidden="true">
+                {row.vertical === 'marine' ? <Ship size={18} /> : <Plane size={18} />}
+              </span>
+              <span className="insp__main">
+                <span className="insp__id">{row.identifier}</span>
+                <span className="insp__sub">
+                  {[getVertical(row.vertical)?.label, [row.make, row.model].filter(Boolean).join(' '), row.customer_name]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              </span>
+              <span className={`insp__status insp__status--${row.status}`}>{row.status}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function safeGet(k) {
+  try {
+    return localStorage.getItem(k)
+  } catch {
+    return null
+  }
+}
+function safeSet(k, v) {
+  try {
+    localStorage.setItem(k, v)
+  } catch {
+    /* ignore */
+  }
 }

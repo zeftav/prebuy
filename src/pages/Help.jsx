@@ -25,6 +25,14 @@ const FAQ = [
     a: 'Yes. From your dashboard you can create additional shops — handy if you run separate businesses. You’re the owner of any shop you create.',
   },
   {
+    q: 'How do I start an inspection?',
+    a: 'From your dashboard, click “New inspection”, choose what you’re inspecting (aircraft or boat), and enter its identifier — an N-number for aircraft, or a HIN (Hull Identification Number) for boats. Add the make/model and customer details if you have them. It’s saved as a draft you can work through next.',
+  },
+  {
+    q: 'My shop inspects boats (or planes) — is that supported?',
+    a: 'Yes. PreBuy is a multi-vertical platform: aircraft and boats are supported today, with more verticals (home, automotive) on the roadmap. The identifier and checklist adapt to what you’re inspecting.',
+  },
+  {
     q: 'Who can see my data?',
     a: 'Only members of your shop. PreBuy is multi-tenant with row-level security, so shops are isolated from each other. Customer reports are shared by a private link you control.',
   },

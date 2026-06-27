@@ -1,0 +1,198 @@
+/* Inspection list + create. Reuses the .auth__* primitives; this file adds the
+   list/shop-bar/vertical-picker pieces. Mobile-first. */
+
+.insp {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 20px 32px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+.insp__user {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.insp__shopbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+.insp__shopname {
+  font-size: 22px;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.insp__shopselect {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+.insp__shopselect select {
+  font: inherit;
+  font-size: 15px;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.insp__section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.insp__sectionhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.insp__sectionhead h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.insp__new {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  padding: 9px 12px;
+  width: auto;
+  text-decoration: none;
+}
+
+.insp__empty {
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.insp__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.insp__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.insp__icon {
+  display: inline-flex;
+  color: var(--text);
+  opacity: 0.7;
+}
+.insp__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-grow: 1;
+  min-width: 0;
+}
+.insp__id {
+  font-weight: 600;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+.insp__sub {
+  font-size: 13px;
+  opacity: 0.65;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insp__status {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.insp__status--draft {
+  background: rgba(128, 128, 128, 0.15);
+  color: var(--text);
+}
+.insp__status--in_progress {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.insp__status--review {
+  background: rgba(230, 160, 30, 0.15);
+  color: #b8860b;
+}
+.insp__status--published {
+  background: rgba(40, 170, 90, 0.15);
+  color: #1e9e57;
+}
+
+/* Create form bits */
+.insp__fieldlabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+.insp__verticals {
+  display: flex;
+  gap: 10px;
+}
+.insp__verticalbtn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-h);
+  cursor: pointer;
+}
+.insp__verticalbtn.is-active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.insp__row2 {
+  display: flex;
+  gap: 10px;
+}
+.insp__row2 .auth__field {
+  flex: 1;
+}
+.insp__year {
+  max-width: 88px;
+}

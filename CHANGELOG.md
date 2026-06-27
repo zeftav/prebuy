@@ -3,6 +3,28 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.3.0] — 2026-06-27
+
+### Added
+- **Multi-vertical inspection flow (aircraft + boat).**
+  - `supabase/migrations/002_verticals.sql` — generalizes `inspections` + `checklist_templates`:
+    adds `vertical`, `asset_type`, generic `identifier`, `make`/`model`/`year`, and a JSONB
+    `attributes` bag; drops the aviation-only `n_number`/`aircraft_*` columns (table was empty).
+    RLS unchanged (still `org_id`-scoped).
+  - `src/lib/verticals.js` — per-vertical registry (aviation → N-number, marine → HIN) with
+    adaptive labels/placeholders and identifier validation (+ tests). Adding a vertical = an entry
+    here + a seeded checklist, not a schema change.
+  - `src/lib/inspections.js` — `validateInspectionDraft` (pure, tested), `createInspection`,
+    `listInspectionsForOrg`.
+  - `src/pages/Dashboard.jsx` — now the active shop's inspection list, with a shop switcher for
+    multi-shop users (remembered in localStorage).
+  - `src/pages/NewInspection.jsx` (`/app/inspections/new`) — create form whose identifier field +
+    make/model labels adapt to the chosen vertical; tooltips on the identifier.
+  - `/help` — entries on starting an inspection and multi-vertical support.
+
+### Changed
+- Dashboard is no longer a bare shop list; shop management moved into a switcher + "New shop" link.
+
 ## [0.2.1] — 2026-06-27
 
 ### Added

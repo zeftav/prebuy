@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.3.0',
+    date: '2026-06-27',
+    title: 'Inspections — aircraft & boats',
+    items: [
+      'Start an inspection: pick aircraft or boat, enter its identifier, add customer details.',
+      'Your dashboard now lists your shop’s inspections, with a switcher if you run more than one shop.',
+      'PreBuy now handles boats as well as aircraft — more inspection types are on the way.',
+    ],
+  },
+  {
     version: '0.2.1',
     date: '2026-06-27',
     title: 'Password reset',

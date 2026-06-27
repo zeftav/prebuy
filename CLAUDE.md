@@ -108,6 +108,12 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   20/21/22/23/24/46 all **Done**. Allowlisted Atlassian + GitHub + git/npm MCP/Bash in
   `.claude/settings.json` (applies to future sessions). Note: couldn't live-smoke-test the edge fn —
   cloud egress policy 403s on `*.supabase.co`, so verify create-shop from the deployed app/browser.
+  Brett confirmed signup works end-to-end (real org created). Then built the **multi-vertical
+  inspection flow** (v0.3.0): migration `002` (verticals/identifier/attributes), `lib/verticals.js`
+  (aviation N-number + marine HIN, +tests), `lib/inspections.js` (+tests), Dashboard→inspection list
+  with shop switcher, `/app/inspections/new` create form. Lint + 45 tests + build green; pushed to
+  `main`. ⚠️ **migration 002 must be run** (SQL paste) before create-inspection works. Brett bought
+  `prebuy.app` via Cloudflare — cutover pending (steps in `docs/deploy.md`).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
@@ -124,13 +130,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - [x] Create Supabase project; run `001_init.sql` (RLS verified). (Auth redirect URLs: localhost only — revisit at Cloudflare time.)
 - [x] Cloudflare Pages project — live at prebuy-2pm.pages.dev (2026-06-26).
 - [x] Supabase Auth URLs set (pages.dev) + Cloudflare env vars confirmed (2026-06-26).
-- [ ] Migration `002`: generalize `inspections`/`checklist_templates` to `asset_type` + generic
-      identifier (aircraft + boat), before real data lands. Fold in with the inspection-flow build.
-- [ ] Boat-survey vertical: marine checklist content; HIN/registration identifier (manual entry).
+- [x] Migration `002` (v0.3.0, 2026-06-27): generalized `inspections`/`checklist_templates` to
+      `vertical` + generic `identifier` + make/model/year + JSONB `attributes`; dropped aviation-only
+      cols. ⚠️ **needs running** in the SQL editor (paste from chat) before create-inspection works.
+- [ ] Seed first global checklist template(s) — aircraft + boat (still TODO; create-inspection works
+      without a template, `template_id` nullable).
+- [ ] Marine checklist content (HIN identifier wired; content pending boat-surveyor SME).
+- [ ] Migrate to **prebuy.app** (bought via Cloudflare 2026-06-27): Pages custom domain + Supabase
+      Auth URLs + Resend domain verify. Steps in `docs/deploy.md` → Not yet set up.
 - [ ] Decide native iOS vs PWA after field-testing dictation + offline at a real hangar/dock.
 - [ ] N-number → make/model lookup (FAA releasable aircraft registration DB).
-- [x] Auth + org signup edge function (PREB-3, v0.2.0, 2026-06-27). ⚠️ `signup` edge fn still needs
-      deploying (Verify JWT OFF). Seed first global checklist template — still TODO.
+- [x] Auth + org signup edge function (PREB-3, v0.2.0); deployed by Brett + verified live 2026-06-27.
 - [x] Password reset flow (v0.2.1, 2026-06-27).
 - [ ] Wire Resend SMTP in Supabase for production auth email (confirm/reset/invite); verify
       `prebuy.app` domain in Resend. See `docs/deploy.md` → Email. (Built-in sender OK for testing.)

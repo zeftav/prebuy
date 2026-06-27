@@ -5,6 +5,7 @@ import ForgotPassword from './pages/ForgotPassword.jsx'
 import ResetPassword from './pages/ResetPassword.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import CreateShop from './pages/CreateShop.jsx'
+import NewInspection from './pages/NewInspection.jsx'
 import Help from './pages/Help.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import './App.css'
@@ -30,6 +31,14 @@ function App() {
         element={
           <ProtectedRoute>
             <CreateShop />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/inspections/new"
+        element={
+          <ProtectedRoute>
+            <NewInspection />
           </ProtectedRoute>
         }
       />
