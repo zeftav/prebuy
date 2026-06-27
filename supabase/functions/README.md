@@ -17,6 +17,7 @@ State the **JWT verification** setting when deploying each function:
 | `invite` / `accept-invite` | OFF (accept) | planned | Add members to an org. |
 | `report` | OFF | **built** | Return a published report by `share_token` for the no-login customer view. |
 | `structure-finding` | ON | **built** | Take a raw dictation transcript → Claude → a clean, customer-facing finding. |
+| `structure-logbook` | ON | **built** | Read photographed logbook pages (Claude vision) → draft logbooks + notable events. |
 | `media-upload` | ON | planned | Service-role upload to Storage if RLS fights direct uploads. |
 | `export-pdf` | ON/OFF | planned | Render a report to PDF. |
 

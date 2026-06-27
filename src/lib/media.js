@@ -87,6 +87,13 @@ export async function listMedia(inspectionId) {
   return { data: rows.map((r) => ({ ...r, url: urlByPath.get(r.storage_path) ?? null })), error: null }
 }
 
+/** Create short-lived signed URLs for a set of storage paths. */
+export async function signedUrlsFor(paths) {
+  if (!paths?.length) return []
+  const { data } = await supabase.storage.from(BUCKET).createSignedUrls(paths, 3600)
+  return (data ?? []).map((s) => s.signedUrl).filter(Boolean)
+}
+
 /** Delete a media row + its storage object. */
 export async function deleteMedia(row) {
   const { error } = await supabase.from('media').delete().eq('id', row.id)

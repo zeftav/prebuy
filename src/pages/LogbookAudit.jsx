@@ -7,14 +7,15 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, Check } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
   listLogbooks, addLogbook, deleteLogbook,
   listEvents, addEvent, deleteEvent,
-  reconcileLogbooks, kindLabel, categoryLabel,
+  reconcileLogbooks, kindLabel, categoryLabel, cleanDraftValue, extractLogbooks,
   LOGBOOK_KINDS, EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
+import { uploadMedia, signedUrlsFor } from '../lib/media.js'
 import './auth.css'
 import './inspections.css'
 
@@ -96,6 +97,8 @@ export default function LogbookAudit() {
         <h1><BookOpen size={20} aria-hidden="true" /> Logbook audit</h1>
         <p>Track records across logbooks, reconcile the times, and note key events.</p>
       </div>
+
+      <ScanImport inspection={inspection} onAddBook={onAddBook} onAddEvent={onAddEvent} />
 
       {/* Reconciliation */}
       <section className="insp__section">
@@ -183,6 +186,165 @@ export default function LogbookAudit() {
         <AddEvent onAdd={onAddEvent} />
       </section>
     </main>
+  )
+}
+
+function ScanImport({ inspection, onAddBook, onAddEvent }) {
+  const [phase, setPhase] = useState('idle') // idle | working | review
+  const [error, setError] = useState(null)
+  const [draft, setDraft] = useState({ logbooks: [], events: [] })
+  const [pickLb, setPickLb] = useState(new Set())
+  const [pickEv, setPickEv] = useState(new Set())
+  const [importing, setImporting] = useState(false)
+
+  async function onPick(files) {
+    const list = Array.from(files ?? [])
+    if (!list.length) return
+    setError(null)
+    setPhase('working')
+    // Upload pages to private storage, then sign for the vision model.
+    const paths = []
+    for (const f of list) {
+      const { data, error } = await uploadMedia({
+        orgId: inspection.org_id,
+        inspectionId: inspection.id,
+        purpose: 'logbook',
+        file: f,
+      })
+      if (!error && data) paths.push(data.storage_path)
+    }
+    const urls = await signedUrlsFor(paths)
+    if (!urls.length) {
+      setError('Couldn’t upload the photos. Try again.')
+      setPhase('idle')
+      return
+    }
+    const { data, error } = await extractLogbooks(urls)
+    if (error) {
+      setError(error.message)
+      setPhase('idle')
+      return
+    }
+    setDraft(data)
+    setPickLb(new Set(data.logbooks.map((_, i) => i)))
+    setPickEv(new Set(data.events.map((_, i) => i)))
+    setPhase('review')
+  }
+
+  function toggle(set, setSet, i) {
+    const next = new Set(set)
+    if (next.has(i)) next.delete(i)
+    else next.add(i)
+    setSet(next)
+  }
+
+  async function doImport() {
+    setImporting(true)
+    for (const i of pickLb) {
+      const d = draft.logbooks[i]
+      await onAddBook({
+        kind: d.kind,
+        label: cleanDraftValue(d.label) || '',
+        start_date: cleanDraftValue(d.start_date) || '',
+        start_tach: cleanDraftValue(d.start_tach) ?? '',
+        end_date: cleanDraftValue(d.end_date) || '',
+        end_tach: cleanDraftValue(d.end_tach) ?? '',
+      })
+    }
+    for (const i of pickEv) {
+      const d = draft.events[i]
+      await onAddEvent({
+        category: d.category,
+        title: cleanDraftValue(d.title) || 'Event',
+        event_date: cleanDraftValue(d.event_date) || '',
+        tach: cleanDraftValue(d.tach) ?? '',
+        description: cleanDraftValue(d.description) || '',
+      })
+    }
+    setImporting(false)
+    setPhase('idle')
+    setDraft({ logbooks: [], events: [] })
+  }
+
+  return (
+    <section className="insp__section lb__scan">
+      <div className="insp__sectionhead">
+        <h2><ScanLine size={18} aria-hidden="true" /> Scan &amp; import <span className="lb__beta">beta</span></h2>
+      </div>
+
+      {phase === 'idle' && (
+        <>
+          <p className="auth__hint">
+            Photograph the logbook pages — we’ll read them and propose logbooks + notable events for you
+            to review. Handwriting varies, so always confirm before importing.
+          </p>
+          <label className="auth__btn auth__btn--ghost insp__walkthrough">
+            <ScanLine size={15} aria-hidden="true" /> Scan logbook pages
+            <input type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => onPick(e.target.files)} />
+          </label>
+          {error && <div className="auth__error" role="alert">{error}</div>}
+        </>
+      )}
+
+      {phase === 'working' && <p className="auth__hint">Reading the pages…</p>}
+
+      {phase === 'review' && (
+        <div className="lb__review">
+          {draft.logbooks.length === 0 && draft.events.length === 0 && (
+            <p className="auth__hint">Nothing legible found. Try clearer, well-lit photos.</p>
+          )}
+
+          {draft.logbooks.length > 0 && (
+            <>
+              <h3 className="lb__reviewh">Proposed logbooks</h3>
+              <ul className="insp__list">
+                {draft.logbooks.map((d, i) => (
+                  <li key={i} className="lb__pick" onClick={() => toggle(pickLb, setPickLb, i)}>
+                    <span className={`lb__check ${pickLb.has(i) ? 'is-on' : ''}`}>{pickLb.has(i) && <Check size={13} />}</span>
+                    <span className="insp__main">
+                      <span className="insp__id">{cleanDraftValue(d.label) || kindLabel(d.kind)}</span>
+                      <span className="insp__sub">
+                        {kindLabel(d.kind)} · {cleanDraftValue(d.start_date) || '?'}→{cleanDraftValue(d.end_date) || '?'} ·
+                        {' '}tach {cleanDraftValue(d.start_tach) ?? '?'}–{cleanDraftValue(d.end_tach) ?? '?'}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {draft.events.length > 0 && (
+            <>
+              <h3 className="lb__reviewh">Proposed events</h3>
+              <ul className="insp__list">
+                {draft.events.map((d, i) => (
+                  <li key={i} className="lb__pick" onClick={() => toggle(pickEv, setPickEv, i)}>
+                    <span className={`lb__check ${pickEv.has(i) ? 'is-on' : ''}`}>{pickEv.has(i) && <Check size={13} />}</span>
+                    <span className="insp__main">
+                      <span className="insp__id">
+                        <span className={`lb__cat lb__cat--${d.category}`}>{categoryLabel(d.category)}</span> {d.title}
+                      </span>
+                      <span className="insp__sub">
+                        {[cleanDraftValue(d.event_date), cleanDraftValue(d.tach) != null ? `tach ${cleanDraftValue(d.tach)}` : null, cleanDraftValue(d.description)]
+                          .filter(Boolean).join(' · ')}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          <div className="insp__capture">
+            <button type="button" className="auth__btn" disabled={importing} onClick={doImport}>
+              {importing ? 'Importing…' : `Import ${pickLb.size + pickEv.size} selected`}
+            </button>
+            <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setPhase('idle')}>Discard</button>
+          </div>
+        </div>
+      )}
+    </section>
   )
 }
 

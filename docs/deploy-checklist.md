@@ -17,28 +17,23 @@ Run in order. All are idempotent (safe to re-run).
 - [x] ✅ `002_verticals.sql` — generic vertical/identifier/attributes
 - [x] ✅ `003_shop_vertical.sql` — `orgs.vertical`
 - [x] ✅ `004_faa_registry.sql` — FAA tables + N3704A fixture
-- [ ] ⬜ `005_seed_a36_checklist.sql` — **A36 Bonanza checklist** (template + ~30 items).
-      Without it, opening an aircraft inspection shows "no template matched".
-- [ ] ⬜ `006_media_storage.sql` — **photos**: `media.purpose`, the private `inspection-media`
-      Storage bucket, and org-scoped Storage policies. Without it, photo upload fails.
-- [ ] ⬜ `007_owner_priority.sql` — `inspection_items.owner_priority` (customization). Without it,
-      the owner-priority flag + custom-item priorities can't save.
-- [ ] ⬜ `008_logbooks.sql` — `logbooks` + `logbook_events` tables (logbook audit tool). Without it,
-      the logbook audit page can't save.
+- [x] ✅ `005_seed_a36_checklist.sql` — A36 Bonanza checklist (template + ~30 items). (2026-06-27)
+- [x] ✅ `006_media_storage.sql` — photos: `media.purpose` + private bucket + Storage policies. (2026-06-27)
+- [x] ✅ `007_owner_priority.sql` — `inspection_items.owner_priority`. (2026-06-27)
+- [x] ✅ `008_logbooks.sql` — `logbooks` + `logbook_events` tables. (2026-06-27)
+- [ ] ⬜ `009_media_logbook_purpose.sql` — allow `media.purpose = 'logbook'` (for OCR page scans).
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
 - [x] ✅ `signup` — Verify JWT **OFF**. (Deployed; redeployed for `vertical`.)
-- [ ] ⬜ `structure-finding` — Verify JWT **ON**. Paste from `supabase/functions/structure-finding/index.ts`.
-      Powers "Clean up with AI" on findings. **Requires the secret below.**
-- [ ] ⬜ `report` — Verify JWT **OFF**. Paste from `supabase/functions/report/index.ts`. Serves the
-      public customer report at `/r/<token>`. No secret (uses auto-injected service role).
+- [x] ✅ `structure-finding` — Verify JWT **ON**. Powers "Clean up with AI". (2026-06-27)
+- [x] ✅ `report` — Verify JWT **OFF**. Serves the public report at `/r/<token>`. (2026-06-27)
+- [ ] ⬜ `structure-logbook` — Verify JWT **ON**. Paste from `supabase/functions/structure-logbook/index.ts`.
+      Logbook OCR import (Claude vision). Reuses `ANTHROPIC_API_KEY` (no new secret).
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 
-- [ ] ⬜ `ANTHROPIC_API_KEY` — your Anthropic key. Needed by `structure-finding`.
-      (Model is `claude-opus-4-8`; switch to `claude-haiku-4-5` / `claude-sonnet-4-6` in the
-      function for cheaper/faster if you prefer — see the function header.)
+- [x] ✅ `ANTHROPIC_API_KEY` — set; used by `structure-finding`. (2026-06-27)
 
 ## 4. After 1–3: smoke test (in the live app)
 
@@ -59,8 +54,13 @@ Run in order. All are idempotent (safe to re-run).
       `faa_aircraft_ref`. Procedure is in the comments at the bottom of `004_faa_registry.sql`
       (download FAA releasable ZIP → COPY MASTER/ACFTREF → upsert trimmed columns). The N3704A
       fixture covers testing until then.
-- [ ] ⬜ **Migrate to `prebuy.app`** (bought via Cloudflare). Steps in `docs/deploy.md` → Not yet
-      set up: Pages custom domain → Supabase Auth URLs → Resend domain verify (~20 min).
+- [ ] ⬜ **Migrate to `prebuy.app`** (bought via Cloudflare). Mirror the Yellowtag layout: **apex
+      `prebuy.app` = marketing/landing**, **`app.prebuy.app` = the SPA** (like `app.yellowtag.app`).
+      Steps: Cloudflare Pages → Custom domains → add `app.prebuy.app` (+ apex once the landing page
+      exists) → update Supabase Auth URL config (Site URL + redirect `https://app.prebuy.app/**`) →
+      verify `prebuy.app` in Resend. ~20 min. Full notes in `docs/deploy.md`.
+- [ ] ⬜ **Marketing/landing page** at the apex (basic product page, à la yellowtag.app) with a CTA
+      into `app.prebuy.app`. See `docs/backlog.md` → Marketing site.
 
 ---
 

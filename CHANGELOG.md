@@ -3,6 +3,21 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.11.0] — 2026-06-27
+
+### Added
+- **Logbook OCR import (beta)** — photograph logbook pages → Claude vision → draft → review → import.
+  - `supabase/migrations/009_media_logbook_purpose.sql` — allow `media.purpose = 'logbook'`.
+  - `supabase/functions/structure-logbook/index.ts` — vision edge fn (**Verify JWT ON**, reuses
+    `ANTHROPIC_API_KEY`): page images → structured draft of logbooks + notable maintenance events.
+  - `src/lib/logbooks.js` `extractLogbooks` + pure `cleanDraftValue` (+ test); `src/lib/media.js`
+    `signedUrlsFor`.
+  - `LogbookAudit` gains a "Scan & import" section: upload pages → review proposed logbooks/events
+    with tick-to-keep → import the selected ones.
+- **Docs/backlog:** logbook-scan extraction targets (broker-style notable-event highlighting; a
+  summarized equipment list as an aside) and a **marketing/landing-page** epic (apex `prebuy.app`,
+  app at `app.prebuy.app`).
+
 ## [0.10.0] — 2026-06-27
 
 ### Added

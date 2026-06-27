@@ -161,3 +161,34 @@ export async function deleteEvent(id) {
   const { error } = await supabase.from('logbook_events').delete().eq('id', id)
   return { error }
 }
+
+// ── OCR import (Claude vision via the structure-logbook edge fn) ─────────────
+
+/** Normalize a draft logbook/event field: empty string → null, 0 → null for tach. */
+export function cleanDraftValue(v) {
+  if (v === '' || v == null) return null
+  if (typeof v === 'number') return v === 0 ? null : v
+  return v
+}
+
+/** Extract draft logbooks + events from photographed pages (signed image URLs). */
+export async function extractLogbooks(imageUrls) {
+  if (!imageUrls?.length) return { data: null, error: new Error('No images to read.') }
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData.session?.access_token
+  if (!token) return { data: null, error: new Error('You must be signed in.') }
+
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/structure-logbook`
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ images: imageUrls }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }
+    return { data: { logbooks: body.logbooks ?? [], events: body.events ?? [] }, error: null }
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e : new Error('Network error') }
+  }
+}

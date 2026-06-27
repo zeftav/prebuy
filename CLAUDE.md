@@ -167,8 +167,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   overlaps=dup-time), notable events (AD/337/overhaul/prop-strike/damage). Linked from detail.
   Lint + 70 tests + build green; pushed `main`. ⚠️ **run migration 008**. Backlog: **photo→OCR
   log import** (Claude vision) is the next logbook step.
-  **▶ NEXT options:** logbook **OCR import** (Claude vision) · server-side PDF · invite teammates ·
-  marine checklist content · FAA bulk-load · prebuy.app cutover · Resend SMTP.
+- Session 2 cont. — **Logbook OCR import (beta, v0.11.0)**. Migration `009` (`media.purpose` +=
+  `logbook`). `structure-logbook` edge fn (**JWT ON**, `claude-opus-4-8` vision, structured output,
+  reuses `ANTHROPIC_API_KEY`): page images → draft logbooks + notable events. `lib/logbooks.js`
+  `extractLogbooks` + pure `cleanDraftValue` (+test); `lib/media.js` `signedUrlsFor`. LogbookAudit
+  "Scan & import" section: upload pages → review (tick-to-keep) → import. Lint + 72 tests + build
+  green; pushed `main`. ⚠️ **run migration 009** + **deploy `structure-logbook` (JWT ON)**.
+  **Deploys done by Brett (2026-06-27):** migrations 001-008, edge fns signup/structure-finding/report,
+  `ANTHROPIC_API_KEY` — all live. Brett set Cloudflare DNS for **app.prebuy.app** (cutover in progress).
+  Backlog: logbook-scan **equipment list** extraction + broker-style event highlighting; **marketing
+  landing page** (apex `prebuy.app`, app at `app.prebuy.app`).
+  **▶ NEXT options:** equipment-list extraction (needs broker listing from Brett) · marketing landing
+  page · invite teammates · server-side PDF · marine checklist content · Resend SMTP.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

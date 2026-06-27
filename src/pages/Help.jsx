@@ -38,7 +38,11 @@ const FAQ = [
   },
   {
     q: 'How does the logbook audit work?',
-    a: 'Open an inspection and tap “Logbook audit”. Add each physical logbook (airframe, engine, propeller) with its date and tach range — we reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). You can also record notable events like ADs, Form 337s, overhauls, prop strikes, and damage. Scanning logs to extract entries automatically is on the way.',
+    a: 'Open an inspection and tap “Logbook audit”. Add each physical logbook (airframe, engine, propeller) with its date and tach range — we reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). You can also record notable events like ADs, Form 337s, overhauls, prop strikes, and damage.',
+  },
+  {
+    q: 'Can I scan logbooks instead of typing them?',
+    a: 'Yes (beta). In the Logbook audit, tap “Scan logbook pages” and photograph the pages. We read them and propose logbooks and notable events for you to review — tick the ones to keep and import. Because logs are often handwritten, always confirm before importing; you can edit or remove anything afterward.',
   },
   {
     q: 'How do I send the report to my customer?',

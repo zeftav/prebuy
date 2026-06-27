@@ -54,7 +54,20 @@ photo→OCR import.** Photograph log pages (or import scans) → extract entries
 path: reuse Storage (media) + **Claude vision** (an edge fn that takes page images → structured entries
 + events), since the AI/Storage plumbing already exists from capture. Could pre-fill logbook spans and
 events for the inspector to confirm. Open question Brett raised: per-page entry extraction vs. "scan the
-whole logs and extract everything" — lean to whole-log batch import with human review.
+whole logs and extract everything" — lean to whole-log batch import with human review. **Decided:
+whole-batch import** (Brett, 2026-06-27).
+
+**Extraction targets (Brett, 2026-06-27) — beyond logbook spans:**
+- **Notable maintenance events, highlighted.** Parse the logs for the events a broker would call out by
+  hand — major repairs/alterations (337s), engine/prop overhauls, **prop strikes & teardowns**, damage
+  history, AD compliance, major mods/STCs, recent big-ticket maintenance. This is high-value (brokers do
+  it manually). **Brett to paste a real broker listing** as the target format → tune the event taxonomy
+  + summary style to match it. Already the `logbook_events` model; refine categories/copy from the example.
+- **Summarized equipment list (as an aside).** Whenever the logs / 337s / equipment list reveal installed
+  equipment (avionics stack, autopilot, ADS-B, engine/prop models, mods), extract a clean **equipment
+  summary**. Storage TBD — likely `inspections.attributes.equipment` (JSONB array) or a small table;
+  surface on the inspection + report. Add an `equipment` field to the `structure-logbook` vision schema
+  when building this.
 
 ### Guided overview photo capture (Brett, 2026-06-27) — early-process
 Early in the inspection (around stage 1–2, before/alongside working items), walk the inspector through
@@ -129,6 +142,15 @@ real multi-vertical demand. Until then, verticals stay code-defined in `lib/vert
 the `vertical` CHECK constraint.
 
 ---
+
+## Marketing site / landing page (Brett, 2026-06-27)
+Stand up a basic **product/landing page** at the apex `prebuy.app`, modeled on **yellowtag.app**, with
+the app living at **`app.prebuy.app`** (mirrors `app.yellowtag.app`). Landing = what PreBuy is (horizontal
+pre-purchase inspection platform; aviation first), who it's for (inspection shops), the core flow
+(identify → checklist in risk order → dictation/photos → customer report), and a clear **CTA → sign up /
+open app** pointing at `app.prebuy.app`. Keep it simple/static first (could be its own small Pages
+project or a marketing route). Pairs with the prebuy.app cutover (deploy-checklist §6). Domain split:
+**apex = marketing**, **`app.` = SPA** — set Cloudflare Pages custom domains + Supabase Auth URLs to match.
 
 ## DECISION (open): Mobile web vs. native iOS app
 

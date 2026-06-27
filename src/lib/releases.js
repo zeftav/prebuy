@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.11.0',
+    date: '2026-06-27',
+    title: 'Scan your logbooks',
+    items: [
+      'New (beta): photograph logbook pages and we’ll read them for you.',
+      'We propose the logbooks and notable events — review, pick, and import.',
+      'Always confirm before importing; handwriting varies.',
+    ],
+  },
+  {
     version: '0.10.0',
     date: '2026-06-27',
     title: 'Logbook audit',

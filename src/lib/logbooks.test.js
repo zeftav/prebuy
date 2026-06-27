@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, cleanDraftValue } from './logbooks.js'
+
+describe('cleanDraftValue', () => {
+  it('maps empty/zero placeholders to null', () => {
+    expect(cleanDraftValue('')).toBeNull()
+    expect(cleanDraftValue(0)).toBeNull()
+    expect(cleanDraftValue(null)).toBeNull()
+  })
+  it('keeps real values', () => {
+    expect(cleanDraftValue('2020-01-01')).toBe('2020-01-01')
+    expect(cleanDraftValue(1200.5)).toBe(1200.5)
+  })
+})
 
 const book = (start, end, extra = {}) => ({ kind: 'airframe', start_tach: start, end_tach: end, ...extra })
 
