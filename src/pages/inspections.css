@@ -797,6 +797,20 @@
   width: auto;
   flex-shrink: 0;
 }
+.insp__enginecard {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 4px;
+}
+.insp__enginehead {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+.insp__enginesub {
+  color: var(--muted, #888);
+  font-weight: 500;
+}
 .insp__profilesave {
   display: flex;
   align-items: center;

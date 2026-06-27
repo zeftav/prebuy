@@ -9,6 +9,9 @@ import {
   draftFromExtraction,
   mergeProfileDraft,
   buildSummaryContext,
+  engineLabel,
+  propLabel,
+  MAX_ENGINES,
   SPEC_FIELDS,
   CURRENCY_FIELDS,
 } from './profile.js'
@@ -59,10 +62,10 @@ describe('formatSpecValue', () => {
 
 describe('profileRows', () => {
   it('returns only fields with values, labeled and suffixed', () => {
-    const rows = profileRows({ specs: { total_time: '4200', engine_notes: 'new cams' } }, SPEC_FIELDS)
+    const rows = profileRows({ specs: { total_time: '4200', mgtow: '3650' } }, SPEC_FIELDS)
     expect(rows).toEqual([
       { key: 'total_time', label: 'Total time', value: '4200 hrs' },
-      { key: 'engine_notes', label: 'Engine notes', value: 'new cams' },
+      { key: 'mgtow', label: 'Max gross weight', value: '3650 lbs' },
     ])
   })
 
@@ -96,11 +99,12 @@ describe('currencyStatus', () => {
 })
 
 describe('draftFromExtraction', () => {
-  it('stringifies numeric specs, dropping 0 to empty', () => {
-    const d = draftFromExtraction({ specs: { total_time: 4200, engine_smoh: 0, engine_notes: ' new cams ' } })
+  it('stringifies numeric specs/engine, dropping 0 to empty', () => {
+    const d = draftFromExtraction({ specs: { total_time: 4200, mgtow: 0, engine_smoh: 850, engine_notes: ' new cams ' } })
     expect(d.specs.total_time).toBe('4200')
-    expect(d.specs.engine_smoh).toBe('')
-    expect(d.specs.engine_notes).toBe('new cams')
+    expect(d.specs.mgtow).toBe('')
+    expect(d.engine.smoh).toBe('850')
+    expect(d.engine.notes).toBe('new cams')
   })
   it('keeps currency strings and filters nameless equipment', () => {
     const d = draftFromExtraction({
@@ -116,14 +120,19 @@ describe('draftFromExtraction', () => {
 })
 
 describe('mergeProfileDraft', () => {
-  it('fills blank specs/currency but never clobbers existing values', () => {
-    const profile = { specs: { total_time: '4200' }, currency: { annual_due: '2026-04' } }
-    const draft = { specs: { total_time: 9999, engine_smoh: 850 }, currency: { annual_due: '2030-01', elt_battery_due: '2027-02' } }
+  it('fills blank specs/currency/engine but never clobbers existing values', () => {
+    const profile = { specs: { total_time: '4200' }, currency: { annual_due: '2026-04' }, engines: [{ smoh: '', notes: '' }] }
+    const draft = {
+      specs: { total_time: '9999', empty_weight: '2350' },
+      currency: { annual_due: '2030-01', elt_battery_due: '2027-02' },
+      engine: { smoh: '850', notes: '' },
+    }
     const merged = mergeProfileDraft(profile, draft)
     expect(merged.specs.total_time).toBe('4200') // kept
-    expect(merged.specs.engine_smoh).toBe('850') // filled
+    expect(merged.specs.empty_weight).toBe('2350') // filled
     expect(merged.currency.annual_due).toBe('2026-04') // kept
     expect(merged.currency.elt_battery_due).toBe('2027-02') // filled
+    expect(merged.engines[0].smoh).toBe('850') // filled engine #1
   })
   it('appends new equipment but dedupes by name (case-insensitive)', () => {
     const profile = { equipment: { avionics: [{ name: 'GTN 750', notes: '' }], additional: [] } }
@@ -131,6 +140,40 @@ describe('mergeProfileDraft', () => {
     const merged = mergeProfileDraft(profile, draft)
     expect(merged.equipment.avionics).toHaveLength(2)
     expect(merged.equipment.avionics.map((r) => r.name)).toEqual(['GTN 750', 'GFC 500'])
+  })
+})
+
+describe('multi-engine', () => {
+  it('migrates a legacy single-engine profile into engines[0]/props[0]', () => {
+    const n = normalizeProfile({ specs: { engine_smoh: '850', engine_notes: 'RAM', prop_since: '320' } })
+    expect(n.engine_count).toBe(1)
+    expect(n.engines[0]).toEqual({ smoh: '850', notes: 'RAM' })
+    expect(n.props[0].since).toBe('320')
+    expect('engine_smoh' in n.specs).toBe(false)
+  })
+  it('sizes engines/props to engine_count (pad + truncate)', () => {
+    const n = normalizeProfile({ engine_count: 2, engines: [{ smoh: '100', notes: '' }] })
+    expect(n.engines).toHaveLength(2)
+    expect(n.props).toHaveLength(2)
+    expect(n.engines[1]).toEqual({ smoh: '', notes: '' })
+    const m = normalizeProfile({ engine_count: 1, engines: [{ smoh: 'a' }, { smoh: 'b' }] })
+    expect(m.engines).toHaveLength(1)
+  })
+  it('clamps engine_count to 1..MAX', () => {
+    expect(normalizeProfile({ engine_count: 99 }).engine_count).toBe(MAX_ENGINES)
+    expect(normalizeProfile({ engine_count: 0 }).engine_count).toBe(1)
+  })
+  it('labels engines/props by layout', () => {
+    expect(engineLabel(0, 1)).toBe('Engine')
+    expect(engineLabel(0, 2, 'conventional')).toBe('Engine #1 (Left)')
+    expect(engineLabel(1, 2, 'conventional')).toBe('Engine #2 (Right)')
+    expect(engineLabel(0, 2, 'centerline')).toBe('Engine #1 (Front)')
+    expect(engineLabel(1, 2, 'centerline')).toBe('Engine #2 (Rear)')
+    expect(propLabel(1, 2, 'centerline')).toBe('Prop #2 (Rear)')
+  })
+  it('isProfileEmpty accounts for engine data', () => {
+    expect(isProfileEmpty({ engine_count: 2 })).toBe(true)
+    expect(isProfileEmpty({ engines: [{ smoh: '850' }] })).toBe(false)
   })
 })
 

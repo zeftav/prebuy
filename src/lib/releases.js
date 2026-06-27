@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.17.0',
+    date: '2026-06-27',
+    title: 'Multi-engine aircraft',
+    items: [
+      'Aircraft profiles now handle single- or multi-engine aircraft — set the number of engines and record each engine and prop separately.',
+      'Engine #1 is the left engine, #2 the right; centerline push-pull twins (like a Cessna 337) are #1 front / #2 rear.',
+      'Engine count is pre-filled from the FAA registry when you look up the N-number, and the report shows each engine.',
+    ],
+  },
+  {
     version: '0.16.0',
     date: '2026-06-27',
     title: 'A checklist for every aircraft',

@@ -3,6 +3,26 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.17.0] — 2026-06-27
+
+### Added
+- **Multi-engine aircraft** — engines & props are now a position-indexed set (frontend only; the
+  profile lives in the existing `attributes.profile` JSONB — no migration, no edge-fn redeploy).
+  - `lib/profile.js` — profile gains `engine_count` + `layout` (`conventional` L/R · `centerline`
+    front/rear for the Cessna 337) and `engines[]` / `props[]` arrays; airframe specs stay single.
+    `normalizeProfile` resizes arrays to `engine_count` and **migrates legacy single-engine profiles**
+    (flat `engine_smoh`/`prop_since` → slot #1). New pure `engineLabel`/`propLabel`/`fieldRows`,
+    updated `draftFromExtraction`/`mergeProfileDraft`/`buildSummaryContext`. Tests +13 (98 total).
+  - `lib/aircraft.js` — FAA lookup now returns `engine_count` (from `faa_aircraft_ref.num_eng`);
+    `lib/inspections.js` seeds it into `attributes.engine_count` at creation (NewInspection passes it).
+  - `AircraftProfile.jsx` — engine-count selector + layout, a card per engine (with its prop), and the
+    scan-to-pre-fill review now has Engine/Prop groups (fills engine #1).
+  - `ReportView.jsx` — Part 1 renders an "Engines & propellers" section, one labeled block per engine.
+
+### Known gaps (tracked in docs/backlog.md → Multi-engine)
+- Logbook **position** (per-engine reconcile) and **per-engine checklist fan-out** are the next
+  increment; the scan currently attributes engine specs to engine #1.
+
 ## [0.16.0] — 2026-06-27
 
 ### Added

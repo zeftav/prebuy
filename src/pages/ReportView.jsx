@@ -16,8 +16,12 @@ import {
   normalizeProfile,
   isProfileEmpty,
   profileRows,
+  fieldRows,
   currencyStatus,
+  engineLabel,
   SPEC_FIELDS,
+  ENGINE_FIELDS,
+  PROP_FIELDS,
   CURRENCY_FIELDS,
 } from '../lib/profile.js'
 import { categoryLabel } from '../lib/logbooks.js'
@@ -84,6 +88,20 @@ export default function ReportView() {
   const hasProfile = !isProfileEmpty(profile)
   const specRows = profileRows(profile, SPEC_FIELDS)
   const currencyRows = profileRows(profile, CURRENCY_FIELDS)
+  // Per-position engine + prop cards (each engine paired with its prop).
+  const engineBlocks = profile.engines
+    .map((eng, i) => {
+      const rows = [
+        ...fieldRows(eng, ENGINE_FIELDS).map((r) => ({ ...r, key: `e${r.key}` })),
+        ...fieldRows(profile.props[i] || {}, PROP_FIELDS).map((r) => ({
+          ...r,
+          key: `p${r.key}`,
+          label: r.label === 'Notes' ? 'Prop notes' : `Prop ${r.label.toLowerCase()}`,
+        })),
+      ]
+      return { i, title: engineLabel(i, profile.engine_count, profile.layout), rows }
+    })
+    .filter((b) => b.rows.length)
   // Part 1 is worth a header if there's any profile data, a maintenance timeline, or photos.
   const hasPart1 = hasProfile || events.length > 0 || overview.length > 0
 
@@ -143,6 +161,25 @@ export default function ReportView() {
                   )
                 })}
               </div>
+            </section>
+          )}
+
+          {engineBlocks.length > 0 && (
+            <section className="report__section">
+              <h2>Engines &amp; propellers</h2>
+              {engineBlocks.map((b) => (
+                <div className="report__engineblock" key={b.i}>
+                  {profile.engine_count > 1 && <h3 className="report__enginehead">{b.title}</h3>}
+                  <div className="report__cards">
+                    {b.rows.map((r) => (
+                      <div className="report__card" key={r.key}>
+                        <span className="report__cardlabel">{r.label}</span>
+                        <span className="report__cardval">{r.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </section>
           )}
 

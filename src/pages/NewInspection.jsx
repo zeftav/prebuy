@@ -29,6 +29,7 @@ export default function NewInspection() {
   const [model, setModel] = useState('')
   const [year, setYear] = useState('')
   const [serial, setSerial] = useState('')
+  const [engineCount, setEngineCount] = useState(null) // seeded from FAA lookup (num_eng)
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
   const [inspectorName, setInspectorName] = useState('')
@@ -81,6 +82,7 @@ export default function NewInspection() {
     if (data.model) setModel(data.model)
     if (data.year) setYear(String(data.year))
     if (data.serial) setSerial(data.serial)
+    if (data.engine_count) setEngineCount(data.engine_count)
     setLookup({ status: 'found', summary: [data.year, data.make, data.model].filter(Boolean).join(' '), serial: data.serial })
   }
 
@@ -98,7 +100,7 @@ export default function NewInspection() {
     setBusy(true)
     const { error } = await createInspection(
       shop.org_id,
-      { vertical: shop.vertical, identifier, make, model, year, serial, customerName, customerEmail, inspectorName, location, inspectionDate },
+      { vertical: shop.vertical, identifier, make, model, year, serial, engineCount, customerName, customerEmail, inspectorName, location, inspectionDate },
       user?.id,
     )
     setBusy(false)

@@ -26,12 +26,15 @@ function titleCase(s) {
 export function shapeAircraft(row) {
   if (!row) return null
   const ref = row.faa_aircraft_ref || {}
+  const engines = Number(ref.num_eng)
   return {
     identifier: row.n_number ?? null,
     year: row.year_mfr ?? null,
     make: ref.mfr ? titleCase(ref.mfr) : null,
     model: ref.model ?? null,
     serial: row.serial ?? null,
+    // FAA num_eng → seed the inspection's engine count (twins, etc.); 0/blank → null.
+    engine_count: Number.isFinite(engines) && engines > 0 ? engines : null,
   }
 }
 
@@ -44,7 +47,7 @@ export async function lookupAircraft(nNumber) {
   if (!n) return { data: null, error: null }
   const { data, error } = await supabase
     .from('faa_registry')
-    .select('n_number, serial, year_mfr, faa_aircraft_ref(mfr, model)')
+    .select('n_number, serial, year_mfr, faa_aircraft_ref(mfr, model, num_eng)')
     .eq('n_number', n)
     .maybeSingle()
   if (error) return { data: null, error }

@@ -233,9 +233,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   can be 1..N engines/props and we must account for it across logbooks, profile specs, checklist
   (per-engine compressions etc.), `structure-logbook` extraction, and the report. **Convention: left
   engine = #1, right = #2.** Edge case: **push-pull (Cessna 337)** = front #1 / rear #2. Full design +
-  touchpoints captured in `docs/backlog.md` → "Multi-engine". **NEXT:** gear-rigging measurement forms,
-  marketing landing page, invite teammates, server-side PDF; plus the multi-engine model + the
-  inspection-knowledge research project (both in backlog).
+  touchpoints captured in `docs/backlog.md` → "Multi-engine".
+- Session 2 cont. — **Multi-engine — profile + report** (v0.17.0, frontend-only, no migration/redeploy).
+  `lib/profile.js`: profile gains `engine_count` + `layout` (conventional L/R · centerline front/rear
+  for C337) + `engines[]`/`props[]` (airframe specs stay single); `normalizeProfile` resizes to count
+  and **migrates legacy single-engine** (flat → slot #1); pure `engineLabel`/`propLabel`/`fieldRows`;
+  `draft/merge/buildSummaryContext` updated. `aircraft.js` FAA lookup returns `engine_count` (num_eng) →
+  `inspections.js` seeds `attributes.engine_count` at create (NewInspection passes it). AircraftProfile:
+  engine-count + layout controls, a card per engine(+prop), scan review Engine/Prop groups (→ #1).
+  ReportView: per-engine "Engines & propellers" blocks. Tests 98. ⚠️ **Still single-engine-only:**
+  logbook position (per-engine reconcile) + per-engine checklist fan-out = next increment (backlog).
+  **NEXT:** marketing landing page (building now), gear-rigging measurement forms, invite teammates,
+  server-side PDF; plus logbook/checklist multi-engine + the inspection-knowledge research project.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

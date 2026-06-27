@@ -31,6 +31,7 @@ export function validateInspectionDraft(draft) {
       model: clean(draft.model),
       year: Number.isFinite(Number(draft.year)) && String(draft.year ?? '').trim() ? Number(draft.year) : null,
       serial: clean(draft.serial), // long-tail facts (serial, etc.) live in attributes
+      engine_count: Number.isFinite(Number(draft.engineCount)) && Number(draft.engineCount) > 0 ? Number(draft.engineCount) : null,
       customer_name: clean(draft.customerName),
       customer_email: clean(draft.customerEmail),
       inspector_name: clean(draft.inspectorName),
@@ -65,8 +66,10 @@ export async function createInspection(orgId, draft, userId) {
   const v = validateInspectionDraft(draft)
   if (!v.valid) return { data: null, error: new Error(v.error) }
 
-  const { serial, ...cols } = v.value
-  const attributes = serial ? { serial } : {}
+  const { serial, engine_count, ...cols } = v.value
+  const attributes = {}
+  if (serial) attributes.serial = serial
+  if (engine_count) attributes.engine_count = engine_count
   const row = { org_id: orgId, status: 'draft', attributes, ...cols }
   if (userId) row.created_by = userId
 

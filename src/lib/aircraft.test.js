@@ -22,7 +22,7 @@ describe('shapeAircraft', () => {
       n_number: 'N3704A',
       serial: 'E-212',
       year_mfr: 1970,
-      faa_aircraft_ref: { mfr: 'BEECH', model: 'A36' },
+      faa_aircraft_ref: { mfr: 'BEECH', model: 'A36', num_eng: 1 },
     }
     expect(shapeAircraft(row)).toEqual({
       identifier: 'N3704A',
@@ -30,7 +30,13 @@ describe('shapeAircraft', () => {
       make: 'Beech',
       model: 'A36', // model left verbatim, not title-cased
       serial: 'E-212',
+      engine_count: 1,
     })
+  })
+
+  it('reads engine count from num_eng (twin)', () => {
+    const row = { n_number: 'N831JB', serial: 'TH-1', year_mfr: 1980, faa_aircraft_ref: { mfr: 'BEECH', model: '58P', num_eng: 2 } }
+    expect(shapeAircraft(row).engine_count).toBe(2)
   })
 
   it('tolerates a row with no ref join', () => {
@@ -41,6 +47,7 @@ describe('shapeAircraft', () => {
       make: null,
       model: null,
       serial: null,
+      engine_count: null,
     })
   })
 })

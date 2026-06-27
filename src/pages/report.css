@@ -269,6 +269,17 @@
   flex-wrap: wrap;
   gap: 6px;
 }
+.report__engineblock { margin-bottom: 14px; }
+.report__engineblock:last-child { margin-bottom: 0; }
+.report__enginehead {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--r-muted);
+  margin: 0 0 8px;
+  border: 0;
+  padding: 0;
+}
 .report__card--overdue { border-color: var(--r-bad); background: #fdf3f2; }
 .report__card--due-soon { border-color: var(--r-warn); background: #fdfaf0; }
 .report__curtag {

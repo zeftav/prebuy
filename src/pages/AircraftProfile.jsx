@@ -18,7 +18,12 @@ import {
   mergeProfileDraft,
   buildSummaryContext,
   generateNarrative,
+  engineLabel,
+  propLabel,
+  MAX_ENGINES,
   SPEC_FIELDS,
+  ENGINE_FIELDS,
+  PROP_FIELDS,
   CURRENCY_FIELDS,
 } from '../lib/profile.js'
 import { uploadMedia, signedUrlsFor } from '../lib/media.js'
@@ -29,15 +34,13 @@ import './inspections.css'
 
 const SPEC_PLACEHOLDER = {
   total_time: '4200',
-  engine_smoh: '850',
-  engine_notes: 'RAM to new limits, new cams (2019)',
-  prop_since: '320',
-  prop_notes: 'SNEW, 3-blade (2018)',
   mgtow: '3650',
   empty_weight: '2350',
   useful_load: '1300',
   fuel_capacity: '80',
 }
+const ENGINE_PLACEHOLDER = { smoh: '850', notes: 'RAM to new limits, new cams (2019)' }
+const PROP_PLACEHOLDER = { since: '320', notes: 'SNEW, 3-blade (2018)' }
 
 export default function AircraftProfile() {
   const { id } = useParams()
@@ -57,7 +60,13 @@ export default function AircraftProfile() {
       if (!active) return
       if (error || !insp) return setState(error ? 'error' : 'notfound')
       setInspection(insp)
-      setProfile(normalizeProfile(insp.attributes?.profile))
+      // Seed engine count from the FAA-derived attributes when the profile hasn't set it yet.
+      const stored = insp.attributes?.profile
+      let np = normalizeProfile(stored)
+      if (!stored?.engine_count && insp.attributes?.engine_count > 1) {
+        np = normalizeProfile({ ...np, engine_count: insp.attributes.engine_count })
+      }
+      setProfile(np)
       setState('ready')
     })()
     return () => {
@@ -83,6 +92,14 @@ export default function AircraftProfile() {
   const setSpec = (k) => (e) => edit((p) => { p.specs[k] = e.target.value })
   const setCurrency = (k) => (e) => edit((p) => { p.currency[k] = e.target.value })
   const setSummary = (e) => edit((p) => { p.summary = e.target.value })
+  const setEngine = (i, k) => (e) => edit((p) => { p.engines[i][k] = e.target.value })
+  const setProp = (i, k) => (e) => edit((p) => { p.props[i][k] = e.target.value })
+  const setLayout = (e) => edit((p) => { p.layout = e.target.value })
+  // Changing the count re-normalizes so the engine/prop arrays resize to match.
+  const setEngineCount = (n) => {
+    setSaved(false)
+    setProfile((p) => normalizeProfile({ ...p, engine_count: n }))
+  }
 
   // Merge a reviewed scan draft into the in-progress form (user still Saves).
   function applyScan(filteredDraft) {
@@ -174,9 +191,9 @@ export default function AircraftProfile() {
         {genError && <div className="auth__error" role="alert">{genError}</div>}
       </section>
 
-      {/* Specs */}
+      {/* Airframe specs */}
       <section className="insp__section">
-        <div className="insp__sectionhead"><h2>Specifications &amp; times</h2></div>
+        <div className="insp__sectionhead"><h2>Airframe — specifications &amp; times</h2></div>
         <div className="insp__profilegrid">
           {SPEC_FIELDS.map((f) => (
             <div className="auth__field" key={f.key}>
@@ -190,6 +207,54 @@ export default function AircraftProfile() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Engines & props (per position) */}
+      <section className="insp__section">
+        <div className="insp__sectionhead">
+          <h2>Engines &amp; propellers <InfoDot label="Single or multi-engine. Convention: #1 is the left engine, #2 the right. Push-pull centerline twins (e.g. Cessna 337) are #1 front / #2 rear." /></h2>
+        </div>
+        <div className="insp__row2">
+          <div className="auth__field">
+            <label htmlFor="engcount">Number of engines</label>
+            <select id="engcount" value={profile.engine_count} onChange={(e) => setEngineCount(Number(e.target.value))}>
+              {Array.from({ length: MAX_ENGINES }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+          {profile.engine_count >= 2 && (
+            <div className="auth__field">
+              <label htmlFor="englayout">Layout</label>
+              <select id="englayout" value={profile.layout} onChange={setLayout}>
+                <option value="conventional">Conventional (left / right)</option>
+                <option value="centerline">Centerline — front / rear (e.g. C337)</option>
+              </select>
+            </div>
+          )}
+        </div>
+        {profile.engines.map((eng, i) => (
+          <div className="insp__enginecard" key={i}>
+            <h3 className="insp__enginehead">
+              {engineLabel(i, profile.engine_count, profile.layout)}
+              {profile.engine_count > 1 && <span className="insp__enginesub"> &amp; {propLabel(i, profile.engine_count, profile.layout)}</span>}
+            </h3>
+            <div className="insp__profilegrid">
+              {ENGINE_FIELDS.map((f) => (
+                <div className="auth__field" key={`e${f.key}`}>
+                  <label>{f.label === 'Notes' ? 'Engine notes' : f.label}</label>
+                  <input type="text" placeholder={ENGINE_PLACEHOLDER[f.key] || ''} value={eng[f.key]} onChange={setEngine(i, f.key)} />
+                </div>
+              ))}
+              {PROP_FIELDS.map((f) => (
+                <div className="auth__field" key={`p${f.key}`}>
+                  <label>{f.label === 'Notes' ? 'Prop notes' : `Prop ${f.label.toLowerCase()}`}</label>
+                  <input type="text" placeholder={PROP_PLACEHOLDER[f.key] || ''} value={profile.props[i]?.[f.key] ?? ''} onChange={setProp(i, f.key)} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* Currency / inspections due */}
@@ -280,7 +345,7 @@ function ScanPrefill({ inspection, onApply }) {
   const [phase, setPhase] = useState('idle') // idle | working | review
   const [draft, setDraft] = useState(null)
   const [error, setError] = useState(null)
-  const [pick, setPick] = useState({ specs: new Set(), currency: new Set(), avionics: new Set(), additional: new Set() })
+  const [pick, setPick] = useState({ specs: new Set(), engine: new Set(), prop: new Set(), currency: new Set(), avionics: new Set(), additional: new Set() })
 
   async function onPick(files) {
     const list = Array.from(files ?? [])
@@ -305,6 +370,8 @@ function ScanPrefill({ inspection, onApply }) {
     setDraft(data)
     setPick({
       specs: new Set(SPEC_FIELDS.map((f) => f.key).filter((k) => data.specs[k])),
+      engine: new Set(ENGINE_FIELDS.map((f) => f.key).filter((k) => data.engine?.[k])),
+      prop: new Set(PROP_FIELDS.map((f) => f.key).filter((k) => data.prop?.[k])),
       currency: new Set(CURRENCY_FIELDS.map((f) => f.key).filter((k) => data.currency[k])),
       avionics: new Set(data.equipment.avionics.map((_, i) => i)),
       additional: new Set(data.equipment.additional.map((_, i) => i)),
@@ -321,11 +388,13 @@ function ScanPrefill({ inspection, onApply }) {
     })
   }
 
-  const count = pick.specs.size + pick.currency.size + pick.avionics.size + pick.additional.size
+  const count = pick.specs.size + pick.engine.size + pick.prop.size + pick.currency.size + pick.avionics.size + pick.additional.size
 
   function apply() {
     const filtered = {
       specs: Object.fromEntries([...pick.specs].map((k) => [k, draft.specs[k]])),
+      engine: Object.fromEntries([...pick.engine].map((k) => [k, draft.engine[k]])),
+      prop: Object.fromEntries([...pick.prop].map((k) => [k, draft.prop[k]])),
       currency: Object.fromEntries([...pick.currency].map((k) => [k, draft.currency[k]])),
       equipment: {
         avionics: [...pick.avionics].map((i) => draft.equipment.avionics[i]),
@@ -338,6 +407,8 @@ function ScanPrefill({ inspection, onApply }) {
   }
 
   const specLabel = (k) => SPEC_FIELDS.find((f) => f.key === k)?.label ?? k
+  const engLabel = (k) => (ENGINE_FIELDS.find((f) => f.key === k)?.label === 'Notes' ? 'Engine notes' : ENGINE_FIELDS.find((f) => f.key === k)?.label ?? k)
+  const prLabel = (k) => (k === 'notes' ? 'Prop notes' : `Prop ${PROP_FIELDS.find((f) => f.key === k)?.label.toLowerCase() ?? k}`)
   const curLabel = (k) => CURRENCY_FIELDS.find((f) => f.key === k)?.label ?? k
 
   return (
@@ -375,10 +446,28 @@ function ScanPrefill({ inspection, onApply }) {
 
           {SPEC_FIELDS.some((f) => draft.specs[f.key]) && (
             <ReviewGroup
-              title="Specs & times"
+              title="Airframe specs & times"
               items={SPEC_FIELDS.filter((f) => draft.specs[f.key]).map((f) => ({ key: f.key, label: specLabel(f.key), value: draft.specs[f.key] }))}
               isOn={(it) => pick.specs.has(it.key)}
               onToggle={(it) => toggle('specs', it.key)}
+            />
+          )}
+
+          {ENGINE_FIELDS.some((f) => draft.engine?.[f.key]) && (
+            <ReviewGroup
+              title="Engine (→ engine #1)"
+              items={ENGINE_FIELDS.filter((f) => draft.engine[f.key]).map((f) => ({ key: f.key, label: engLabel(f.key), value: draft.engine[f.key] }))}
+              isOn={(it) => pick.engine.has(it.key)}
+              onToggle={(it) => toggle('engine', it.key)}
+            />
+          )}
+
+          {PROP_FIELDS.some((f) => draft.prop?.[f.key]) && (
+            <ReviewGroup
+              title="Propeller (→ prop #1)"
+              items={PROP_FIELDS.filter((f) => draft.prop[f.key]).map((f) => ({ key: f.key, label: prLabel(f.key), value: draft.prop[f.key] }))}
+              isOn={(it) => pick.prop.has(it.key)}
+              onToggle={(it) => toggle('prop', it.key)}
             />
           )}
 
