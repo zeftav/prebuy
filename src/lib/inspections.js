@@ -33,8 +33,30 @@ export function validateInspectionDraft(draft) {
       serial: clean(draft.serial), // long-tail facts (serial, etc.) live in attributes
       customer_name: clean(draft.customerName),
       customer_email: clean(draft.customerEmail),
+      inspector_name: clean(draft.inspectorName),
+      location: clean(draft.location),
+      inspection_date: draft.inspectionDate || null,
     },
   }
+}
+
+/** Update the report-header provenance (who/where/when). */
+export async function updateInspectionMeta(id, patch) {
+  const clean = (s) => {
+    const v = String(s ?? '').trim()
+    return v.length ? v : null
+  }
+  const row = {}
+  if ('inspector_name' in patch) row.inspector_name = clean(patch.inspector_name)
+  if ('location' in patch) row.location = clean(patch.location)
+  if ('inspection_date' in patch) row.inspection_date = patch.inspection_date || null
+  const { data, error } = await supabase
+    .from('inspections')
+    .update(row)
+    .eq('id', id)
+    .select('id, inspector_name, location, inspection_date')
+    .single()
+  return { data, error }
 }
 
 /** Create a draft inspection in an org. `userId` (optional) records who created it. */

@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.12.0',
+    date: '2026-06-27',
+    title: 'Who, where & when',
+    items: [
+      'Record the inspector, location, and inspection date on each job.',
+      'They now appear at the top of the customer report.',
+      'Set them when you create an inspection, or edit them anytime.',
+    ],
+  },
+  {
     version: '0.11.0',
     date: '2026-06-27',
     title: 'Scan your logbooks',

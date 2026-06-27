@@ -3,6 +3,18 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.12.0] — 2026-06-27
+
+### Added
+- **Inspection provenance on the report** — who / where / when.
+  - `supabase/migrations/010_inspection_meta.sql` — `inspections.inspector_name`, `location`,
+    `inspection_date`.
+  - Captured on the New Inspection form and editable any time from the inspection (an "inspection
+    details" card); `lib/inspections.js` `updateInspectionMeta`.
+  - `report` edge fn returns them; `ReportView` shows Inspected-by / Location / Inspection-date in the
+    report header (date prefers the recorded inspection date, falls back to publish date).
+  - **Redeploy `report`** + run migration 010.
+
 ## [0.11.0] — 2026-06-27
 
 ### Added

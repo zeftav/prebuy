@@ -177,8 +177,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `ANTHROPIC_API_KEY` — all live. Brett set Cloudflare DNS for **app.prebuy.app** (cutover in progress).
   Backlog: logbook-scan **equipment list** extraction + broker-style event highlighting; **marketing
   landing page** (apex `prebuy.app`, app at `app.prebuy.app`).
-  **▶ NEXT options:** equipment-list extraction (needs broker listing from Brett) · marketing landing
-  page · invite teammates · server-side PDF · marine checklist content · Resend SMTP.
+- Session 2 cont. — **Inspection provenance (v0.12.0)**. Migration `010` (`inspections.inspector_name`
+  / `location` / `inspection_date`). Captured on NewInspection + editable card in InspectionDetail
+  (`updateInspectionMeta`); `report` edge fn returns them; ReportView header shows who/where/when.
+  ⚠️ **run migration 010 + REDEPLOY `report`**. Brett: app live at **app.prebuy.app** (cutover done);
+  Cloudflare + Supabase Auth URLs updated. Brett supplied a real **broker listing** (58P Baron) as the
+  target format for the records/equipment summary — distilled into `docs/backlog.md` (text not stored).
+  **▶ NEXT (Brett's steer): redesign the report into a professional 2-part doc** — "Aircraft profile"
+  (spec/currency cards, maintenance timeline, damage callout, categorized equipment, photos) + the
+  inspection findings. Data dependency: **equipment/spec extraction** (extend `structure-logbook` →
+  `inspections.attributes`). Then: marketing landing page · gear-rigging measurement form (needs Drive
+  manuals) · invite teammates · server-side PDF · Resend SMTP.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

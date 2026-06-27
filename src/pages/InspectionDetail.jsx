@@ -19,6 +19,7 @@ import { getVertical } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
 import { structureFinding } from '../lib/findings.js'
 import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
+import { updateInspectionMeta } from '../lib/inspections.js'
 import { publishInspection, unpublishInspection, reportUrl } from '../lib/report.js'
 import './auth.css'
 import './inspections.css'
@@ -104,6 +105,12 @@ export default function InspectionDetail() {
     if (!error) setInspection((p) => ({ ...p, status: 'in_progress', published_at: null }))
   }
 
+  async function saveMeta(patch) {
+    const { data, error } = await updateInspectionMeta(inspection.id, patch)
+    if (!error && data) setInspection((p) => ({ ...p, ...data }))
+    return error
+  }
+
   if (state === 'loading') {
     return (
       <main className="auth-pending" aria-busy="true">
@@ -156,6 +163,8 @@ export default function InspectionDetail() {
         <span>{reviewed} of {items.length} items reviewed</span>
         <span className="auth__hint">Worked highest financial risk first.</span>
       </div>
+
+      <InspectionMeta inspection={inspection} onSave={saveMeta} />
 
       <div className="insp__tools">
         <Link to={`/app/inspections/${inspection.id}/overview`} className="auth__btn auth__btn--ghost insp__walkthrough">
@@ -375,6 +384,63 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
         </div>
       )}
     </li>
+  )
+}
+
+function InspectionMeta({ inspection, onSave }) {
+  const [editing, setEditing] = useState(false)
+  const [f, setF] = useState({
+    inspector_name: inspection.inspector_name ?? '',
+    location: inspection.location ?? '',
+    inspection_date: inspection.inspection_date ?? '',
+  })
+  const [busy, setBusy] = useState(false)
+  const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }))
+
+  const summary = [
+    inspection.inspector_name,
+    inspection.location,
+    inspection.inspection_date,
+  ].filter(Boolean).join(' · ')
+
+  async function save() {
+    setBusy(true)
+    await onSave(f)
+    setBusy(false)
+    setEditing(false)
+  }
+
+  if (!editing) {
+    return (
+      <div className="insp__meta">
+        <span className="insp__metasummary">
+          {summary || 'Add inspector, location & date'}
+        </span>
+        <button type="button" className="auth__toggle" onClick={() => setEditing(true)}>Edit</button>
+      </div>
+    )
+  }
+  return (
+    <div className="insp__metaedit">
+      <div className="insp__row2">
+        <div className="auth__field">
+          <label htmlFor="m-inspector">Inspector</label>
+          <input id="m-inspector" type="text" placeholder="Name / A&P #" value={f.inspector_name} onChange={set('inspector_name')} />
+        </div>
+        <div className="auth__field insp__year">
+          <label htmlFor="m-date">Date</label>
+          <input id="m-date" type="date" value={f.inspection_date} onChange={set('inspection_date')} />
+        </div>
+      </div>
+      <div className="auth__field">
+        <label htmlFor="m-loc">Location</label>
+        <input id="m-loc" type="text" placeholder="e.g. KPKV, Port Lavaca TX" value={f.location} onChange={set('location')} />
+      </div>
+      <div className="insp__capture">
+        <button type="button" className="auth__btn" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>
+        <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setEditing(false)}>Cancel</button>
+      </div>
+    </div>
   )
 }
 

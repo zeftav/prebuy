@@ -31,6 +31,9 @@ export default function NewInspection() {
   const [serial, setSerial] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
+  const [inspectorName, setInspectorName] = useState('')
+  const [location, setLocation] = useState('')
+  const [inspectionDate, setInspectionDate] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
@@ -95,7 +98,7 @@ export default function NewInspection() {
     setBusy(true)
     const { error } = await createInspection(
       shop.org_id,
-      { vertical: shop.vertical, identifier, make, model, year, serial, customerName, customerEmail },
+      { vertical: shop.vertical, identifier, make, model, year, serial, customerName, customerEmail, inspectorName, location, inspectionDate },
       user?.id,
     )
     setBusy(false)
@@ -220,6 +223,21 @@ export default function NewInspection() {
         <div className="auth__field">
           <label htmlFor="customerEmail">Customer email</label>
           <input id="customerEmail" type="email" autoComplete="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
+        </div>
+
+        <div className="insp__row2">
+          <div className="auth__field">
+            <label htmlFor="inspector">Inspector</label>
+            <input id="inspector" type="text" placeholder="Your name / A&P #" value={inspectorName} onChange={(e) => setInspectorName(e.target.value)} />
+          </div>
+          <div className="auth__field insp__year">
+            <label htmlFor="idate">Date</label>
+            <input id="idate" type="date" value={inspectionDate} onChange={(e) => setInspectionDate(e.target.value)} />
+          </div>
+        </div>
+        <div className="auth__field">
+          <label htmlFor="location">Location</label>
+          <input id="location" type="text" placeholder="e.g. KPKV, Port Lavaca TX" value={location} onChange={(e) => setLocation(e.target.value)} />
         </div>
 
         <button type="submit" className="auth__btn" disabled={busy || (Boolean(identifier) && !idCheck.valid)}>

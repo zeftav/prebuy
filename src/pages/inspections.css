@@ -395,6 +395,31 @@
   flex-wrap: wrap;
 }
 
+.insp__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.insp__metasummary {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.insp__metaedit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
 /* Logbook audit */
 .lb__recon {
   display: flex;

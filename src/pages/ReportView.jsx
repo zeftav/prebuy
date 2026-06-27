@@ -54,6 +54,10 @@ export default function ReportView() {
   const asset = [inspection.year, inspection.make, inspection.model].filter(Boolean).join(' ')
   const isMarine = inspection.vertical === 'marine'
   const published = inspection.published_at ? new Date(inspection.published_at).toLocaleDateString() : ''
+  // Prefer the recorded inspection date; fall back to the publish date.
+  const inspected = inspection.inspection_date
+    ? new Date(inspection.inspection_date + 'T00:00:00').toLocaleDateString()
+    : published
 
   return (
     <main className="report">
@@ -90,10 +94,22 @@ export default function ReportView() {
               <span className="report__metaval">{inspection.customer_name}</span>
             </div>
           )}
-          {published && (
+          {inspection.inspector_name && (
             <div>
-              <span className="report__metalabel">Date</span>
-              <span className="report__metaval">{published}</span>
+              <span className="report__metalabel">Inspected by</span>
+              <span className="report__metaval">{inspection.inspector_name}</span>
+            </div>
+          )}
+          {inspection.location && (
+            <div>
+              <span className="report__metalabel">Location</span>
+              <span className="report__metaval">{inspection.location}</span>
+            </div>
+          )}
+          {inspected && (
+            <div>
+              <span className="report__metalabel">Inspection date</span>
+              <span className="report__metaval">{inspected}</span>
             </div>
           )}
         </div>
