@@ -13,6 +13,12 @@
 --
 -- Idempotent: fixed template id; re-running replaces the items.
 
+-- A generic template has no make/model, but the original schema (001) made both
+-- NOT NULL. Relax them so model-agnostic templates can exist (and so the
+-- `model IS NULL` generic-match in lib/checklist.js works). Safe/idempotent.
+alter table public.checklist_templates alter column make drop not null;
+alter table public.checklist_templates alter column model drop not null;
+
 insert into public.checklist_templates (id, is_global, vertical, asset_type, make, model, name, version)
 values ('00000000-0000-4000-a000-00000000a000', true, 'aviation', null,
         null, null, 'General Aircraft — Pre-Purchase Survey (generic)', 1)
