@@ -380,6 +380,16 @@ open app** pointing at `app.prebuy.app`. Keep it simple/static first (could be i
 project or a marketing route). Pairs with the prebuy.app cutover (deploy-checklist §6). Domain split:
 **apex = marketing**, **`app.` = SPA** — set Cloudflare Pages custom domains + Supabase Auth URLs to match.
 
+**Status (2026-06-27):** the landing page is **built** as `Home.jsx`, currently served at `/` on
+**every** host (so `app.prebuy.app/` shows marketing for now — harmless; the app is still fully reachable
+at `/app` and `/login`). **TODO — host-split the apex (deferred, Brett "do later"):** make `/`
+**host-aware** so `app.prebuy.app/` redirects into the app (`/app` → login/dashboard) and only the apex
+`prebuy.app/` shows the landing. Designed approach (one deploy, no duplicate site): a tiny `lib/hosts.js`
+(`isAppHost()` = hostname === 'app.prebuy.app'; `appBase()` = `https://app.prebuy.app` only on the apex,
+else '') + `App.jsx` route `/` = `isAppHost() ? <Navigate to="/app"/> : <Home/>`, and landing CTAs use
+`appBase()+'/login'` so the apex crosses over to the app subdomain. Then point the apex DNS at the same
+Pages project. (Alternative: a separate static landing project at the apex.)
+
 ## DECISION (open): Mobile web vs. native iOS app
 
 **Current direction:** mobile-web-first (responsive, installable PWA). Native is a **Phase-2 trigger**,
