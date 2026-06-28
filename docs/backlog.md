@@ -579,6 +579,63 @@ no-key public API that decodes a 17-char VIN → year, make, model, body class, 
 - Pairs naturally with the **AI auto-profile** idea below (vPIC gives ground-truth make/model/year; AI
   fills typical specs/equipment).
 
+### Market read — where automotive/RV is (and isn't) worth it (Brett + Claude, 2026-06-28)
+
+Discussed whether there's a real PPI market in automotive/RV. Conclusion — three segments, three answers:
+
+- **Mainstream used cars → skip.** Commoditized ($100-200 local mechanic), history owned by Carfax/
+  AutoCheck, remote-PPI already done at scale (Lemon Squad et al.). The report isn't a trust
+  differentiator; thin margins; wrong DNA for PreBuy.
+- **Classic / collector / sports / exotic → genuine fit (same DNA as aviation/marine).** High value
+  ($50k-$1M+), remote buyers, real trust gap a polished shareable report fills. Tailwind: online-auction
+  boom (Bring a Trailer >$1B/yr, Cars & Bids, PCARMARKET, RM/Hagerty). **Our records/provenance angle is
+  the differentiator** — collectors obsess over service history, originality, matching numbers, accident
+  history (the "portable aircraft file" applied to cars). Caveat: vPIC decodes ~1981+ (17-char VIN era)
+  well, weak for pre-1981 vintage. "Inspector" persona is fragmented (marque specialists, mobile
+  inspectors, consignment dealers).
+- **RV → possibly the strongest non-aviation fit of all.** (1) A profession with no good software already
+  exists — **NRVIA** certifies RV inspectors; PPIs run $200-700+; they use spreadsheets/PDF templates
+  today. (2) The inspection is genuinely complex/multi-system (chassis + house: plumbing, 12V/shore
+  power, propane, slides, roof, appliances) — exactly what a risk-ordered checklist engine is for;
+  basically home + marine-engine combined. (3) High value, big used market, remote buying, post-2020
+  ownership surge.
+
+**Recommendation:** RV first, classic/collector second, mainstream auto never. **Engineering is cheap**
+(platform is vertical-pluggable: config + checklist + VIN resolver, no rewrite); the expensive part is
+**GTM + SME checklist content**. Highest-leverage next step is validation, not building: talk to ~1
+NRVIA inspector and ~1 classic-car PPI provider — "would you use this and pay?" beats a built-but-unused
+checklist. Efficiency: **building the VIN/vPIC resolver unlocks both** RV (modern motorhome chassis VIN)
+and modern collector cars, so it's not an either/or bet at the infra level.
+
+### RV vertical — what it'd take (sketch, build when validated)
+
+Slots into the existing engine like marine/home did (migrations 012/013); no schema changes.
+
+- **`verticals.js` entry `rv`:** noun "RV"; identifier = **VIN** (`hasLookup: true`, validate 17 chars,
+  no I/O/Q); `overviewShots` (exterior corners, roof, undercarriage/chassis, slide-outs extended,
+  galley, bath/wet systems, electrical panel/converter, propane, water heater, generator, tires w/ DOT
+  dates, VIN/data plates); `guidedCapture: 'full'`.
+- **Identifier resolver `lib/vehicle.js` `lookupVIN`** (shared with collector-auto) → vPIC →
+  year/make(chassis)/model/body-class + engine/GVWR into `attributes`.
+- **Profile schema (`PROFILE_SCHEMAS.rv`):** specs = length, GVWR/GCWR, chassis (e.g. Ford F53/Freightliner),
+  mileage, fresh/grey/black tank capacities, # slides, sleeps; **hasEngines true** (motorhome) with
+  engine fields hours/miles/notes — but **towable trailers have no engine** (5th-wheel/travel trailer),
+  so likely two subtypes or a `hasEngines` toggle at create; currency/"key dates" = roof reseal, tire
+  DOT age, generator hours/service, propane cert, brake/bearing service, registration; equipment groups =
+  "Appliances & systems" / "Exterior & chassis".
+- **Checklist:** author a risk-weighted RV pre-purchase survey (water intrusion/delamination = the
+  big-dollar item, like corrosion in aircraft; then chassis/engine, slides, roof, electrical, propane,
+  appliances, tires/age). Source from NRVIA SoP-style scope; generator via `scripts/seed/gen-checklist-
+  sql.mjs` → a migration, model-agnostic fallback (`model IS NULL`) like home/marine.
+- **Multi-engine/position:** N/A for RV (single chassis engine + optional onboard generator — treat
+  generator as its own logbook kind, not a second "engine").
+- **Reuses for free:** AI research-asset (typical specs by make/model/year), logbook/records audit
+  (service history), report, handoff/listings, guided photo walkthrough.
+
+Classic/collector-auto vertical would be a near-twin (VIN resolver shared; profile = numbers-matching,
+drivetrain, restoration/originality, documentation; checklist = marque-agnostic collector PPI) — but
+lead with RV per the market read above.
+
 ## AI auto-build the profile from the identifier (Brett, 2026-06-28)
 
 Brett saw Google's AI Overview return a near-complete spec sheet for a HIN (`HUN38553A999` → 1999 Hunter
