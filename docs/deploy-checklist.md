@@ -28,12 +28,12 @@ Run in order. All are idempotent (safe to re-run).
 - [x] ✅ `012_seed_home_checklist.sql` — generic **home** inspection checklist (InterNACHI-based,
       ~101 items). (2026-06-28)
 - [x] ✅ `013_seed_marine_checklist.sql` — generic **boat** survey checklist (~56 items). (2026-06-28)
-- [ ] ⬜ `014_logbook_position.sql` — `position` on `logbooks` + `logbook_events` (per-engine logbook
-      tracking). **Run in the SQL editor** (pasted in chat).
-- [ ] ⬜ `015_media_attachments.sql` — `media.kind`+= 'document', `media.purpose`+= 'attachment'
-      (oil-analysis / doc uploads on items). **Run in the SQL editor** (pasted in chat).
-- [ ] 🔁 **Redeploy `report` (JWT OFF)** once after 014+015 — adds event `position` (timeline engine
-      labels) + per-item `attachments` to the report. One redeploy covers both.
+- [x] ✅ `014_logbook_position.sql` — `position` on `logbooks` + `logbook_events` (per-engine logbook
+      tracking). (2026-06-28)
+- [x] ✅ `015_media_attachments.sql` — `media.kind`+= 'document', `media.purpose`+= 'attachment'
+      (oil-analysis / doc uploads on items). (2026-06-28)
+- [x] ✅ Redeployed `report` (JWT OFF) — event `position` (timeline engine labels) + per-item
+      `attachments`. (2026-06-28)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
