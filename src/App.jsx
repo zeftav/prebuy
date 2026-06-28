@@ -11,6 +11,7 @@ import InspectionDetail from './pages/InspectionDetail.jsx'
 import OverviewCapture from './pages/OverviewCapture.jsx'
 import AircraftProfile from './pages/AircraftProfile.jsx'
 import LogbookAudit from './pages/LogbookAudit.jsx'
+import ClaimListing from './pages/ClaimListing.jsx'
 import ReportView from './pages/ReportView.jsx'
 import Help from './pages/Help.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
@@ -84,6 +85,14 @@ function App() {
         element={
           <ProtectedRoute>
             <LogbookAudit />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/claim/:token"
+        element={
+          <ProtectedRoute>
+            <ClaimListing />
           </ProtectedRoute>
         }
       />

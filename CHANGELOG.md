@@ -3,6 +3,28 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.25.0] — 2026-06-28
+
+### Added
+- **Cross-org broker handoff (broker epic Phase 2).** A broker hands a listing to another shop via a
+  tokenized **claim link**; the shop claims it and the listing is copied cross-org into their org as a
+  full inspection.
+  - `supabase/migrations/017_handoffs.sql` — `handoffs` table (listing/from_org/token/to_email/
+    to_shop_name/status/claimed_*) + RLS (broker side only). **Needs running.**
+  - `supabase/functions/claim-listing/index.ts` — **new edge fn (JWT ON, service role).** `preview`
+    returns the listing summary + originating shop; `claim` verifies the caller's membership in the
+    target org, then copies the listing → new inspection incl. **cross-org Storage object copies**,
+    logbooks and events, and marks the handoff claimed. **Deploy (JWT ON).** No new secret.
+  - `src/lib/handoff.js` — `createHandoff` / `listHandoffs` / `revokeHandoff` (RLS), `handoffUrl`,
+    `previewHandoff` / `claimHandoff` (edge fn).
+  - `src/pages/ClaimListing.jsx` + `/claim/:token` route (ProtectedRoute) — preview + "Claim into [shop]".
+  - `InspectionDetail` (listing) — `HandoffPanel`: create/copy/revoke handoff links; same-org "Start
+    inspection in this shop" stays.
+
+### Notes
+- **Next:** auto-email the invite (needs app-email key) and a **searchable shop directory + expertise
+  filter** (opt-in discoverability). Tracked in `docs/backlog.md`.
+
 ## [0.24.0] — 2026-06-28
 
 ### Changed

@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import {
@@ -22,6 +22,7 @@ import { useDictation } from '../lib/dictation.js'
 import { structureFinding } from '../lib/findings.js'
 import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
 import { updateInspectionMeta, startInspectionFromListing } from '../lib/inspections.js'
+import { createHandoff, listHandoffs, revokeHandoff, handoffUrl } from '../lib/handoff.js'
 import { publishInspection, unpublishInspection, reportUrl } from '../lib/report.js'
 import './auth.css'
 import './inspections.css'
@@ -202,15 +203,18 @@ export default function InspectionDetail() {
       <PublishBar inspection={inspection} onPublish={publish} onUnpublish={unpublish} />
 
       {isListing ? (
-        <div className="insp__listingactions">
-          <p className="auth__hint">
-            Build the {cfg.key === 'marine' ? 'vessel' : 'aircraft'} profile, photos and logbooks above,
-            then publish the listing — or start a full pre-purchase inspection from it.
-          </p>
-          <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={startInspection} disabled={handoffBusy}>
-            <ClipboardCheck size={15} aria-hidden="true" /> {handoffBusy ? 'Starting…' : 'Start inspection from this listing'}
-          </button>
-        </div>
+        <>
+          <div className="insp__listingactions">
+            <p className="auth__hint">
+              Build the {cfg.key === 'marine' ? 'vessel' : 'aircraft'} profile, photos and logbooks above,
+              then publish the listing — or send it to a shop for a full pre-purchase inspection.
+            </p>
+            <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={startInspection} disabled={handoffBusy}>
+              <ClipboardCheck size={15} aria-hidden="true" /> {handoffBusy ? 'Starting…' : 'Start inspection in this shop'}
+            </button>
+          </div>
+          <HandoffPanel inspection={inspection} userId={user?.id} />
+        </>
       ) : (
         <>
           {note === 'no-template' && (
@@ -581,6 +585,109 @@ function PublishBar({ inspection, onPublish, onUnpublish }) {
       <button type="button" className="auth__toggle" disabled={busy} onClick={() => act(onUnpublish)}>
         Unpublish
       </button>
+    </div>
+  )
+}
+
+// Broker handoff: create a claim link for another shop to pick up this listing.
+function HandoffPanel({ inspection, userId }) {
+  const [handoffs, setHandoffs] = useState([])
+  const [open, setOpen] = useState(false)
+  const [f, setF] = useState({ to_shop_name: '', to_email: '' })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const [copiedId, setCopiedId] = useState(null)
+
+  useEffect(() => {
+    listHandoffs(inspection.id).then(({ data }) => setHandoffs(data))
+  }, [inspection.id])
+
+  async function create() {
+    setBusy(true)
+    setError(null)
+    const { data, error } = await createHandoff(inspection, { toShopName: f.to_shop_name, toEmail: f.to_email }, userId)
+    setBusy(false)
+    if (error) return setError(error.message)
+    setHandoffs((p) => [data, ...p])
+    setF({ to_shop_name: '', to_email: '' })
+    setOpen(false)
+  }
+
+  async function revoke(h) {
+    setHandoffs((p) => p.map((x) => (x.id === h.id ? { ...x, status: 'revoked' } : x)))
+    await revokeHandoff(h.id)
+  }
+
+  async function copy(h) {
+    try {
+      await navigator.clipboard.writeText(handoffUrl(h.token))
+      setCopiedId(h.id)
+      setTimeout(() => setCopiedId(null), 1500)
+    } catch {
+      /* clipboard blocked */
+    }
+  }
+
+  return (
+    <div className="insp__handoff">
+      <div className="insp__sectionhead">
+        <h2><Send size={18} aria-hidden="true" /> Hand off to an inspecting shop</h2>
+      </div>
+      <p className="auth__hint">
+        Create a secure link and send it to a shop — they claim it into their PreBuy and get this listing
+        as a full pre-purchase inspection (profile, photos and logbooks included).
+      </p>
+
+      {handoffs.length > 0 && (
+        <ul className="insp__list">
+          {handoffs.map((h) => (
+            <li key={h.id} className="insp__row">
+              <span className="insp__main">
+                <span className="insp__id">{h.to_shop_name || h.to_email || 'Handoff link'}</span>
+                <span className="insp__sub">
+                  {h.status === 'pending' ? 'Awaiting claim' : h.status === 'claimed' ? 'Claimed' : 'Revoked'}
+                  {h.to_email ? ` · ${h.to_email}` : ''}
+                </span>
+              </span>
+              {h.status === 'pending' && (
+                <>
+                  <button type="button" className="insp__capturebtn" onClick={() => copy(h)}>
+                    <Copy size={14} aria-hidden="true" /> {copiedId === h.id ? 'Copied' : 'Copy link'}
+                  </button>
+                  <button type="button" className="insp__flag" onClick={() => revoke(h)} aria-label="Revoke handoff">
+                    <X size={15} aria-hidden="true" />
+                  </button>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {open ? (
+        <div className="auth__form insp__additem">
+          <div className="insp__row2">
+            <div className="auth__field">
+              <label htmlFor="ho-name">Shop name (optional)</label>
+              <input id="ho-name" type="text" placeholder="e.g. Falcon Aviation" value={f.to_shop_name} onChange={(e) => setF((p) => ({ ...p, to_shop_name: e.target.value }))} />
+            </div>
+            <div className="auth__field">
+              <label htmlFor="ho-email">Email (optional)</label>
+              <input id="ho-email" type="email" placeholder="shop@example.com" value={f.to_email} onChange={(e) => setF((p) => ({ ...p, to_email: e.target.value }))} />
+            </div>
+          </div>
+          <p className="auth__hint">We’ll generate a link to send them. (Auto-email invites are coming soon.)</p>
+          {error && <div className="auth__error" role="alert">{error}</div>}
+          <div className="insp__capture">
+            <button type="button" className="auth__btn" onClick={create} disabled={busy}>{busy ? 'Creating…' : 'Create handoff link'}</button>
+            <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setOpen(false)}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={() => setOpen(true)}>
+          <Send size={15} aria-hidden="true" /> Create handoff link
+        </button>
+      )}
     </div>
   )
 }

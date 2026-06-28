@@ -285,7 +285,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
 - Session 2 cont. — **Landing-page repositioning** (v0.24.0, frontend-only). `Home.jsx` reframed to the
   whole deal lifecycle + many industries: audience trio (sellers/brokers · inspectors/surveyors · buyers),
   vertical-neutral how-it-works/features, industries strip, "Forged in aviation" origin band. `App.css`
-  styles added. **NEXT: broker Phase 2 cross-org handoff** (building now).
+  styles added.
+- Session 2 cont. — **Cross-org broker handoff (broker epic Phase 2)** (v0.25.0). Migration `017`
+  (`handoffs` table + RLS, broker-side). New **`claim-listing`** edge fn (**JWT ON**, service role):
+  `preview` (listing summary) + `claim` (verifies caller's org membership, copies listing → inspection
+  cross-org incl. **Storage object copies** + logbooks/events, marks claimed). `lib/handoff.js`
+  (create/list/revoke/url + preview/claim). `ClaimListing` page at **`/claim/:token`** (ProtectedRoute).
+  InspectionDetail listing → `HandoffPanel` (create/copy/revoke claim links). Lint + 111 tests + build
+  green. ⚠️ **Run migration 017 + deploy `claim-listing` (JWT ON).**
+  **NEXT:** auto-email invite (needs app-email RESEND_API_KEY) + searchable shop directory + expertise
+  filter; then scope/disclaimer drawer, gear-rigging forms, invite teammates, server-side PDF; research project.
   **NEXT (broker Phase 2):** cross-org handoff — shop directory + invite + storage copy + claim link
   (+ expertise filtering later). Then scope/disclaimer drawer, gear-rigging forms, invite teammates,
   server-side PDF; broader landing-page story (all verticals / whole sale lifecycle); per-vertical

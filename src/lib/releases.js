@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.25.0',
+    date: '2026-06-28',
+    title: 'Hand a listing to a shop',
+    items: [
+      'Brokers can now hand a listing to an inspecting shop: create a secure link and send it.',
+      'The shop opens the link, picks their PreBuy shop, and claims it — the listing copies in as a full inspection with the profile, photos and logbooks.',
+      'Works for any shop already on PreBuy. (Auto-email invites and a searchable shop directory are coming next.)',
+    ],
+  },
+  {
     version: '0.24.0',
     date: '2026-06-28',
     title: 'A bigger story',
