@@ -53,12 +53,12 @@ const FAQ = [
     a: 'Open the inspection and scroll to the bottom — owners and admins see “Delete this inspection.” You’ll be asked to type the identifier (N-number / HIN / address) to confirm. Deleting permanently removes the inspection and everything in it — items, photos, documents and logbooks — and takes any published report offline. It can’t be undone, so to just hide a report instead, use “Unpublish.”',
   },
   {
-    q: 'What is the Aircraft profile, and what shows on the report?',
-    a: 'The Aircraft profile (tap it on an inspection) is the “spec sheet” half of the report: a short summary, specs and times, currency/due dates, damage history, and a categorized equipment list. The customer report is a two-part document — the profile first, then your inspection findings. Anything you leave blank is simply left off, so fill in as much or as little as you like. The report also builds a dated maintenance timeline automatically from your logbook events.',
+    q: 'What is the profile, and what shows on the report?',
+    a: 'The profile (tap it on an inspection) is the “spec sheet” half of the report, and it matches your industry: an aircraft profile has airframe times, engines/props, and FAA currency dates; a vessel profile has LOA/beam/draft, engine hours, and documentation/haul-out dates; a property profile has square footage, year built, and system ages. All of them also take a summary, a damage/history callout, and a categorized equipment list. The customer report is a two-part document — the profile first, then your inspection findings — and anything you leave blank is simply left off. The report also builds a dated maintenance timeline automatically from your logbook events.',
   },
   {
     q: 'Can I fill the profile from photos instead of typing?',
-    a: 'Yes (beta). On the Aircraft profile, tap “Scan to pre-fill” and photograph records — a weight & balance / equipment list, an avionics placard, or logbook pages. We propose specs, currency dates, and equipment for you to review and tick. We never overwrite anything you’ve already entered; picked fields drop into the form for you to check before saving.',
+    a: 'Yes (beta), for aircraft today. On an aircraft profile, tap “Scan to pre-fill” and photograph records — a weight & balance / equipment list, an avionics placard, or logbook pages. We propose specs, currency dates, and equipment for you to review and tick. We never overwrite anything you’ve already entered; picked fields drop into the form for you to check before saving. Scan support for boats and homes is on the way.',
   },
   {
     q: 'Can PreBuy write the report summary for me?',

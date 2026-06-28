@@ -17,7 +17,7 @@ import {
   deleteInspectionItem,
 } from '../lib/checklist.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
-import { getVertical } from '../lib/verticals.js'
+import { getVertical, profileSchema } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
 import { structureFinding } from '../lib/findings.js'
 import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
@@ -173,6 +173,7 @@ export default function InspectionDetail() {
   }
 
   const cfg = getVertical(inspection.vertical) ?? getVertical('aviation')
+  const pSchema = profileSchema(inspection.vertical)
   const subtitle = [inspection.year, inspection.make, inspection.model].filter(Boolean).join(' ')
   const isListing = inspection.mode === 'listing'
 
@@ -213,7 +214,7 @@ export default function InspectionDetail() {
 
       <div className="insp__tools">
         <Link to={`/app/inspections/${inspection.id}/profile`} className="auth__btn auth__btn--ghost insp__walkthrough">
-          <FileText size={15} aria-hidden="true" /> {cfg.key === 'marine' ? 'Vessel' : 'Aircraft'} profile
+          <FileText size={15} aria-hidden="true" /> {pSchema.noun} profile
         </Link>
         <Link to={`/app/inspections/${inspection.id}/overview`} className="auth__btn auth__btn--ghost insp__walkthrough">
           <Images size={15} aria-hidden="true" /> Photo walkthrough
@@ -229,7 +230,7 @@ export default function InspectionDetail() {
         <>
           <div className="insp__listingactions">
             <p className="auth__hint">
-              Build the {cfg.key === 'marine' ? 'vessel' : 'aircraft'} profile, photos and logbooks above,
+              Build the {pSchema.noun.toLowerCase()} profile, photos and logbooks above,
               then publish the listing — or send it to a shop for a full pre-purchase inspection.
             </p>
             <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={startInspection} disabled={handoffBusy}>

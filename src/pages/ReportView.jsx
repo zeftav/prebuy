@@ -15,15 +15,11 @@ import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
   normalizeProfile,
   isProfileEmpty,
-  profileRows,
   fieldRows,
   currencyStatus,
   engineLabel,
-  SPEC_FIELDS,
-  ENGINE_FIELDS,
-  PROP_FIELDS,
-  CURRENCY_FIELDS,
 } from '../lib/profile.js'
+import { profileSchema } from '../lib/verticals.js'
 import { categoryLabel } from '../lib/logbooks.js'
 import './report.css'
 
@@ -78,23 +74,24 @@ export default function ReportView() {
   const counts = reportSummary(items)
   const asset = [inspection.year, inspection.make, inspection.model].filter(Boolean).join(' ')
   const isMarine = inspection.vertical === 'marine'
-  const assetWord = isMarine ? 'Vessel' : 'Aircraft'
+  const schema = profileSchema(inspection.vertical)
+  const assetWord = schema.noun
   const published = inspection.published_at ? new Date(inspection.published_at).toLocaleDateString() : ''
   const inspected = inspection.inspection_date
     ? new Date(inspection.inspection_date + 'T00:00:00').toLocaleDateString()
     : published
 
   const isListing = inspection.mode === 'listing'
-  const profile = normalizeProfile(inspection.profile)
-  const hasProfile = !isProfileEmpty(profile)
-  const specRows = profileRows(profile, SPEC_FIELDS)
-  const currencyRows = profileRows(profile, CURRENCY_FIELDS)
+  const profile = normalizeProfile(inspection.profile, inspection.vertical)
+  const hasProfile = !isProfileEmpty(profile, inspection.vertical)
+  const specRows = fieldRows(profile.specs, schema.specFields)
+  const currencyRows = fieldRows(profile.currency, schema.currencyFields)
   // Per-position engine + prop cards (each engine paired with its prop).
-  const engineBlocks = profile.engines
+  const engineBlocks = (schema.hasEngines ? profile.engines : [])
     .map((eng, i) => {
       const rows = [
-        ...fieldRows(eng, ENGINE_FIELDS).map((r) => ({ ...r, key: `e${r.key}` })),
-        ...fieldRows(profile.props[i] || {}, PROP_FIELDS).map((r) => ({
+        ...fieldRows(eng, schema.engineFields).map((r) => ({ ...r, key: `e${r.key}` })),
+        ...fieldRows(profile.props[i] || {}, schema.propFields).map((r) => ({
           ...r,
           key: `p${r.key}`,
           label: r.label === 'Notes' ? 'Prop notes' : `Prop ${r.label.toLowerCase()}`,
@@ -138,9 +135,9 @@ export default function ReportView() {
         <>
           {!isListing && <PartHeader n="1" title={`${assetWord} profile`} />}
 
-          {(specRows.length > 0 || currencyRows.length > 0) && (
+          {specRows.length > 0 && (
             <section className="report__section">
-              <h2>Specifications &amp; currency</h2>
+              <h2>Specifications</h2>
               <div className="report__cards">
                 {specRows.map((r) => (
                   <div className="report__card" key={r.key}>
@@ -148,6 +145,14 @@ export default function ReportView() {
                     <span className="report__cardval">{r.value}</span>
                   </div>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {currencyRows.length > 0 && (
+            <section className="report__section">
+              <h2>{schema.currencyTitle}</h2>
+              <div className="report__cards">
                 {currencyRows.map((r) => {
                   const st = currencyStatus(profile.currency[r.key])
                   return (
@@ -167,7 +172,7 @@ export default function ReportView() {
 
           {engineBlocks.length > 0 && (
             <section className="report__section">
-              <h2>Engines &amp; propellers</h2>
+              <h2>{schema.enginesTitle}</h2>
               {engineBlocks.map((b) => (
                 <div className="report__engineblock" key={b.i}>
                   {profile.engine_count > 1 && <h3 className="report__enginehead">{b.title}</h3>}
@@ -187,7 +192,7 @@ export default function ReportView() {
           {/* Damage callout — brokers always state it explicitly. */}
           {hasProfile && (
             <section className="report__section">
-              <h2>Damage history</h2>
+              <h2>{schema.damageTitle}</h2>
               {profile.damage.length > 0 ? (
                 <div className="report__damage">
                   {profile.damage.map((d, i) => (
@@ -234,12 +239,13 @@ export default function ReportView() {
             </section>
           )}
 
-          {/* Categorized equipment. */}
+          {/* Categorized equipment (group labels per vertical). */}
           {(profile.equipment.avionics.length > 0 || profile.equipment.additional.length > 0) && (
             <section className="report__section">
               <h2>Equipment</h2>
-              <EquipmentGroup title="Avionics" rows={profile.equipment.avionics} />
-              <EquipmentGroup title="Additional equipment" rows={profile.equipment.additional} />
+              {schema.equipmentGroups.map((g) => (
+                <EquipmentGroup key={g.key} title={g.title} rows={profile.equipment[g.key]} />
+              ))}
             </section>
           )}
 

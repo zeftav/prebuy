@@ -35,6 +35,14 @@ logbook` extraction schema (currently forces aviation specs/currency — make pe
 don't inject aviation fields for non-aviation); `verticals.js` (new `profile` descriptor per vertical).
 **Sizable — design first.** Keep legacy aviation profiles rendering unchanged (back-comp).
 
+**DONE (v0.29.0, 2026-06-28):** `verticals.js` `PROFILE_SCHEMAS` + `profileSchema()`; `profile.js`,
+`AircraftProfile.jsx`, `ReportView.jsx` all schema-driven (marine = LOA/beam/draft/engine-hours/USCG
+docs; home = sq ft/year-built/system-ages, no engines). Frontend-only (report edge fn already returns
+vertical). Remaining follow-ups (NOT done): (a) marine/home **scan-to-pre-fill** — the
+`structure-logbook` vision extraction is aviation-specific, so Scan is gated to aircraft; (b) marine
+engine labels should read **Port/Starboard** (the shared `engineLabel` uses Left/Right); (c) richer
+home Part 1 layout if desired.
+
 ### 2. Delete an inspection / report as a shop
 **Problem:** there's **no way to delete an inspection or its published report** — only publish/unpublish
 (`lib/inspections.js` has no delete; `lib/report.js` only publishes). A shop is stuck with test/junk

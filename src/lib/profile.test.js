@@ -214,3 +214,44 @@ describe('buildSummaryContext', () => {
     expect(buildSummaryContext({ vertical: 'marine' }, null, [], []).asset.kind).toBe('vessel')
   })
 })
+
+describe('per-vertical profile schema', () => {
+  it('marine profile uses vessel specs + engines, not aircraft fields', () => {
+    const p = emptyProfile('marine')
+    expect(Object.keys(p.specs)).toContain('loa')
+    expect(Object.keys(p.specs)).not.toContain('total_time')
+    expect(p.engines.length).toBe(1) // boats have engines
+    expect(Object.keys(p.currency)).toContain('documentation_due')
+    expect(Object.keys(p.currency)).not.toContain('transponder_due')
+  })
+
+  it('home profile has no engines and property specs', () => {
+    const p = emptyProfile('home')
+    expect(p.engines).toEqual([])
+    expect(p.props).toEqual([])
+    expect(Object.keys(p.specs)).toContain('square_footage')
+  })
+
+  it('normalizeProfile keeps only the vertical’s keys', () => {
+    // A marine profile that somehow carries an aircraft key drops it.
+    const n = normalizeProfile({ specs: { loa: '35', total_time: '4200' } }, 'marine')
+    expect(n.specs.loa).toBe('35')
+    expect(n.specs.total_time).toBeUndefined()
+  })
+
+  it('home isProfileEmpty ignores engines', () => {
+    expect(isProfileEmpty({ specs: {} }, 'home')).toBe(true)
+    expect(isProfileEmpty({ specs: { square_footage: '2200' } }, 'home')).toBe(false)
+  })
+
+  it('buildSummaryContext maps home to property and marine engines generically', () => {
+    expect(buildSummaryContext({ vertical: 'home' }, null, [], []).asset.kind).toBe('property')
+    const ctx = buildSummaryContext(
+      { vertical: 'marine' },
+      { engine_count: 1, engines: [{ hours: '1200', notes: 'Yanmar' }] },
+      [],
+      [],
+    )
+    expect(ctx.engines[0].hours).toBe('1200')
+  })
+})

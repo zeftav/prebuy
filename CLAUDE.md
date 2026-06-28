@@ -340,6 +340,20 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   email **rate limit** (Auth → Rate Limits) after heavy testing, Resend deliverability/spam, an
   undeliverable recipient domain, or the confirm-email toggle. Diagnose via Supabase → Auth → Logs +
   Resend → Emails (same path that surfaced the earlier `535` SMTP-username typo).
+- Session 3 cont. — **Shop-side delete** (v0.28.0) + **signup "account exists" fix** (v0.27.2) +
+  **per-vertical profile/report** (v0.29.0). v0.27.2: `Login.jsx` detects Supabase's empty-identities
+  fake-success → "account already exists, sign in / reset" (this was the "confirmation email didn't
+  arrive" report — existing email). v0.28.0: `deleteInspection` (Storage cleanup via
+  `removeInspectionStorage`, then row delete; DB children cascade; published report link dies) +
+  `InspectionDetail` owner/admin "Danger zone" (type-the-identifier). v0.29.0: **per-vertical profile**
+  — `verticals.js` `PROFILE_SCHEMAS`/`profileSchema()` drive field sets/labels/sections;
+  `profile.js` (`emptyProfile`/`normalizeProfile`/`isProfileEmpty`/`buildSummaryContext` take a vertical,
+  default aviation, build bags from schema keys; engines omitted when none); `AircraftProfile.jsx` +
+  `ReportView.jsx` render from the schema. Marine = LOA/beam/draft/engine-hours/USCG-docs; home =
+  sqft/year/system-ages, no engines. **Fixes the boat report leaking aircraft fields.** Frontend-only
+  (report edge fn already returns `vertical`); **no migration / no deploy** for v0.27.2/0.28.0/0.29.0.
+  Lint + 132 tests + build green. Follow-ups (backlog): marine/home scan extraction; Port/Starboard
+  marine engine labels.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

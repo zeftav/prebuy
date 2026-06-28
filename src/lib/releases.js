@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.29.0',
+    date: '2026-06-28',
+    title: 'Reports that match your industry',
+    items: [
+      'The profile and report now fit what you inspect: boats show LOA/beam/draft, engine hours and documentation/haul-out dates; homes show square footage, year built and system ages — no more aircraft-only fields on a boat or home report.',
+      'Aircraft reports are unchanged. Engines/props show for aircraft and boats; homes skip them.',
+    ],
+  },
+  {
     version: '0.28.0',
     date: '2026-06-28',
     title: 'Delete an inspection',

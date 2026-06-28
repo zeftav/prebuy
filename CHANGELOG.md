@@ -3,6 +3,31 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.29.0] — 2026-06-28
+
+### Fixed / Changed
+- **Per-vertical profile + report.** The profile "spec sheet" and report Part 1 were aviation-modeled,
+  so a **boat (or home) shop's report showed aircraft fields** (airframe times, SMOH/props, FAA
+  currency like annual/transponder/ELT/O₂). Field sets, labels, section titles and which blocks render
+  are now driven per vertical.
+  - `lib/verticals.js` — new `PROFILE_SCHEMAS` + `profileSchema(vertical)` (specFields, currencyFields,
+    hasEngines, engine/propFields, equipment group labels, damage columns, titles). Aviation mirrors the
+    old shape exactly (back-compat); **marine** = LOA/beam/draft/displacement/fuel/water, engine hours,
+    USCG documentation/haul-out/thru-hull, electronics/gear groups; **home** = sq ft/year built/beds/
+    baths/etc, no engines, system-age "key dates", systems/appliances groups.
+  - `lib/profile.js` — `emptyProfile`/`normalizeProfile`/`isProfileEmpty`/`buildSummaryContext` take a
+    vertical (default aviation) and build bags from the schema keys; engines/props omitted when the
+    vertical has none; legacy single-engine aviation migration preserved. (+5 tests, 30 total.)
+  - `pages/AircraftProfile.jsx` + `pages/ReportView.jsx` — render from the schema (titles, fields,
+    engine block only when `hasEngines`, equipment group labels). Header reads "{noun} profile".
+    Scan-to-pre-fill stays aircraft-only (the vision extraction is aviation-specific).
+  - Frontend only — the `report` edge fn already returns `vertical` + `profile`. **No migration / no
+    redeploy.** Legacy aviation profiles render unchanged.
+
+### Notes
+- Follow-ups (backlog): marine/home scan-to-pre-fill (vision extraction per vertical); marine engine
+  labels as Port/Starboard (currently Left/Right via the shared label helper).
+
 ## [0.28.0] — 2026-06-28
 
 ### Added

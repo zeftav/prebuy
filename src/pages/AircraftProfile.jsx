@@ -26,21 +26,12 @@ import {
   PROP_FIELDS,
   CURRENCY_FIELDS,
 } from '../lib/profile.js'
+import { profileSchema } from '../lib/verticals.js'
 import { uploadMedia, signedUrlsFor } from '../lib/media.js'
 import { InfoDot } from '../components/Tooltip.jsx'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import './auth.css'
 import './inspections.css'
-
-const SPEC_PLACEHOLDER = {
-  total_time: '4200',
-  mgtow: '3650',
-  empty_weight: '2350',
-  useful_load: '1300',
-  fuel_capacity: '80',
-}
-const ENGINE_PLACEHOLDER = { smoh: '850', notes: 'RAM to new limits, new cams (2019)' }
-const PROP_PLACEHOLDER = { since: '320', notes: 'SNEW, 3-blade (2018)' }
 
 export default function AircraftProfile() {
   const { id } = useParams()
@@ -62,9 +53,9 @@ export default function AircraftProfile() {
       setInspection(insp)
       // Seed engine count from the FAA-derived attributes when the profile hasn't set it yet.
       const stored = insp.attributes?.profile
-      let np = normalizeProfile(stored)
+      let np = normalizeProfile(stored, insp.vertical)
       if (!stored?.engine_count && insp.attributes?.engine_count > 1) {
-        np = normalizeProfile({ ...np, engine_count: insp.attributes.engine_count })
+        np = normalizeProfile({ ...np, engine_count: insp.attributes.engine_count }, insp.vertical)
       }
       setProfile(np)
       setState('ready')
@@ -74,7 +65,7 @@ export default function AircraftProfile() {
     }
   }, [id])
 
-  const isMarine = inspection?.vertical === 'marine'
+  const schema = profileSchema(inspection?.vertical)
   const subtitle = useMemo(
     () => [inspection?.year, inspection?.make, inspection?.model].filter(Boolean).join(' '),
     [inspection],
@@ -98,7 +89,7 @@ export default function AircraftProfile() {
   // Changing the count re-normalizes so the engine/prop arrays resize to match.
   const setEngineCount = (n) => {
     setSaved(false)
-    setProfile((p) => normalizeProfile({ ...p, engine_count: n }))
+    setProfile((p) => normalizeProfile({ ...p, engine_count: n }, inspection.vertical))
   }
 
   // Merge a reviewed scan draft into the in-progress form (user still Saves).
@@ -129,7 +120,7 @@ export default function AircraftProfile() {
     setBusy(false)
     if (error) return setError(error.message)
     setInspection((p) => ({ ...p, attributes: data }))
-    setProfile(normalizeProfile(data.profile))
+    setProfile(normalizeProfile(data.profile, inspection.vertical))
     setSaved(true)
   }
 
@@ -156,7 +147,7 @@ export default function AircraftProfile() {
       <div className="insp__detailhead">
         <span className="insp__icon" aria-hidden="true"><FileText size={22} /></span>
         <div>
-          <h1 className="insp__detailid">{isMarine ? 'Vessel' : 'Aircraft'} profile</h1>
+          <h1 className="insp__detailid">{schema.noun} profile</h1>
           <p className="insp__detailsub">{[inspection.identifier, subtitle].filter(Boolean).join(' · ')}</p>
         </div>
       </div>
@@ -167,7 +158,7 @@ export default function AircraftProfile() {
         timeline comes from the <Link to={`/app/inspections/${id}/logbooks`} className="auth__inlinelink">logbook audit</Link>.
       </p>
 
-      <ScanPrefill inspection={inspection} onApply={applyScan} />
+      {schema.canScan && <ScanPrefill inspection={inspection} onApply={applyScan} />}
 
       {/* Narrative summary */}
       <section className="insp__section">
@@ -191,17 +182,17 @@ export default function AircraftProfile() {
         {genError && <div className="auth__error" role="alert">{genError}</div>}
       </section>
 
-      {/* Airframe specs */}
+      {/* Specifications */}
       <section className="insp__section">
-        <div className="insp__sectionhead"><h2>Airframe — specifications &amp; times</h2></div>
+        <div className="insp__sectionhead"><h2>{schema.specTitle}</h2></div>
         <div className="insp__profilegrid">
-          {SPEC_FIELDS.map((f) => (
+          {schema.specFields.map((f) => (
             <div className="auth__field" key={f.key}>
               <label>{f.label}</label>
               <input
                 type="text"
-                placeholder={SPEC_PLACEHOLDER[f.key] || ''}
-                value={profile.specs[f.key]}
+                placeholder={f.placeholder || ''}
+                value={profile.specs[f.key] ?? ''}
                 onChange={setSpec(f.key)}
               />
             </div>
@@ -209,120 +200,107 @@ export default function AircraftProfile() {
         </div>
       </section>
 
-      {/* Engines & props (per position) */}
-      <section className="insp__section">
-        <div className="insp__sectionhead">
-          <h2>Engines &amp; propellers <InfoDot label="Single or multi-engine. Convention: #1 is the left engine, #2 the right. Push-pull centerline twins (e.g. Cessna 337) are #1 front / #2 rear." /></h2>
-        </div>
-        <div className="insp__row2">
-          <div className="auth__field">
-            <label htmlFor="engcount">Number of engines</label>
-            <select id="engcount" value={profile.engine_count} onChange={(e) => setEngineCount(Number(e.target.value))}>
-              {Array.from({ length: MAX_ENGINES }, (_, i) => i + 1).map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
+      {/* Engines & props (per position) — only for verticals that have engines */}
+      {schema.hasEngines && (
+        <section className="insp__section">
+          <div className="insp__sectionhead">
+            <h2>{schema.enginesTitle} <InfoDot label={schema.enginesInfo} /></h2>
           </div>
-          {profile.engine_count >= 2 && (
+          <div className="insp__row2">
             <div className="auth__field">
-              <label htmlFor="englayout">Layout</label>
-              <select id="englayout" value={profile.layout} onChange={setLayout}>
-                <option value="conventional">Conventional (left / right)</option>
-                <option value="centerline">Centerline — front / rear (e.g. C337)</option>
+              <label htmlFor="engcount">Number of engines</label>
+              <select id="engcount" value={profile.engine_count} onChange={(e) => setEngineCount(Number(e.target.value))}>
+                {Array.from({ length: MAX_ENGINES }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
               </select>
             </div>
-          )}
-        </div>
-        {profile.engines.map((eng, i) => (
-          <div className="insp__enginecard" key={i}>
-            <h3 className="insp__enginehead">
-              {engineLabel(i, profile.engine_count, profile.layout)}
-              {profile.engine_count > 1 && <span className="insp__enginesub"> &amp; {propLabel(i, profile.engine_count, profile.layout)}</span>}
-            </h3>
-            <div className="insp__profilegrid">
-              {ENGINE_FIELDS.map((f) => (
-                <div className="auth__field" key={`e${f.key}`}>
-                  <label>{f.label === 'Notes' ? 'Engine notes' : f.label}</label>
-                  <input type="text" placeholder={ENGINE_PLACEHOLDER[f.key] || ''} value={eng[f.key]} onChange={setEngine(i, f.key)} />
-                </div>
-              ))}
-              {PROP_FIELDS.map((f) => (
-                <div className="auth__field" key={`p${f.key}`}>
-                  <label>{f.label === 'Notes' ? 'Prop notes' : `Prop ${f.label.toLowerCase()}`}</label>
-                  <input type="text" placeholder={PROP_PLACEHOLDER[f.key] || ''} value={profile.props[i]?.[f.key] ?? ''} onChange={setProp(i, f.key)} />
-                </div>
-              ))}
-            </div>
+            {profile.engine_count >= 2 && (
+              <div className="auth__field">
+                <label htmlFor="englayout">Layout</label>
+                <select id="englayout" value={profile.layout} onChange={setLayout}>
+                  <option value="conventional">Conventional (left / right)</option>
+                  <option value="centerline">Centerline — front / rear (e.g. C337)</option>
+                </select>
+              </div>
+            )}
           </div>
-        ))}
-      </section>
-
-      {/* Currency / inspections due */}
-      <section className="insp__section">
-        <div className="insp__sectionhead">
-          <h2>Currency &amp; due dates <InfoDot label="When required inspections/checks come due. Accepts a month (2026-04) or a full date. Overdue and due-soon items are flagged on the report." /></h2>
-        </div>
-        <div className="insp__profilegrid">
-          {CURRENCY_FIELDS.map((f) => (
-            <div className="auth__field" key={f.key}>
-              <label>{f.label}</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="2026-04"
-                value={profile.currency[f.key]}
-                onChange={setCurrency(f.key)}
-              />
+          {profile.engines.map((eng, i) => (
+            <div className="insp__enginecard" key={i}>
+              <h3 className="insp__enginehead">
+                {engineLabel(i, profile.engine_count, profile.layout)}
+                {profile.engine_count > 1 && schema.propFields.length > 0 && <span className="insp__enginesub"> &amp; {propLabel(i, profile.engine_count, profile.layout)}</span>}
+              </h3>
+              <div className="insp__profilegrid">
+                {schema.engineFields.map((f) => (
+                  <div className="auth__field" key={`e${f.key}`}>
+                    <label>{f.label === 'Notes' ? 'Engine notes' : f.label}</label>
+                    <input type="text" placeholder={f.placeholder || ''} value={eng[f.key] ?? ''} onChange={setEngine(i, f.key)} />
+                  </div>
+                ))}
+                {schema.propFields.map((f) => (
+                  <div className="auth__field" key={`p${f.key}`}>
+                    <label>{f.label === 'Notes' ? 'Prop notes' : `Prop ${f.label.toLowerCase()}`}</label>
+                    <input type="text" placeholder={f.placeholder || ''} value={profile.props[i]?.[f.key] ?? ''} onChange={setProp(i, f.key)} />
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Damage history */}
+      {/* Currency / due dates */}
+      {schema.currencyFields.length > 0 && (
+        <section className="insp__section">
+          <div className="insp__sectionhead">
+            <h2>{schema.currencyTitle} <InfoDot label={schema.currencyInfo} /></h2>
+          </div>
+          <div className="insp__profilegrid">
+            {schema.currencyFields.map((f) => (
+              <div className="auth__field" key={f.key}>
+                <label>{f.label}</label>
+                <input
+                  type="text"
+                  placeholder={schema.currencyPlaceholder || ''}
+                  value={profile.currency[f.key] ?? ''}
+                  onChange={setCurrency(f.key)}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Damage / history */}
       <RowEditor
-        title="Damage history"
-        info="Brokers always state damage explicitly: what happened, when, and what was / was not affected. Leave empty for a clean 'no damage history' callout."
+        title={schema.damageTitle}
+        info={schema.damageInfo}
         rows={profile.damage}
-        columns={[
-          { key: 'date', label: 'Date', placeholder: '2018-06', width: 'narrow' },
-          { key: 'summary', label: 'What happened', placeholder: 'Bird strike to RH cowl nose' },
-          { key: 'affected', label: 'Affected / not affected', placeholder: 'Cowl replaced; prop & engine not impacted' },
-        ]}
-        addLabel="Add damage entry"
+        columns={schema.damageColumns}
+        addLabel="Add entry"
         onAdd={() => edit((p) => p.damage.push({ date: '', summary: '', affected: '' }))}
         onChange={(i, k, v) => edit((p) => { p.damage[i][k] = v })}
         onRemove={(i) => edit((p) => p.damage.splice(i, 1))}
       />
 
-      {/* Equipment — avionics */}
-      <RowEditor
-        title="Avionics"
-        info="GPS/nav/comm, autopilot + modes, audio panel, transponder/ADS-B, engine monitor, radar, stormscope… Add a condition note where relevant."
-        rows={profile.equipment.avionics}
-        columns={[
-          { key: 'name', label: 'Item', placeholder: 'Garmin GTN 750Xi' },
-          { key: 'notes', label: 'Condition / notes', placeholder: 'WAAS, current databases' },
-        ]}
-        addLabel="Add avionics item"
-        onAdd={() => edit((p) => p.equipment.avionics.push({ name: '', notes: '' }))}
-        onChange={(i, k, v) => edit((p) => { p.equipment.avionics[i][k] = v })}
-        onRemove={(i) => edit((p) => p.equipment.avionics.splice(i, 1))}
-      />
-
-      {/* Equipment — additional */}
-      <RowEditor
-        title="Additional equipment"
-        info="Non-avionics extras: FIKI/known-ice, GAMIjectors, oxygen, air conditioning, winglets/VGs, long-range fuel, useful-load mods…"
-        rows={profile.equipment.additional}
-        columns={[
-          { key: 'name', label: 'Item', placeholder: 'TKS known-ice (FIKI)' },
-          { key: 'notes', label: 'Condition / notes', placeholder: 'Full system, recently serviced' },
-        ]}
-        addLabel="Add equipment item"
-        onAdd={() => edit((p) => p.equipment.additional.push({ name: '', notes: '' }))}
-        onChange={(i, k, v) => edit((p) => { p.equipment.additional[i][k] = v })}
-        onRemove={(i) => edit((p) => p.equipment.additional.splice(i, 1))}
-      />
+      {/* Equipment groups (relabeled per vertical; stored as avionics / additional) */}
+      {schema.equipmentGroups.map((g) => (
+        <RowEditor
+          key={g.key}
+          title={g.title}
+          info={g.info}
+          rows={profile.equipment[g.key]}
+          columns={[
+            { key: 'name', label: 'Item', placeholder: g.itemPlaceholder },
+            { key: 'notes', label: 'Condition / notes', placeholder: g.notesPlaceholder },
+          ]}
+          addLabel={g.addLabel}
+          onAdd={() => edit((p) => p.equipment[g.key].push({ name: '', notes: '' }))}
+          onChange={(i, k, v) => edit((p) => { p.equipment[g.key][i][k] = v })}
+          onRemove={(i) => edit((p) => p.equipment[g.key].splice(i, 1))}
+        />
+      ))}
 
       {error && <div className="auth__error" role="alert">{error}</div>}
       <div className="insp__profilesave">

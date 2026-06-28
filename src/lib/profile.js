@@ -17,33 +17,32 @@
 // single write merges the profile back into the attributes bag.
 
 import { supabase } from './supabase.js'
+import { profileSchema } from './verticals.js'
 
 export const MAX_ENGINES = 4
 
-/** Canonical empty profile (single engine by default). */
-export function emptyProfile() {
+const obj = (v) => (v && typeof v === 'object' ? v : {})
+const blankBag = (fields) => Object.fromEntries((fields ?? []).map((f) => [f.key, '']))
+const pickBag = (o, keys) => Object.fromEntries(keys.map((k) => [k, str(o?.[k]).trim()]))
+
+/**
+ * Canonical empty profile for a vertical (single engine by default). The spec /
+ * currency / engine / prop FIELDS come from the vertical's profile schema, so a
+ * boat or home profile holds the right keys (no aircraft fields). Defaults to
+ * aviation for back-compat with code/data that predates verticalized profiles.
+ */
+export function emptyProfile(verticalKey = 'aviation') {
+  const schema = profileSchema(verticalKey)
   return {
     summary: '',
     engine_count: 1,
     layout: 'conventional', // 'conventional' (L/R) | 'centerline' (front/rear, e.g. C337)
-    specs: {
-      total_time: '',
-      mgtow: '',
-      empty_weight: '',
-      useful_load: '',
-      fuel_capacity: '',
-    },
-    engines: [{ smoh: '', notes: '' }], // index 0 = engine #1
-    props: [{ since: '', notes: '' }], //   index 0 = prop #1
-    currency: {
-      annual_due: '',
-      ifr_pitot_static_due: '', // 91.411
-      transponder_due: '', //      91.413
-      elt_battery_due: '',
-      o2_hydro_due: '',
-    },
+    specs: blankBag(schema.specFields),
+    engines: schema.hasEngines ? [blankBag(schema.engineFields)] : [],
+    props: schema.hasEngines ? [blankBag(schema.propFields)] : [],
+    currency: blankBag(schema.currencyFields),
     damage: [], //    [{ date, summary, affected }]
-    equipment: { avionics: [], additional: [] }, // [{ name, notes }]
+    equipment: { avionics: [], additional: [] }, // two buckets, relabeled per vertical
   }
 }
 
@@ -57,48 +56,62 @@ function fitLength(arr, n, make) {
   return out
 }
 
-/** Coerce a stored/loose profile object into the canonical shape. Pure + defensive. */
-export function normalizeProfile(raw) {
-  const base = emptyProfile()
+const rowList = (arr, fields) =>
+  (Array.isArray(arr) ? arr : [])
+    .map((r) => (r && typeof r === 'object' ? Object.fromEntries(fields.map((f) => [f, str(r[f]).trim()])) : null))
+    .filter((r) => r && fields.some((f) => r[f]))
+
+/**
+ * Coerce a stored/loose profile object into the canonical shape for its vertical.
+ * Pure + defensive. Spec/currency/engine/prop keys come from the vertical schema;
+ * verticals without engines (home) carry empty engine/prop arrays. Legacy
+ * aviation profiles with flat engine_smoh/prop_since migrate into slot #1.
+ */
+export function normalizeProfile(raw, verticalKey = 'aviation') {
+  const schema = profileSchema(verticalKey)
+  const base = emptyProfile(verticalKey)
   if (!raw || typeof raw !== 'object') return base
-  const specs = raw.specs && typeof raw.specs === 'object' ? raw.specs : {}
-  const currency = raw.currency && typeof raw.currency === 'object' ? raw.currency : {}
-  const eq = raw.equipment && typeof raw.equipment === 'object' ? raw.equipment : {}
+  const specs = obj(raw.specs)
+  const currency = obj(raw.currency)
+  const eq = obj(raw.equipment)
+  const specKeys = schema.specFields.map((f) => f.key)
+  const curKeys = schema.currencyFields.map((f) => f.key)
 
-  const engineCount = clampCount(raw.engine_count)
-  const layout = raw.layout === 'centerline' ? 'centerline' : 'conventional'
+  let engineCount = 1
+  let layout = 'conventional'
+  let engines = []
+  let props = []
+  if (schema.hasEngines) {
+    engineCount = clampCount(raw.engine_count)
+    layout = raw.layout === 'centerline' ? 'centerline' : 'conventional'
+    const eKeys = schema.engineFields.map((f) => f.key)
+    const pKeys = schema.propFields.map((f) => f.key)
 
-  // Engines/props: prefer the arrays; else migrate legacy flat specs into slot #1.
-  let engines = Array.isArray(raw.engines)
-    ? raw.engines.map((e) => ({ smoh: str(e?.smoh).trim(), notes: str(e?.notes).trim() }))
-    : null
-  if (!engines) {
-    engines = (specs.engine_smoh || specs.engine_notes)
-      ? [{ smoh: str(specs.engine_smoh).trim(), notes: str(specs.engine_notes).trim() }]
-      : []
+    // Prefer the stored arrays; else migrate legacy flat aviation specs into slot #1.
+    engines = Array.isArray(raw.engines) ? raw.engines.map((e) => pickBag(e, eKeys)) : null
+    if (!engines) {
+      engines = (specs.engine_smoh || specs.engine_notes)
+        ? [pickBag({ smoh: specs.engine_smoh, notes: specs.engine_notes }, eKeys)]
+        : []
+    }
+    props = Array.isArray(raw.props) ? raw.props.map((p) => pickBag(p, pKeys)) : null
+    if (!props) {
+      props = (specs.prop_since || specs.prop_notes)
+        ? [pickBag({ since: specs.prop_since, notes: specs.prop_notes }, pKeys)]
+        : []
+    }
+    engines = fitLength(engines, engineCount, () => blankBag(schema.engineFields))
+    props = fitLength(props, engineCount, () => blankBag(schema.propFields))
   }
-  let props = Array.isArray(raw.props)
-    ? raw.props.map((p) => ({ since: str(p?.since).trim(), notes: str(p?.notes).trim() }))
-    : null
-  if (!props) {
-    props = (specs.prop_since || specs.prop_notes)
-      ? [{ since: str(specs.prop_since).trim(), notes: str(specs.prop_notes).trim() }]
-      : []
-  }
-
-  const rowList = (arr, fields) =>
-    (Array.isArray(arr) ? arr : [])
-      .map((r) => (r && typeof r === 'object' ? Object.fromEntries(fields.map((f) => [f, str(r[f]).trim()])) : null))
-      .filter((r) => r && fields.some((f) => r[f]))
 
   return {
     summary: str(raw.summary).trim(),
     engine_count: engineCount,
     layout,
-    specs: Object.fromEntries(Object.keys(base.specs).map((k) => [k, str(specs[k]).trim()])),
-    engines: fitLength(engines, engineCount, () => ({ smoh: '', notes: '' })),
-    props: fitLength(props, engineCount, () => ({ since: '', notes: '' })),
-    currency: Object.fromEntries(Object.keys(base.currency).map((k) => [k, str(currency[k]).trim()])),
+    specs: Object.fromEntries(specKeys.map((k) => [k, str(specs[k]).trim()])),
+    engines,
+    props,
+    currency: Object.fromEntries(curKeys.map((k) => [k, str(currency[k]).trim()])),
     damage: rowList(raw.damage, ['date', 'summary', 'affected']),
     equipment: {
       avionics: rowList(eq.avionics, ['name', 'notes']),
@@ -108,12 +121,12 @@ export function normalizeProfile(raw) {
 }
 
 /** True if the profile has nothing worth rendering. Pure. (count/layout alone ≠ data.) */
-export function isProfileEmpty(p) {
-  const n = normalizeProfile(p)
+export function isProfileEmpty(p, verticalKey = 'aviation') {
+  const n = normalizeProfile(p, verticalKey)
   const anySpec = Object.values(n.specs).some(Boolean)
   const anyCur = Object.values(n.currency).some(Boolean)
-  const anyEngine = n.engines.some((e) => e.smoh || e.notes)
-  const anyProp = n.props.some((pp) => pp.since || pp.notes)
+  const anyEngine = n.engines.some((e) => Object.values(e).some(Boolean))
+  const anyProp = n.props.some((pp) => Object.values(pp).some(Boolean))
   return !n.summary && !anySpec && !anyCur && !anyEngine && !anyProp && !n.damage.length && !n.equipment.avionics.length && !n.equipment.additional.length
 }
 
@@ -133,29 +146,12 @@ export function propLabel(i, count = 1, layout = 'conventional') {
   return side ? `Prop #${i + 1} (${side})` : `Prop #${i + 1}`
 }
 
-// Human labels for the report's cards (display order preserved).
-export const SPEC_FIELDS = [
-  { key: 'total_time', label: 'Total time', suffix: ' hrs' },
-  { key: 'mgtow', label: 'Max gross weight', suffix: ' lbs' },
-  { key: 'empty_weight', label: 'Empty weight', suffix: ' lbs' },
-  { key: 'useful_load', label: 'Useful load', suffix: ' lbs' },
-  { key: 'fuel_capacity', label: 'Fuel capacity', suffix: ' gal' },
-]
-export const ENGINE_FIELDS = [
-  { key: 'smoh', label: 'SMOH', suffix: ' hrs' },
-  { key: 'notes', label: 'Notes' },
-]
-export const PROP_FIELDS = [
-  { key: 'since', label: 'Since new/OH', suffix: ' hrs' },
-  { key: 'notes', label: 'Notes' },
-]
-export const CURRENCY_FIELDS = [
-  { key: 'annual_due', label: 'Annual due' },
-  { key: 'ifr_pitot_static_due', label: 'IFR pitot/static (91.411)' },
-  { key: 'transponder_due', label: 'Transponder (91.413)' },
-  { key: 'elt_battery_due', label: 'ELT battery' },
-  { key: 'o2_hydro_due', label: 'O₂ bottle hydro' },
-]
+// Aviation field sets, re-exported from the schema for back-compat (the scan
+// pre-fill path + tests use these). Per-vertical rendering reads profileSchema().
+export const SPEC_FIELDS = profileSchema('aviation').specFields
+export const ENGINE_FIELDS = profileSchema('aviation').engineFields
+export const PROP_FIELDS = profileSchema('aviation').propFields
+export const CURRENCY_FIELDS = profileSchema('aviation').currencyFields
 
 /** Append a unit suffix only when the value looks purely numeric. Pure. */
 export function formatSpecValue(value, suffix) {
@@ -281,20 +277,22 @@ export function mergeProfileDraft(profile, draft) {
  * `events` are logbook_events.
  */
 export function buildSummaryContext(inspection, profile, events, items) {
-  const n = normalizeProfile(profile)
   const insp = inspection ?? {}
+  const schema = profileSchema(insp.vertical)
+  const n = normalizeProfile(profile, insp.vertical)
 
   const specs = {}
-  for (const f of SPEC_FIELDS) if (n.specs[f.key]) specs[f.key] = formatSpecValue(n.specs[f.key], f.suffix)
+  for (const f of schema.specFields) if (n.specs[f.key]) specs[f.key] = formatSpecValue(n.specs[f.key], f.suffix)
   const currency = {}
-  for (const f of CURRENCY_FIELDS) if (n.currency[f.key]) currency[f.key] = n.currency[f.key]
+  for (const f of schema.currencyFields) if (n.currency[f.key]) currency[f.key] = n.currency[f.key]
 
+  const nonEmpty = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v))
   const engines = n.engines
-    .map((e, i) => ({ position: engineLabel(i, n.engine_count, n.layout), smoh: e.smoh || undefined, notes: e.notes || undefined }))
-    .filter((e) => e.smoh || e.notes)
+    .map((e, i) => ({ position: engineLabel(i, n.engine_count, n.layout), ...nonEmpty(e) }))
+    .filter((e) => Object.keys(e).length > 1)
   const props = n.props
-    .map((p, i) => ({ position: propLabel(i, n.engine_count, n.layout), since: p.since || undefined, notes: p.notes || undefined }))
-    .filter((p) => p.since || p.notes)
+    .map((p, i) => ({ position: propLabel(i, n.engine_count, n.layout), ...nonEmpty(p) }))
+    .filter((p) => Object.keys(p).length > 1)
 
   const findingItems = (items ?? [])
     .filter((i) => i.status === 'discrepancy' || i.status === 'monitor')
@@ -305,7 +303,7 @@ export function buildSummaryContext(inspection, profile, events, items) {
 
   const ctx = {
     asset: {
-      kind: insp.vertical === 'marine' ? 'vessel' : 'aircraft',
+      kind: { aviation: 'aircraft', marine: 'vessel', home: 'property' }[insp.vertical] || 'asset',
       identifier: insp.identifier || undefined,
       year: insp.year || undefined,
       make: insp.make || undefined,
