@@ -376,6 +376,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   (+tests, 134). `AircraftProfile` `ResearchPrefill` panel (tick-to-keep, all verticals). Drafts are
   typical-for-the-model -> verify before publishing. ⚠️ **Deploy `research-asset` (JWT ON)** — no
   migration, no new secret. Confirmed API specifics via the `claude-api` skill.
+- Session 3 cont. — **Dictate-the-whole-walk-around** (v0.31.0). New **`structure-walkaround`** edge fn
+  (**JWT ON**, `claude-opus-4-8` + structured `json_schema`; input = transcript + checklist items
+  [id/category/title/risk band]; output array of mapped findings `{item_id|"", suggested_category/title,
+  status, severity, finding, confidence}`; reuses `ANTHROPIC_API_KEY`; logs `ai_usage`; caps transcript
+  16k). `lib/walkaround.js`: `parseWalkaround` + pure `itemsContext`/`buildReviewRows`/`planApply`/
+  `acceptedCount` (+tests, 13 → 147 total). `pages/Walkaround.jsx` (`/app/inspections/:id/walkaround`):
+  continuous `useDictation` (typed/paste fallback) → **review-before-apply** (edit/re-map/untick;
+  low-confidence flagged) → apply (`updateInspectionItem` for matched, `addCustomItem`+patch for new) →
+  **"fill in the blanks"** (pending items risk-ordered). Linked prominently from InspectionDetail tools
+  (inspections only, not listings). Per-vertical. ⚠️ **Deploy `structure-walkaround` (JWT ON)** — no
+  migration, reuses `ANTHROPIC_API_KEY`.
   **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
   Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 

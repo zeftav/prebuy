@@ -213,6 +213,11 @@ export default function InspectionDetail() {
       <InspectionMeta inspection={inspection} onSave={saveMeta} />
 
       <div className="insp__tools">
+        {!isListing && (
+          <Link to={`/app/inspections/${inspection.id}/walkaround`} className="auth__btn insp__walkthrough insp__walkcta">
+            <Mic size={15} aria-hidden="true" /> Dictate walk-around
+          </Link>
+        )}
         <Link to={`/app/inspections/${inspection.id}/profile`} className="auth__btn auth__btn--ghost insp__walkthrough">
           <FileText size={15} aria-hidden="true" /> {pSchema.noun} profile
         </Link>

@@ -85,6 +85,10 @@ const FAQ = [
     a: 'Yes. Open a checklist item and tap “Dictate”, then speak your note — it transcribes live. Tap “Clean up with AI” and we’ll rewrite your spoken note into a clear, customer-ready finding and suggest a severity and status, which you can adjust. Dictation uses your browser’s speech recognition; if it isn’t available, just type. No audio is stored.',
   },
   {
+    q: 'Can I dictate the whole walk-around at once?',
+    a: 'Yes — open an inspection and tap “Dictate walk-around.” Talk through the entire walk-around in one pass, the way you’d normally work it (“left main tire worn, nose strut a little low, small oil weep at the left valve cover, prop looks good…”). We split it into individual findings and map each to the right checklist item, writing a clean note and suggesting a status and severity for each. Then you review everything before it’s applied — fix the wording, change a status, re-map a finding to a different item, or untick it; low-confidence matches are flagged. Anything you didn’t mention is listed afterward as “fill in the blanks,” highest financial risk first. If dictation isn’t available on your browser, type or paste the walk-around instead.',
+  },
+  {
     q: 'Where does the checklist come from?',
     a: 'Each aircraft model has a starter pre-purchase checklist built into PreBuy, with items weighted by how much they typically cost to fix. The Beech A36 Bonanza is included to start; more models follow. You’ll soon be able to customize and re-prioritize items for your shop or a specific buyer.',
   },

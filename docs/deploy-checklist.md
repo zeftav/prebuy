@@ -60,6 +60,9 @@ Run in order. All are idempotent (safe to re-run).
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile
       from make/model via Claude + web search. Reuses `ANTHROPIC_API_KEY`. (deployed 2026-06-28)
+  - [ ] 🔁 **REDEPLOY `research-asset` (JWT ON) for v0.30.3** — low effort + fewer searches (no timeout).
+- [ ] ⬜ **`structure-walkaround`** (new, v0.31.0) — Verify JWT **ON**. Dictate-the-whole-walk-around →
+      parsed/mapped findings. Reuses `ANTHROPIC_API_KEY`. No migration. (2026-06-28)
 - [x] ✅ **REDEPLOYED `structure-finding`, `structure-logbook`, `generate-summary`** (v0.27.0) — all
       three now log token usage to `ai_usage` (fire-and-forget, service role) for the platform AI-cost
       view. JWT **ON**. (2026-06-28)

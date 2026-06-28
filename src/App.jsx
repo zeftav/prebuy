@@ -9,6 +9,7 @@ import CreateShop from './pages/CreateShop.jsx'
 import NewInspection from './pages/NewInspection.jsx'
 import InspectionDetail from './pages/InspectionDetail.jsx'
 import OverviewCapture from './pages/OverviewCapture.jsx'
+import Walkaround from './pages/Walkaround.jsx'
 import AircraftProfile from './pages/AircraftProfile.jsx'
 import LogbookAudit from './pages/LogbookAudit.jsx'
 import ClaimListing from './pages/ClaimListing.jsx'
@@ -63,6 +64,14 @@ function App() {
         element={
           <ProtectedRoute>
             <InspectionDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/inspections/:id/walkaround"
+        element={
+          <ProtectedRoute>
+            <Walkaround />
           </ProtectedRoute>
         }
       />

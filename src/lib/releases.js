@@ -6,6 +6,17 @@
 
 export const releases = [
   {
+    version: '0.31.0',
+    date: '2026-06-28',
+    title: 'Dictate the whole walk-around',
+    items: [
+      'New “Dictate walk-around” tool on each inspection: talk through the entire walk-around in one pass — every tire, panel, leak and “looks good” — and we split it into individual findings and map each to the right checklist item.',
+      'Review everything before it’s applied: fix the wording, change a status, re-map a finding to a different item, or untick it. Low-confidence matches are flagged so you can double-check them.',
+      'Anything not mentioned is listed afterward as “fill in the blanks,” highest financial risk first, so nothing gets missed.',
+      'Works for aircraft, boats and homes — it parses against that inspection’s own checklist.',
+    ],
+  },
+  {
     version: '0.30.3',
     date: '2026-06-28',
     title: 'Faster research + tidier profile',

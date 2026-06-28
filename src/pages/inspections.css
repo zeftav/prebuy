@@ -1046,3 +1046,86 @@
     flex-basis: 100%;
   }
 }
+
+/* ── Dictate-the-walk-around tool ─────────────────────────────────────── */
+.insp__walkcta {
+  text-decoration: none;
+}
+.insp__walkrec {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.insp__walktext {
+  width: 100%;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--line, #d7dce3);
+  border-radius: 10px;
+  font: inherit;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+.insp__walkreview {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+.insp__walkrow--off {
+  opacity: 0.55;
+}
+.insp__walkaccept {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+}
+.insp__walkaccept input {
+  margin-top: 3px;
+}
+.insp__walkmap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.insp__walkremap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.insp__walkremap select {
+  flex: 1;
+  padding: 7px 9px;
+  border: 1px solid var(--line, #d7dce3);
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+.insp__lowconf {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #b26a00;
+  background: rgba(224, 160, 0, 0.12);
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.insp__walkdone {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+.insp__clean {
+  color: #1a7f37;
+  font-weight: 600;
+}

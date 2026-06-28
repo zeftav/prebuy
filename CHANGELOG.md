@@ -3,6 +3,27 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.31.0] — 2026-06-28
+
+### Added
+- **Dictate-the-whole-walk-around tool** (`/app/inspections/:id/walkaround`, linked prominently from the
+  inspection's tools row). The mechanic talks through the entire walk-around in one continuous pass; the
+  new **`structure-walkaround`** edge fn (Claude `claude-opus-4-8`, structured `json_schema`) splits the
+  monologue into discrete findings, maps each to the best-matching checklist item (or proposes a new
+  custom item), and writes a clean customer-facing note + status/severity/confidence per finding.
+  - `lib/walkaround.js`: `parseWalkaround` (edge-fn client) + pure, tested helpers `itemsContext`,
+    `buildReviewRows` (resolve AI output against current items), `planApply` (→ item patches +
+    new-item drafts), `acceptedCount`.
+  - `pages/Walkaround.jsx`: record (continuous `useDictation`, typed/paste fallback for iOS Safari) →
+    **review-before-apply** (edit wording/status, re-map to a different item, untick; low-confidence
+    flagged) → apply (patches matched items via `updateInspectionItem`, `addCustomItem` for new) →
+    **"fill in the blanks"** (still-pending items, risk-ordered).
+  - Per-vertical: parses against that inspection's own checklist (aircraft / boat / home).
+  - `structure-walkaround` logs token usage to `ai_usage` (fire-and-forget) like the other AI fns.
+
+### Deploy
+- ⚠️ **Deploy `structure-walkaround` (Verify JWT ON).** Reuses `ANTHROPIC_API_KEY`. No migration.
+
 ## [0.30.3] — 2026-06-28
 
 ### Fixed
