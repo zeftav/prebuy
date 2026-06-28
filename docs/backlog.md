@@ -495,6 +495,37 @@ Status: **decide after field-testing the two risks.** Revisit once the capture f
 
 ---
 
+## True session impersonation — platform support (Brett, 2026-06-28)
+
+We shipped a **read-only support view** (`/admin/orgs/:id` — team + inspections + report links, via the
+`admin-orgs` `org_detail` action, service role). Brett wants **true impersonation** later: actually
+operate the app *as* a shop user to reproduce issues. Design it safe + audited, not a backdoor.
+
+**Approach (preferred): short-lived scoped session minted by an edge fn.**
+- New edge fn `impersonate` (JWT ON, service role, super-admin re-check). Input: `{ org_id }` (and
+  optionally a target `user_id`, else the org owner). It uses the Admin API to mint a **time-limited
+  session** for that user — e.g. `auth.admin.generateLink({ type: 'magiclink', email })` and exchange,
+  or `auth.admin.createSession`-style flow if available in the SDK version — and returns tokens the
+  client swaps in.
+- **Guardrails (all required):**
+  - **Audit log:** write an `impersonation_log` row (admin_email, target_user/org, started_at, ended_at,
+    reason). Surface it in the platform dashboard.
+  - **Time-box:** session valid ≤ ~30 min; auto-revert.
+  - **Visible banner:** a persistent "You are viewing as <shop> — Exit impersonation" bar app-wide so
+    you never forget you're in it; "Exit" restores the admin session.
+  - **Read-mostly by default:** consider blocking destructive writes (publish, delete, handoff) while
+    impersonating, or at least tagging any write with the impersonator in the audit log.
+  - **Never for another super admin / founder.**
+- **Client:** stash the real admin session, apply the minted session, set an `impersonating` flag in
+  context (drives the banner + write guards); "Exit" restores the stashed session.
+
+**Simpler fallback if session-minting is awkward in our SDK:** extend the read-only support view to
+fetch any single inspection's full data (items/media/logbooks) via a service-role `inspection_detail`
+action and render it in a read-only admin viewer — covers "see exactly what they see" without minting a
+session, but you can't *act*.
+
+Status: **spec only.** Build when support load justifies it; the read-only view covers most needs now.
+
 ## Other near-term (tracked in CLAUDE.md TODO)
 Auth + shop signup · Tooltip component + `/help` FAQ · FAA N-number lookup · capture flow
 (dictation + media) · report view + PDF · seed first global checklist · Jira setup.
