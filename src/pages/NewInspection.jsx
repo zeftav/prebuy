@@ -85,7 +85,15 @@ export default function NewInspection() {
     if (data.year) setYear(String(data.year))
     if (data.serial) setSerial(data.serial)
     if (data.engine_count) setEngineCount(data.engine_count)
-    setLookup({ status: 'found', summary: [data.year, data.make, data.model].filter(Boolean).join(' '), serial: data.serial })
+    setLookup({
+      status: 'found',
+      summary: [data.year, data.make, data.model].filter(Boolean).join(' '),
+      serial: data.serial,
+      vertical: shop.vertical,
+      mic: data.mic ?? null,
+      builderMatched: data.builder_matched ?? null,
+      hasBuilder: Boolean(data.make),
+    })
   }
 
   async function onSubmit(e) {
@@ -213,11 +221,26 @@ export default function NewInspection() {
           </div>
           {identifier && !idCheck.valid && <span className="auth__hint">{idCheck.error}</span>}
           {lookup.status === 'found' && (
-            <span className="insp__found">
-              <CheckCircle2 size={15} aria-hidden="true" />
-              Found: {lookup.summary}
-              {lookup.serial ? ` · S/N ${lookup.serial}` : ''}
-            </span>
+            <>
+              <span className="insp__found">
+                <CheckCircle2 size={15} aria-hidden="true" />
+                Found: {lookup.summary}
+                {lookup.serial ? ` · S/N ${lookup.serial}` : ''}
+              </span>
+              {lookup.vertical === 'marine' ? (
+                lookup.builderMatched ? (
+                  <span className="auth__hint">
+                    ✓ Builder matched in the USCG database{lookup.mic ? ` (MIC ${lookup.mic})` : ''}; model year &amp; serial read from the HIN.
+                  </span>
+                ) : (
+                  <span className="auth__hint">
+                    Model year &amp; serial read from the HIN. Builder code {lookup.mic || '—'} isn’t in the USCG database — enter the builder below.
+                  </span>
+                )
+              ) : (
+                <span className="auth__hint">✓ Make, model, year &amp; serial from the FAA registry.</span>
+              )}
+            </>
           )}
           {lookup.status === 'notfound' && (
             <span className="auth__hint">No match — enter the details manually below.</span>

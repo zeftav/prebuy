@@ -3,6 +3,19 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.30.2] — 2026-06-28
+
+### Changed
+- **HIN lookup tells you the source of each detail.** `lib/marine.js` `lookupHIN` now returns `mic` +
+  `builder_matched`; `NewInspection` shows, on a marine lookup, "✓ Builder matched in the USCG database
+  (MIC xxx); model year & serial read from the HIN" — or, when the MIC isn't on file, "…builder code xxx
+  isn't in the USCG database — enter the builder below." Aviation shows "from the FAA registry." Makes it
+  obvious when the builder came from the (now fully-loaded) USCG MIC database vs. parsed from the HIN.
+  Frontend only.
+
+### Ops
+- **USCG MIC bulk-load complete** (~16k builders) via the GitHub Action (needed `ENCODING 'WIN1252'`).
+
 ## [0.30.1] — 2026-06-28
 
 ### Fixed

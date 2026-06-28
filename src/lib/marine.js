@@ -66,6 +66,10 @@ export async function lookupHIN(rawHin) {
   if (error) return { data: null, error }
 
   const shaped = shapeFromHIN(parsed, micRow)
-  if (shaped) shaped.identifier = hin
+  if (shaped) {
+    shaped.identifier = hin
+    shaped.mic = parsed.mic // the 3-char builder code
+    shaped.builder_matched = !!micRow // true = builder resolved from the USCG MIC database
+  }
   return { data: shaped, error: null }
 }

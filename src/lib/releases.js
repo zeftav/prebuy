@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.30.2',
+    date: '2026-06-28',
+    title: 'Clearer HIN lookup',
+    items: [
+      'When you look up a boat HIN, we now tell you where each detail came from: “Builder matched in the USCG database” when the manufacturer code is on file, or a note that the builder code isn’t on file (enter it manually) — and that the model year and serial are read from the HIN itself.',
+    ],
+  },
+  {
     version: '0.30.1',
     date: '2026-06-28',
     title: 'Research with AI — fills more',
