@@ -9,43 +9,35 @@ Without this load, only the seeded codes resolve (the test codes from `018`, plu
 **HUN → Hunter Marine** from `020`); every other real boat shows the year/serial
 but a blank builder.
 
-## Why it's operator-supplied (unlike the FAA loader)
+## The source: the official USCG MIC.csv
 
-The FAA publishes a single downloadable ZIP. The USCG MIC list is a **searchable
-web app** (`uscgboating.org`, ~16k records) with **no one-click CSV export**, and
-it 403s non-browser requests. So you point the loader at a CSV you provide.
+The USCG publishes the full recreational-boat manufacturer list (~16k rows) as a
+direct CSV download:
 
-### Getting a CSV
+    https://uscgboating.org/downloads/MIC.csv
 
-Any of these, as long as it ends up as a CSV with a header row:
-
-- The USCG search at <https://uscgboating.org/manufacturers/> (export/scrape what
-  you need — it's public data).
-- A vetted third-party MIC spreadsheet (several publish ~16k rows). Verify a few
-  against the USCG site before trusting it.
-- Your own curated list.
+(linked from <https://uscgboating.org/content/manufacturers-identification.php>).
+It 403s non-browser requests, so the loader/Action send a browser User-Agent. The
+file's columns include `MIC`, `Company`, `Date Out of Business`, etc.
 
 The loader is **forgiving about column names**: it stages the CSV verbatim and
-auto-detects the columns for the **MIC** (`mic` / `code` / `mfr code` / …), the
-**manufacturer/company** name (`manufacturer` / `company` / `name` / `builder` /
-…), and optional **status**. It only needs a recognizable MIC column and a
-manufacturer column. MICs must be exactly 3 characters; duplicates are de-duped.
+auto-detects the **MIC**, the **manufacturer/company** name, and a **status** —
+preferring to derive status from a "Date Out of Business" column (empty → active,
+else inactive). It treats the literal `NULL` as blank, requires a 3-char MIC + a
+manufacturer, and de-dupes by MIC. So a differently-shaped CSV also works.
 
-## A. GitHub Action (recommended — background + auto-refresh)
+## A. GitHub Action (recommended — one click + auto-refresh)
 
-`.github/workflows/marine-mic-load.yml` downloads the CSV and loads it on a GitHub
-runner. Runs **on demand** and **quarterly**.
+`.github/workflows/marine-mic-load.yml` downloads the official CSV and loads it on
+a GitHub runner. Runs **on demand** and **quarterly**.
 
-**One-time setup:**
+**One-time setup:** just the repo secret `SUPABASE_DB_URL` — the Supabase
+**Session pooler** connection string (the same secret the FAA loader uses; runners
+are IPv4-only and the Direct host is IPv6-only → `ENETUNREACH`). It's already set
+if the FAA load has run.
 
-1. Repo secret `SUPABASE_DB_URL` — the Supabase **Session pooler** connection
-   string (the same secret the FAA loader uses; runners are IPv4-only and the
-   Direct host is IPv6-only → `ENETUNREACH`).
-2. Repo **variable** `MIC_SOURCE_URL` — a URL to your MIC CSV (Settings → Secrets
-   and variables → Actions → **Variables**). Or pass `source_url` when running the
-   workflow manually.
-
-Then: Actions → **Load USCG MIC list** → Run workflow.
+Then: Actions → **Load USCG MIC list** → Run workflow. (To use a different CSV,
+set a `MIC_SOURCE_URL` repo **variable** or pass `source_url` on dispatch.)
 
 ## B. Locally
 

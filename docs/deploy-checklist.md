@@ -97,9 +97,10 @@ Run in order. All are idempotent (safe to re-run).
       ⬜ Still: verify `prebuy.app` in Resend (for email); point the **apex** at the landing page once built.
 - [ ] ⬜ **Marketing/landing page** at the apex (basic product page, à la yellowtag.app) with a CTA
       into `app.prebuy.app`. See `docs/backlog.md` → Marketing site.
-- [ ] ⬜ **USCG MIC bulk-load** (boat builder lookup) — set repo **variable** `MIC_SOURCE_URL` to a CSV
-      of MIC codes, then run Actions → **Load USCG MIC list** (reuses the `SUPABASE_DB_URL` secret).
-      Until then only seeded codes (test + HUN) resolve. Steps + sourcing in `docs/marine-mic-load.md`.
+- [ ] ⬜ **USCG MIC bulk-load** (boat builder lookup) — one click: Actions → **Load USCG MIC list** →
+      Run workflow. Pulls the official `uscgboating.org/downloads/MIC.csv` (~16k builders) and loads it;
+      reuses the `SUPABASE_DB_URL` secret (no extra config). Until then only seeded codes (test + HUN)
+      resolve. Quarterly auto-refresh. Details in `docs/marine-mic-load.md`.
 
 ---
 

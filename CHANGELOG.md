@@ -12,9 +12,11 @@ User-facing entries are also summarized in-app (see `src/lib/releases.js`).
   - `scripts/marine/load-mic.mjs` (+`package.json`) — idempotent CSV→`marine_mic` upsert (stage verbatim,
     auto-detect mic/manufacturer/status columns, dedupe by MIC, 3-char filter). Mirrors the FAA loader;
     reuses the `SUPABASE_DB_URL` Session-pooler secret.
-  - `.github/workflows/marine-mic-load.yml` — manual + quarterly; downloads a CSV from the
-    `MIC_SOURCE_URL` repo variable (browser UA + retry) and loads it. `docs/marine-mic-load.md` covers
-    sourcing (the USCG DB is a search app with no one-click CSV → operator-supplied).
+  - `.github/workflows/marine-mic-load.yml` — manual + quarterly; **defaults to the official USCG CSV**
+    `https://uscgboating.org/downloads/MIC.csv` (~16k builders; browser UA + retry), overridable via
+    `MIC_SOURCE_URL`. One click, reuses `SUPABASE_DB_URL`. `docs/marine-mic-load.md` has the details.
+    (Found the official direct CSV download — no scraping/third-party needed; loader derives active/
+    inactive from the file's "Date Out of Business" column and treats literal `NULL` as blank.)
   - `supabase/migrations/020_marine_mic_seed.sql` — seeds **HUN → Hunter Marine** (verified) so a real
     builder resolves before the full list is loaded. **Run it.**
 

@@ -15,10 +15,15 @@ on:
   workflow_dispatch:
     inputs:
       source_url:
-        description: 'Override CSV URL (else uses the MIC_SOURCE_URL repo variable)'
+        description: 'Override CSV URL (defaults to the official USCG MIC.csv)'
         required: false
   schedule:
     - cron: '0 9 1 1,4,7,10 *' # 09:00 UTC on the 1st of Jan/Apr/Jul/Oct
+
+# The official USCG MIC list (~16k recreational-boat builders), published as a CSV.
+# Overridable via the workflow input or a MIC_SOURCE_URL repo variable.
+env:
+  DEFAULT_MIC_URL: 'https://uscgboating.org/downloads/MIC.csv'
 
 jobs:
   load:
@@ -31,19 +36,15 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Resolve + download the MIC CSV
+      - name: Download the MIC CSV
         env:
-          SOURCE_URL: ${{ github.event.inputs.source_url || vars.MIC_SOURCE_URL }}
+          SOURCE_URL: ${{ github.event.inputs.source_url || vars.MIC_SOURCE_URL || env.DEFAULT_MIC_URL }}
         run: |
-          if [ -z "$SOURCE_URL" ]; then
-            echo "::error::No MIC CSV source. Set the MIC_SOURCE_URL repo variable or pass source_url. See docs/marine-mic-load.md."
-            exit 1
-          fi
-          # Some hosts 403 non-browser requests, so send a browser User-Agent.
+          # uscgboating.org 403s non-browser requests, so send a browser User-Agent.
           curl -fSL --retry 3 \
             -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36' \
             -o mic.csv "$SOURCE_URL"
-          head -3 mic.csv
+          head -1 mic.csv
           wc -l mic.csv
 
       - name: Install loader deps

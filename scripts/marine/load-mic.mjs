@@ -77,28 +77,40 @@ try {
   console.log(`  staged ${staged[0].n.toLocaleString()} rows`)
 
   const micCol = findColumn(cols, ['mic', 'manufacturercode', 'mfrcode', 'code', 'manufactureridentificationcode'])
-  const mfrCol = findColumn(cols, ['manufacturer', 'company', 'companyname', 'name', 'mfr', 'builder', 'manufacturername'])
+  const mfrCol = findColumn(cols, ['company', 'manufacturer', 'companyname', 'name', 'mfr', 'builder', 'manufacturername'])
+  const oobCol = findColumn(cols, ['dateoutofbusiness', 'outofbusiness'])
   const statusCol = findColumn(cols, ['status', 'active', 'operatingstatus'])
   if (!micCol || !mfrCol) {
     die(`Couldn't find MIC + manufacturer columns in the CSV header.\n  Detected columns: ${cols.join(', ')}\n  Rename the header so MIC and manufacturer/company are identifiable (see docs/marine-mic-load.md).`)
   }
-  console.log(`  columns → mic="${micCol}", manufacturer="${mfrCol}", status=${statusCol ? `"${statusCol}"` : '(none)'}`)
+  console.log(`  columns → mic="${micCol}", manufacturer="${mfrCol}", status=${oobCol ? `from "${oobCol}"` : statusCol ? `"${statusCol}"` : '(none)'}`)
+
+  // The USCG file (and others) use the literal string "NULL" for blanks → treat
+  // it as empty. Helper that trims and maps ''/'NULL' to SQL null.
+  const clean = (col) => `nullif(nullif(trim("${col}"), ''), 'NULL')`
+
+  // Status: prefer deriving from a "date out of business" column (empty → active,
+  // else inactive); else a status column verbatim; else null.
+  const statusExpr = oobCol
+    ? `case when ${clean(oobCol)} is null then 'active' else 'inactive' end`
+    : statusCol
+      ? clean(statusCol)
+      : 'null'
 
   // Upsert: MICs are exactly 3 chars (uppercased); manufacturer required. Dedupe
-  // by MIC (a CSV can carry multiple records per code) — distinct on keeps one.
+  // by MIC (the file can carry a stray duplicate) — distinct on keeps one.
   console.log('Upserting marine_mic…')
-  const statusExpr = statusCol ? `nullif(trim("${statusCol}"), '')` : 'null'
   const res = await client.query(`
     insert into public.marine_mic (mic, manufacturer, status, updated_at)
     select mic, manufacturer, status, now() from (
       select distinct on (upper(trim("${micCol}")))
         upper(trim("${micCol}")) as mic,
-        nullif(trim("${mfrCol}"), '') as manufacturer,
+        ${clean(mfrCol)} as manufacturer,
         ${statusExpr} as status
       from stg_mic
       where char_length(trim("${micCol}")) = 3
-        and coalesce(trim("${mfrCol}"), '') <> ''
-      order by upper(trim("${micCol}")), nullif(trim("${mfrCol}"), '')
+        and ${clean(mfrCol)} is not null
+      order by upper(trim("${micCol}")), ${clean(mfrCol)}
     ) d
     on conflict (mic) do update set
       manufacturer = excluded.manufacturer,

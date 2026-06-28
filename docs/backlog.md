@@ -563,6 +563,44 @@ Status: **decide after field-testing the two risks.** Revisit once the capture f
 
 ---
 
+## VIN lookup for automotive / RV (Brett, 2026-06-28)
+
+The vehicle/RV analog of the N-number (aviation) and HIN (marine) resolvers. **NHTSA vPIC** is a free,
+no-key public API that decodes a 17-char VIN → year, make, model, body class, engine, plant, GVWR, etc.
+- Decode endpoint: `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/<VIN>?format=json` (flat
+  values) — one HTTP call, no bulk table needed (unlike FAA/MIC). RVs decode too (motorhome chassis +
+  body class; trailer VINs give make/year).
+- **Touchpoints when we add an automotive/RV vertical:** `verticals.js` (new vertical(s) + `validateIdentifier`
+  for VIN [17 chars, no I/O/Q] + `hasLookup`); a `lib/vehicle.js` resolver (`lookupVIN` → shape make/
+  model/year/attributes) calling vPIC directly from the client (CORS-friendly) or via a thin edge fn;
+  `NewInspection` dispatch by vertical (already switches aviation/marine); a per-vertical **profile
+  schema** (engine, mileage, GVWR, axles/slides for RV) — slots into the v0.29.0 `profileSchema()` work;
+  seeded checklists. No bulk loader required (live API), so simpler than FAA/MIC.
+- Pairs naturally with the **AI auto-profile** idea below (vPIC gives ground-truth make/model/year; AI
+  fills typical specs/equipment).
+
+## AI auto-build the profile from the identifier (Brett, 2026-06-28)
+
+Brett saw Google's AI Overview return a near-complete spec sheet for a HIN (`HUN38553A999` → 1999 Hunter
+380: LOA 37'3", beam 12'7", displ 16,000 lb, draft 5', tanks 30/75/35, 36 hp Yanmar, 2 cabins/1 head,
+even the boat's name). Goal: an **"Auto-fill / Research this asset"** button that drafts the profile
+automatically, for human review — the autofill that makes the tool feel professional.
+- **What's reliably auto-fillable:** once we know **year + make + model**, the *model's published spec
+  sheet* (dimensions, weights, tank capacities, typical engine, layout) is well-documented public data
+  an LLM (with web search) can assemble. Equipment lists for a model's typical config too.
+- **The catch (must be designed in):** a HIN/N-number gives builder + serial + year, **not the model** —
+  and a *specific hull's* config can differ from the model's typical specs (engine swaps, options). So:
+  AI proposes **model + typical specs as a DRAFT**, clearly "AI-suggested, verify against the actual
+  asset," grounded with web-search citations; the inspector ticks/edits before save (reuse the scan-
+  review `mergeProfileDraft` flow — fill-blanks-only).
+- **Architecture:** new edge fn `research-asset` (JWT ON, Claude + the web-search tool, structured
+  output → a `profileSchema`-shaped draft + a guessed model + sources). Called from `AircraftProfile`
+  (and maybe `NewInspection` after identify). Per-vertical prompt (vessel vs aircraft vs vehicle).
+  Log to `ai_usage` like the other AI fns. Confirm Claude web-search tool + model via the `claude-api`
+  skill at build time.
+- **Sequence:** strongest combined with the identifier resolvers — vPIC/HIN/FAA give ground-truth
+  make/model/year; the AI fills the rest. Big professionalism win; build behind the "verify" framing.
+
 ## True session impersonation — platform support (Brett, 2026-06-28)
 
 We shipped a **read-only support view** (`/admin/orgs/:id` — team + inspections + report links, via the
