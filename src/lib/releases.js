@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.26.0',
+    date: '2026-06-28',
+    title: 'Boat HIN lookup',
+    items: [
+      'Starting a boat inspection? Enter the HIN and tap “Look up” — we read the model year and serial straight from it, and the builder when the manufacturer code is known.',
+      'Edit anything before you save, just like the N-number lookup.',
+    ],
+  },
+  {
     version: '0.25.0',
     date: '2026-06-28',
     title: 'Hand a listing to a shop',

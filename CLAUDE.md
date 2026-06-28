@@ -299,6 +299,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   (+ expertise filtering later). Then scope/disclaimer drawer, gear-rigging forms, invite teammates,
   server-side PDF; broader landing-page story (all verticals / whole sale lifecycle); per-vertical
   identifier resolvers (USCG MIC, address/property, NHTSA vPIC); aircraft-as-entity; research project.
+- Session 2 cont. — **Boat HIN lookup** (v0.26.0). The marine analog of the N-number lookup — first
+  per-vertical resolver beyond aviation. Migration `018` (`marine_mic` ref table: mic PK / manufacturer /
+  status + RLS read-only; TEST fixtures `ABC`/`ZZZ`). `lib/marine.js`: pure `normalizeHIN`/
+  `inferModelYear`/`parseHIN` (12-char modern HIN → MIC·serial·build-month·model-year)/`shapeFromHIN`
+  (+tests, 118 total) + `lookupHIN` (parse + MIC query; missing MIC just leaves builder null).
+  `verticals.js` marine `hasLookup: true`. NewInspection dispatches the lookup by shop vertical
+  (`lookupHIN` for marine, else `lookupAircraft`); notfound copy made vertical-neutral. Full USCG MIC
+  bulk-load = backlog. ⚠️ **Run migration 018** (no edge fn). Lint + 118 tests + build green.
+  **NEXT (Brett's steer): super-admin dashboard** — Brett has a strong one on Yellowtag; he'll export a
+  feature outline to spec it. Likely: cross-org overview (orgs/users/inspections counts + recent
+  activity), per-org drill-in, impersonate/support, system health — gated to a platform-owner role
+  (NOT org RLS; service-role edge fn or a `super_admin` flag). Spec pending from Brett.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

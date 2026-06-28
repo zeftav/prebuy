@@ -11,6 +11,7 @@ import { fetchMemberships, pickActiveOrg } from '../lib/shops.js'
 import { createInspection } from '../lib/inspections.js'
 import { getVertical, validateIdentifier } from '../lib/verticals.js'
 import { lookupAircraft } from '../lib/aircraft.js'
+import { lookupHIN } from '../lib/marine.js'
 import Tooltip, { InfoDot } from '../components/Tooltip.jsx'
 import './auth.css'
 import './inspections.css'
@@ -69,7 +70,7 @@ export default function NewInspection() {
       return
     }
     setLookup({ status: 'busy' })
-    const { data, error } = await lookupAircraft(identifier)
+    const { data, error } = shop.vertical === 'marine' ? await lookupHIN(identifier) : await lookupAircraft(identifier)
     if (error) {
       setLookup({ status: 'error' })
       return
@@ -219,7 +220,7 @@ export default function NewInspection() {
             </span>
           )}
           {lookup.status === 'notfound' && (
-            <span className="auth__hint">No FAA match — enter the details manually below.</span>
+            <span className="auth__hint">No match — enter the details manually below.</span>
           )}
           {lookup.status === 'error' && (
             <span className="auth__hint">Lookup unavailable right now — you can still enter details manually.</span>

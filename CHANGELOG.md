@@ -3,6 +3,25 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.26.0] — 2026-06-28
+
+### Added
+- **Boat HIN lookup (marine Identify stage).** Marine inspections now have a "Look up" button, the boat
+  analog of the N-number lookup. A modern 12-char Hull Identification Number is structured, so we parse
+  the **serial** and **model year** straight from it client-side, and resolve the **builder** from the
+  first 3 chars (the USCG **MIC**) via a small reference table.
+  - `supabase/migrations/018_marine_mic.sql` — `marine_mic` table (mic PK / manufacturer / status) +
+    RLS read-only to authenticated. Seeds TEST fixtures (`ABC`, `ZZZ`); the full USCG MIC list is a
+    later bulk-load (see `docs/backlog.md`). **Needs running.** No edge fn.
+  - `src/lib/marine.js` — pure `normalizeHIN` / `inferModelYear` / `parseHIN` / `shapeFromHIN` (+tests),
+    and `lookupHIN` (parse + MIC query). `verticals.js` marine `hasLookup: true`.
+  - `NewInspection` dispatches the lookup by the shop vertical (`lookupHIN` for marine, `lookupAircraft`
+    otherwise); a missing MIC just leaves the builder blank (year/serial still fill).
+
+### Notes
+- HIN parsing covers the post-Aug-1984 12-char format. Builder resolution is only as complete as the
+  `marine_mic` table — fixtures for now; bulk-load the public USCG MIC list to cover real builders.
+
 ## [0.25.0] — 2026-06-28
 
 ### Added

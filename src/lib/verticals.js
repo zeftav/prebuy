@@ -78,12 +78,12 @@ export const VERTICALS = {
     noun: 'boat',
     identifierLabel: 'HIN',
     identifierPlaceholder: 'ABC12345D404',
-    identifierHint: 'Hull Identification Number — 12 characters, usually on the transom.',
+    identifierHint: 'Hull Identification Number — 12 characters, usually on the transom. We’ll read the builder, model year and serial from it.',
     makeLabel: 'Builder',
     modelLabel: 'Model',
     makePlaceholder: 'Catalina',
     modelPlaceholder: '30',
-    hasLookup: false, // no clean public HIN decoder — manual entry for now
+    hasLookup: true, // HIN structure → serial + model year; builder via USCG MIC (lib/marine.js)
     guidedCapture: 'full',
     overviewShots: [
       'Exterior — bow',

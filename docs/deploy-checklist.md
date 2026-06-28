@@ -38,6 +38,8 @@ Run in order. All are idempotent (safe to re-run).
       `report` redeployed (JWT OFF) so listings publish as a listing/spec-sheet. (2026-06-28)
 - [x] ✅ `017_handoffs.sql` — `handoffs` table + RLS (cross-org broker handoff), and **`claim-listing`**
       edge fn deployed (JWT ON). Powers `/claim/:token`. (2026-06-28)
+- [ ] ⬜ `018_marine_mic.sql` — `marine_mic` reference table + RLS read (powers the **boat HIN lookup**;
+      builder from MIC). Seeds TEST fixtures only. No edge fn. (2026-06-28)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
