@@ -25,10 +25,9 @@ Run in order. All are idempotent (safe to re-run).
 - [x] ✅ `010_inspection_meta.sql` — `inspections.inspector_name` / `location` / `inspection_date`. (2026-06-27)
 - [x] ✅ `011_generic_aviation_checklist.sql` — model-agnostic "General Aircraft" fallback template
       (drops NOT NULL on make/model, then seeds the generic template). (2026-06-27)
-- [ ] ⬜ `012_seed_home_checklist.sql` — generic **home** inspection checklist (InterNACHI-based,
-      ~101 items). **Run in the SQL editor** (pasted in chat).
-- [ ] ⬜ `013_seed_marine_checklist.sql` — generic **boat** survey checklist (~56 items). **Run in the
-      SQL editor** (pasted in chat). Order doesn't matter vs 012.
+- [x] ✅ `012_seed_home_checklist.sql` — generic **home** inspection checklist (InterNACHI-based,
+      ~101 items). (2026-06-28)
+- [x] ✅ `013_seed_marine_checklist.sql` — generic **boat** survey checklist (~56 items). (2026-06-28)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
