@@ -181,7 +181,7 @@ export default function AircraftProfile() {
         <textarea
           className="insp__summaryinput"
           rows={5}
-          placeholder="e.g. A well-maintained, hangared A36 with mid-time engine, recent avionics upgrade, and no damage history."
+          placeholder={schema.summaryPlaceholder}
           value={profile.summary}
           onChange={setSummary}
         />

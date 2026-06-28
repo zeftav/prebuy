@@ -3,6 +3,16 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.30.3] — 2026-06-28
+
+### Fixed
+- **"Research with AI" timed out.** `claude-opus-4-8` defaults to high effort, which (with up to 6 web
+  searches) ran for minutes. Set `output_config.effort: 'low'` (it's structured extraction, not deep
+  reasoning), cut `web_search` `max_uses` 6 → 3, and told it to answer mainly from knowledge and search
+  only briefly to confirm. ⚠️ **Redeploy `research-asset` (JWT ON).**
+- **Vertical-specific Summary placeholder.** The profile Summary box showed an aircraft example for every
+  vertical; now driven by `profileSchema().summaryPlaceholder` (aircraft / vessel / property). Frontend.
+
 ## [0.30.2] — 2026-06-28
 
 ### Changed

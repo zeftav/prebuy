@@ -155,6 +155,8 @@ Deno.serve(async (req: Request) => {
     `standard/notable factory equipment grouped as avionics (electronics/nav) and additional (everything ` +
     `else). Write a neutral 2-3 sentence summary of the model. Set model_guess to the model you identified ` +
     `and confidence accordingly. List the sources you used (may be empty if you relied on known specs).` +
+    `\n\nWork efficiently: answer mainly from your knowledge of this model and use web search only briefly ` +
+    `(a couple of queries at most) to confirm or fill gaps — do not over-search.` +
     `\n\nFields:\n${fieldGuide}`
 
   try {
@@ -173,8 +175,9 @@ Deno.serve(async (req: Request) => {
           'actual asset, so prefer giving a typical value over leaving a field blank. Only leave a field blank ' +
           'when the model has no standard value for it; do not fabricate implausible numbers, and never present ' +
           'a value as specific to this exact unit.',
-        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }],
-        output_config: { format: { type: 'json_schema', schema: SCHEMA } },
+        tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 3 }],
+        // Low effort keeps this fast — it's structured extraction, not deep reasoning.
+        output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
         messages: messages as never,
       })
       if (message.stop_reason !== 'pause_turn') break

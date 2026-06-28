@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.30.3',
+    date: '2026-06-28',
+    title: 'Faster research + tidier profile',
+    items: [
+      '“Research with AI” is much faster now and no longer times out — it answers mainly from the model’s knowledge and searches the web only briefly to confirm.',
+      'The Summary box’s example text now matches what you’re inspecting (aircraft, boat, or property) instead of always showing an aircraft example.',
+    ],
+  },
+  {
     version: '0.30.2',
     date: '2026-06-28',
     title: 'Clearer HIN lookup',

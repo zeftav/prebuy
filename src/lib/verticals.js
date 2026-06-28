@@ -128,6 +128,7 @@ const PROFILE_SCHEMAS = {
   aviation: {
     noun: 'Aircraft',
     canScan: true,
+    summaryPlaceholder: 'e.g. A well-maintained, hangared A36 with mid-time engine, a recent avionics upgrade, and no damage history.',
     specTitle: 'Airframe — specifications & times',
     specFields: [
       { key: 'total_time', label: 'Total time', suffix: ' hrs', placeholder: '4200' },
@@ -172,6 +173,7 @@ const PROFILE_SCHEMAS = {
   marine: {
     noun: 'Vessel',
     canScan: false,
+    summaryPlaceholder: 'e.g. A well-kept, freshwater-only Hunter 380 with a low-hour diesel, updated electronics, and no damage history.',
     specTitle: 'Vessel — specifications',
     specFields: [
       { key: 'loa', label: 'Length overall (LOA)', suffix: ' ft', placeholder: '35' },
@@ -215,6 +217,7 @@ const PROFILE_SCHEMAS = {
   home: {
     noun: 'Property',
     canScan: false,
+    summaryPlaceholder: 'e.g. A well-maintained 1998 two-story with a newer roof, updated HVAC, and no known structural issues.',
     specTitle: 'Property — details',
     specFields: [
       { key: 'square_footage', label: 'Square footage', suffix: ' sq ft', placeholder: '2200' },
