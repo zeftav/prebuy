@@ -410,6 +410,7 @@ function ResearchPrefill({ inspection, schema, onApply }) {
           <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={run} disabled={!canRun || phase === 'working'}>
             <Globe size={15} aria-hidden="true" /> {phase === 'working' ? 'Researching…' : 'Research with AI'}
           </button>
+          {phase === 'working' && <p className="auth__hint">Searching the web and compiling specs — this can take up to a minute.</p>}
           {!canRun && <p className="auth__hint">Add a make/model (or look up the identifier) first.</p>}
           {error && <div className="auth__error" role="alert">{error}</div>}
         </>

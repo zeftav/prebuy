@@ -411,17 +411,26 @@ export async function researchAsset(inspection, orgId) {
   }
 
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/research-asset`
+  // Web search makes this slow; cap the wait so the UI never hangs indefinitely.
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 150000)
   try {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify(body),
+      signal: ctrl.signal,
     })
     const json = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(json.error || `Request failed (${res.status})`) }
     return { data: json, error: null }
   } catch (e) {
+    if (e?.name === 'AbortError') {
+      return { data: null, error: new Error('Research took too long and timed out. Try again, or fill the profile manually.') }
+    }
     return { data: null, error: e instanceof Error ? e : new Error('Network error') }
+  } finally {
+    clearTimeout(timer)
   }
 }
 

@@ -3,6 +3,18 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.30.1] — 2026-06-28
+
+### Fixed
+- **"Research with AI" returned a model guess but 0 filled fields.** The `research-asset` prompt was
+  over-conservative ("only report what you find via search; never invent figures"), so when web results
+  were thin Claude left every spec blank rather than using its knowledge of a well-documented model.
+  Reworked the system + user prompt to fill the model's **typical published specs** from web search
+  **and** its own knowledge (still a verify-me draft; blank only when there's no standard value).
+  ⚠️ **Redeploy `research-asset` (JWT ON).**
+- `researchAsset` now has a 150s client-side timeout (clear message instead of an indefinite
+  "Researching…") + a "this can take up to a minute" hint while it runs. Frontend.
+
 ## [0.30.0] — 2026-06-28
 
 ### Added

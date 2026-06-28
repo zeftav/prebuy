@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.30.1',
+    date: '2026-06-28',
+    title: 'Research with AI — fills more',
+    items: [
+      'Fixed “Research with AI” coming back empty: it now fills the model’s typical published specs from the web and its own knowledge, instead of leaving fields blank when search results were thin.',
+    ],
+  },
+  {
     version: '0.30.0',
     date: '2026-06-28',
     title: 'Research the profile with AI',

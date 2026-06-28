@@ -144,15 +144,18 @@ Deno.serve(async (req: Request) => {
 
   const anthropic = new Anthropic({ apiKey })
   const userText =
-    `Research the published manufacturer specifications for this ${noun}: ${descriptor || identifier}.` +
+    `Research the typical published specifications for this ${noun}: ${descriptor || identifier}.` +
     (identifier ? ` Identifier: ${identifier}.` : '') +
-    `\n\nUse web search to find the model's spec sheet / brochure / a reputable listing. Fill ONLY the ` +
-    `fields below, using values TYPICAL for this make/model/year (not a specific unit). Use a plain ` +
-    `number where the field is numeric (no units). Leave any field you can't verify as an empty string "". ` +
-    `For engines/props, return one entry per engine the model typically has. Equipment: list standard/notable ` +
-    `factory equipment grouped as avionics (electronics/nav) and additional (everything else). Write a short, ` +
-    `neutral 2-3 sentence summary of the model. Set model_guess to the exact model you identified and confidence ` +
-    `to how sure you are. Provide the sources you used.\n\nFields:\n${fieldGuide}`
+    `\n\nUse web search to find the model's spec sheet / brochure / a reputable listing, AND draw on your ` +
+    `own knowledge of this model. FILL EVERY field below for which a typical value exists for this ` +
+    `make/model/year — these are typical-for-the-model figures the user will verify against the actual ` +
+    `${noun}, so prefer giving a typical value over leaving it blank. Use a plain number for numeric ` +
+    `fields (no units). Leave a field blank ("") ONLY when there is genuinely no standard value for the ` +
+    `model. For engines/props, return one entry per engine the model typically has. Equipment: list the ` +
+    `standard/notable factory equipment grouped as avionics (electronics/nav) and additional (everything ` +
+    `else). Write a neutral 2-3 sentence summary of the model. Set model_guess to the model you identified ` +
+    `and confidence accordingly. List the sources you used (may be empty if you relied on known specs).` +
+    `\n\nFields:\n${fieldGuide}`
 
   try {
     // The web_search server tool may yield stop_reason "pause_turn"; resume by
@@ -165,8 +168,11 @@ Deno.serve(async (req: Request) => {
         max_tokens: 4096,
         system:
           'You research published specifications for high-value assets (aircraft, boats, vehicles, homes). ' +
-          'You only report what you can find from real sources via web search; you never invent figures. ' +
-          'Values are typical-for-the-model, clearly a starting draft a human will verify against the actual asset.',
+          'Fill in the model’s TYPICAL published specifications using web search and your own knowledge of ' +
+          'the model. These are starting-point, typical-for-the-model figures the user will verify against the ' +
+          'actual asset, so prefer giving a typical value over leaving a field blank. Only leave a field blank ' +
+          'when the model has no standard value for it; do not fabricate implausible numbers, and never present ' +
+          'a value as specific to this exact unit.',
         tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }],
         output_config: { format: { type: 'json_schema', schema: SCHEMA } },
         messages: messages as never,
