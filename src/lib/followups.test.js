@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { reasonLabel, openCount, groupByStatus, groupByReason, reportFollowups, FOLLOWUP_REASONS } from './followups.js'
+import { reasonLabel, openCount, tallyByInspection, groupByStatus, groupByReason, reportFollowups, FOLLOWUP_REASONS } from './followups.js'
 
 const F = [
   { id: '1', reason: 'research', status: 'open', show_on_report: true },
@@ -28,6 +28,25 @@ describe('openCount', () => {
   })
   it('handles nullish', () => {
     expect(openCount(null)).toBe(0)
+  })
+})
+
+describe('tallyByInspection', () => {
+  it('counts rows per inspection_id', () => {
+    expect(
+      tallyByInspection([
+        { inspection_id: 'a' },
+        { inspection_id: 'b' },
+        { inspection_id: 'a' },
+        { inspection_id: 'a' },
+      ]),
+    ).toEqual({ a: 3, b: 1 })
+  })
+  it('ignores rows without an inspection_id', () => {
+    expect(tallyByInspection([{ inspection_id: 'a' }, {}, { inspection_id: null }])).toEqual({ a: 1 })
+  })
+  it('handles nullish', () => {
+    expect(tallyByInspection(null)).toEqual({})
   })
 })
 

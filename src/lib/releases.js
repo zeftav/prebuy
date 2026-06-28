@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.32.1',
+    date: '2026-06-28',
+    title: 'Loose-ends badge on the dashboard',
+    items: [
+      'Your inspection list now shows a “loose ends” badge on any job with open follow-ups, so you can see at a glance which inspections still have things to tidy up before the report.',
+    ],
+  },
+  {
     version: '0.32.0',
     date: '2026-06-28',
     title: 'Follow-ups / “to-investigate” list',

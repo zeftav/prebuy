@@ -3,6 +3,14 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.32.1] — 2026-06-28
+
+### Added
+- **Dashboard "loose ends" badge.** The inspection list shows the open follow-up count per inspection
+  so loose ends are visible across jobs at a glance. `lib/followups.js` `openFollowupCounts(orgId)`
+  (one query per shop) + pure tested `tallyByInspection`; `Dashboard` renders the badge. Frontend only
+  (no migration / no deploy).
+
 ## [0.32.0] — 2026-06-28
 
 ### Added

@@ -1214,3 +1214,15 @@
   gap: 4px;
   flex-shrink: 0;
 }
+
+/* Dashboard "loose ends" (open follow-ups) badge */
+.insp__loosebadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b26a00;
+  background: rgba(224, 160, 0, 0.12);
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}

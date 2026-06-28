@@ -9,6 +9,7 @@ import { Plane, LogOut, Plus, Ship, ShieldCheck, Trash2 } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { fetchMemberships, pickActiveOrg } from '../lib/shops.js'
 import { listInspectionsForOrg, deleteInspection } from '../lib/inspections.js'
+import { openFollowupCounts } from '../lib/followups.js'
 import { getVertical } from '../lib/verticals.js'
 import './auth.css'
 import './inspections.css'
@@ -133,13 +134,19 @@ export default function Dashboard() {
 
 function InspectionList({ orgId, canManage }) {
   const [state, setState] = useState({ status: 'loading', rows: [] })
+  const [followCounts, setFollowCounts] = useState({})
 
   useEffect(() => {
     let active = true
     setState({ status: 'loading', rows: [] })
+    setFollowCounts({})
     listInspectionsForOrg(orgId).then(({ data, error }) => {
       if (!active) return
       setState({ status: error ? 'error' : 'ready', rows: data, error })
+    })
+    // Open follow-up counts for the whole shop, in one query (badge data).
+    openFollowupCounts(orgId).then(({ data }) => {
+      if (active) setFollowCounts(data)
     })
     return () => {
       active = false
@@ -195,6 +202,11 @@ function InspectionList({ orgId, canManage }) {
                       .join(' · ')}
                   </span>
                 </span>
+                {followCounts[row.id] > 0 && (
+                  <span className="insp__loosebadge" title={`${followCounts[row.id]} open follow-up${followCounts[row.id] === 1 ? '' : 's'}`}>
+                    {followCounts[row.id]} {followCounts[row.id] === 1 ? 'loose end' : 'loose ends'}
+                  </span>
+                )}
                 <span className={`insp__status insp__status--${row.status}`}>{row.status}</span>
               </Link>
               {canManage && <RowDelete row={row} onDeleted={() => removeRow(row.id)} />}

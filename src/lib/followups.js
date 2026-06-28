@@ -70,11 +70,41 @@ export async function deleteFollowup(id) {
   return { error }
 }
 
+/**
+ * Open follow-up counts per inspection for a whole shop, in one query (for the
+ * Dashboard's at-a-glance "loose ends" badge). Returns { data: { [inspectionId]:
+ * count }, error }.
+ */
+export async function openFollowupCounts(orgId) {
+  const { data, error } = await supabase
+    .from('inspection_followups')
+    .select('inspection_id')
+    .eq('org_id', orgId)
+    .eq('status', 'open')
+  if (error) return { data: {}, error }
+  return { data: tallyByInspection(data), error: null }
+}
+
 // ── Pure helpers (tested) ────────────────────────────────────────────────────
 
 /** Count of still-open follow-ups. Pure. */
 export function openCount(followups) {
   return (followups ?? []).filter((f) => f?.status === 'open').length
+}
+
+/**
+ * Tally rows ({ inspection_id }) into { [inspectionId]: count }. Pure — used by
+ * the Dashboard "loose ends" badge (rows are pre-filtered to open). Ignores rows
+ * with no inspection_id. Pure.
+ */
+export function tallyByInspection(rows) {
+  const counts = {}
+  for (const r of rows ?? []) {
+    const id = r?.inspection_id
+    if (!id) continue
+    counts[id] = (counts[id] || 0) + 1
+  }
+  return counts
 }
 
 /**
