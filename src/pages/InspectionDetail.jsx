@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import {
   getInspection,
@@ -222,9 +222,13 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
   const [aiBusy, setAiBusy] = useState(false)
   const [aiError, setAiError] = useState(null)
   const [photoBusy, setPhotoBusy] = useState(false)
+  const [docBusy, setDocBusy] = useState(false)
   const dict = useDictation()
   const band = riskBand(item)
   const isDiscrepancy = item.status === 'discrepancy'
+  // Photos render as thumbnails; documents (PDF lab reports, etc.) as download links.
+  const photos = media.filter((m) => m.kind !== 'document')
+  const docs = media.filter((m) => m.kind === 'document')
 
   async function addPhoto(file) {
     if (!file) return
@@ -237,6 +241,21 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
       file,
     })
     setPhotoBusy(false)
+    if (!error) onMediaChange()
+  }
+
+  async function addDoc(file) {
+    if (!file) return
+    setDocBusy(true)
+    const { error } = await uploadMedia({
+      orgId: inspection.org_id,
+      inspectionId: inspection.id,
+      inspectionItemId: item.id,
+      purpose: 'attachment',
+      file,
+      caption: file.name, // keep the original filename for display
+    })
+    setDocBusy(false)
     if (!error) onMediaChange()
   }
 
@@ -351,11 +370,22 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
               {aiBusy ? 'Cleaning…' : 'Clean up with AI'}
             </button>
             <PhotoPicker onPick={(files) => addPhoto(files?.[0])} busy={photoBusy} />
+            <label className="insp__capturebtn">
+              <Paperclip size={15} aria-hidden="true" />
+              {docBusy ? 'Uploading…' : 'Attach file'}
+              <input
+                type="file"
+                accept="application/pdf,image/*"
+                hidden
+                disabled={docBusy}
+                onChange={(e) => addDoc(e.target.files?.[0])}
+              />
+            </label>
           </div>
 
-          {media.length > 0 && (
+          {photos.length > 0 && (
             <div className="insp__thumbs">
-              {media.map((m) => (
+              {photos.map((m) => (
                 <span key={m.id} className="insp__thumbwrap">
                   {m.url && <img className="insp__thumb" src={m.url} alt="finding" loading="lazy" />}
                   <button type="button" className="insp__thumbdel" onClick={() => removePhoto(m)} aria-label="Remove photo">
@@ -364,6 +394,22 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
                 </span>
               ))}
             </div>
+          )}
+
+          {docs.length > 0 && (
+            <ul className="insp__docs">
+              {docs.map((m) => (
+                <li key={m.id} className="insp__doc">
+                  <Paperclip size={13} aria-hidden="true" />
+                  {m.url
+                    ? <a href={m.url} target="_blank" rel="noreferrer">{m.caption || 'Attachment'}</a>
+                    : <span>{m.caption || 'Attachment'}</span>}
+                  <button type="button" className="insp__thumbdel insp__docdel" onClick={() => removePhoto(m)} aria-label="Remove attachment">
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
 
           {dict.listening && <span className="auth__hint">Listening… speak your note.</span>}

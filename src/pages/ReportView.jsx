@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Plane, Ship, Printer, AlertTriangle, Eye, Check, ShieldCheck, Wrench } from 'lucide-react'
+import { Plane, Ship, Printer, AlertTriangle, Eye, Check, ShieldCheck, Wrench, Paperclip } from 'lucide-react'
 import { fetchReport, reportSummary } from '../lib/report.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
@@ -276,7 +276,14 @@ export default function ReportView() {
           <ul className="report__clearedlist">
             {cleared.map((i) => (
               <li key={i.id}>
-                <span>{i.title}</span>
+                <span>
+                  {i.title}
+                  {i.attachments?.length > 0 && i.attachments.map((a, idx) => (
+                    <a key={idx} className="report__clearedfile" href={a.url} target="_blank" rel="noreferrer">
+                      <Paperclip size={12} aria-hidden="true" /> {a.name}
+                    </a>
+                  ))}
+                </span>
                 <span className="report__clearedstatus">{STATUS_LABEL[i.status]}</span>
               </li>
             ))}
@@ -349,6 +356,16 @@ function ReportSection({ title, items, showPhotos }) {
               <h3>{i.title}</h3>
             </div>
             {i.findings && <p className="report__findingtext">{i.findings}</p>}
+            {i.attachments?.length > 0 && (
+              <ul className="report__attachments">
+                {i.attachments.map((a, idx) => (
+                  <li key={idx}>
+                    <Paperclip size={13} aria-hidden="true" />{' '}
+                    <a href={a.url} target="_blank" rel="noreferrer">{a.name}</a>
+                  </li>
+                ))}
+              </ul>
+            )}
             {showPhotos && i.photos?.length > 0 && (
               <div className="report__gallery report__gallery--small">
                 {i.photos.map((url, idx) => (

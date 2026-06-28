@@ -23,9 +23,10 @@ describe('mediaStoragePath', () => {
 })
 
 describe('mediaKind', () => {
-  it('detects video vs photo', () => {
+  it('detects video, photo, and document', () => {
     expect(mediaKind('video/mp4')).toBe('video')
     expect(mediaKind('image/jpeg')).toBe('photo')
-    expect(mediaKind(undefined)).toBe('photo')
+    expect(mediaKind('application/pdf')).toBe('document')
+    expect(mediaKind(undefined)).toBe('document') // unknown → treat as a document, not a photo
   })
 })

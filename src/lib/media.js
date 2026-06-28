@@ -21,7 +21,10 @@ export function mediaStoragePath(orgId, inspectionId, filename) {
 
 /** Derive media kind from a MIME type. */
 export function mediaKind(mime) {
-  return String(mime ?? '').startsWith('video/') ? 'video' : 'photo'
+  const m = String(mime ?? '')
+  if (m.startsWith('video/')) return 'video'
+  if (m.startsWith('image/')) return 'photo'
+  return 'document' // PDFs, lab reports, etc.
 }
 
 function uniqueName(filename) {

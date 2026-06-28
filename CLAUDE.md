@@ -263,8 +263,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   unaffected (only first-open instantiation). LogbookAudit: position pickers + per-engine reconcile +
   labels. `report` edge fn returns event `position`; ReportView timeline shows the engine. Tests 107.
   ⚠️ **Run migration 014 + redeploy `report` (JWT OFF).**
-  **NEXT:** document/oil-analysis upload (next), scope/disclaimer drawer, gear-rigging forms, invite
-  teammates, server-side PDF, Resend SMTP (pre-beta); aircraft-as-entity + broker intake; research project.
+- Session 2 cont. — **Document attachments on items** (v0.21.0). Migration `015` (`media.kind`+='document',
+  `media.purpose`+='attachment'). `media.js` `mediaKind`→'document' for non-image/video; caption holds
+  the filename. InspectionDetail: "Attach file" (PDF/image) per item next to "Add photo"; photos→thumbs,
+  docs→download links. `report` edge fn returns per-item `attachments`; ReportView renders them on
+  findings + cleared items. Help FAQ +1. Tests 107. ⚠️ **Run migration 015** + the **one `report`
+  redeploy (JWT OFF)** also covers v0.20.0 (event position).
+  **NEXT:** scope/disclaimer drawer (not_required/limitations), gear-rigging forms, invite teammates,
+  server-side PDF, Resend SMTP (pre-beta); multi-vertical landing copy; aircraft-as-entity + broker
+  intake; research project.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

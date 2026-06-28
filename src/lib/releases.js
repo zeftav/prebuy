@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.21.0',
+    date: '2026-06-28',
+    title: 'Attach documents (oil analysis & more)',
+    items: [
+      'Attach a PDF or photo to any checklist item — oil-analysis lab results, receipts, a 337, and so on.',
+      'Attachments are private to your shop and show up with that item on the customer report.',
+      '“Add photo” is for inspection photos; the new “Attach file” is for documents.',
+    ],
+  },
+  {
     version: '0.20.0',
     date: '2026-06-28',
     title: 'Multi-engine, deeper',

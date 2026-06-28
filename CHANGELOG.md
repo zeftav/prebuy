@@ -3,6 +3,21 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.21.0] — 2026-06-28
+
+### Added
+- **Document attachments on inspection items** (e.g. oil-analysis lab PDFs on the engine item).
+  - `supabase/migrations/015_media_attachments.sql` — `media.kind` adds `document`, `media.purpose` adds
+    `attachment`. **Needs running.**
+  - `lib/media.js` — `mediaKind` returns `document` for non-image/video MIME (PDF etc.); upload stores the
+    original filename in `caption`. Test updated.
+  - `InspectionDetail` — "Attach file" (PDF/image) on each item alongside "Add photo"; photos render as
+    thumbnails, documents as download links (delete supported).
+  - `report` edge fn + `ReportView` — per-item `attachments` (signed URL + filename) returned and rendered
+    on findings and on cleared items. **Redeploy `report` (JWT OFF)** — same fn as v0.20.0, so one
+    redeploy covers both.
+  - Help FAQ entry added.
+
 ## [0.20.0] — 2026-06-28
 
 ### Added

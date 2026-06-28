@@ -79,13 +79,20 @@ Deno.serve(async (req: Request) => {
     .map((m) => ({ caption: m.caption, url: withUrl(m) }))
 
   const photosByItem = new Map<string, string[]>()
+  const filesByItem = new Map<string, { url: string; name: string }[]>()
   for (const m of media ?? []) {
-    if (m.purpose !== 'discrepancy' || !m.inspection_item_id) continue
+    if (!m.inspection_item_id) continue
     const u = withUrl(m)
     if (!u) continue
-    const arr = photosByItem.get(m.inspection_item_id) ?? []
-    arr.push(u)
-    photosByItem.set(m.inspection_item_id, arr)
+    if (m.purpose === 'discrepancy' && m.kind !== 'document') {
+      const arr = photosByItem.get(m.inspection_item_id) ?? []
+      arr.push(u)
+      photosByItem.set(m.inspection_item_id, arr)
+    } else if (m.purpose === 'attachment') {
+      const arr = filesByItem.get(m.inspection_item_id) ?? []
+      arr.push({ url: u, name: m.caption || 'Attachment' })
+      filesByItem.set(m.inspection_item_id, arr)
+    }
   }
 
   return json({
@@ -117,6 +124,7 @@ Deno.serve(async (req: Request) => {
       owner_priority: i.owner_priority,
       sort_order: i.sort_order,
       photos: photosByItem.get(i.id) ?? [],
+      attachments: filesByItem.get(i.id) ?? [],
     })),
     // Dated maintenance chronology (broker-style highlights), newest first.
     events: (events ?? [])

@@ -65,6 +65,10 @@ const FAQ = [
     a: 'Yes. On an inspection, tap “Add item” to add your own checks (with a High/Medium/Low priority). Use the flag button on any item to mark it an owner-requested priority — those float to the top of the list so you hit them first. Customizations apply to that inspection only; the starter checklist stays intact.',
   },
   {
+    q: 'Can I attach a document, like oil-analysis results?',
+    a: 'Yes. Open the checklist item (e.g. the engine’s oil-analysis check) and tap “Attach file” to upload a PDF or photo — lab results, receipts, a 337, etc. Attachments are stored privately to your shop and appear with that item on the customer report. Use “Add photo” for inspection photos and “Attach file” for documents.',
+  },
+  {
     q: 'How do I add photos?',
     a: 'Two ways. On any checklist item, tap “Add photo” to attach discrepancy photos to that finding. For big-picture documentation, open an inspection and tap “Photo walkthrough” — we’ll prompt you through a standard shot list (exterior angles, panel, engine, logbooks, and so on) so the report has consistent coverage. Photos are stored privately to your shop.',
   },
