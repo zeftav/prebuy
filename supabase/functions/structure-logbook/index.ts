@@ -13,6 +13,7 @@
 // Model: claude-opus-4-8 (vision) + structured outputs.
 
 import Anthropic from 'npm:@anthropic-ai/sdk'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +25,33 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   })
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Fire-and-forget AI usage log (cost attribution). Never throws.
+async function logAiUsage(fnName: string, model: string, usage: { input_tokens?: number; output_tokens?: number } | undefined, orgId: string, jwt: string) {
+  try {
+    const url = Deno.env.get('SUPABASE_URL')
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!url || !key) return
+    const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+    let email: string | null = null
+    if (jwt) {
+      const { data } = await admin.auth.getUser(jwt)
+      email = data?.user?.email ?? null
+    }
+    await admin.from('ai_usage').insert({
+      org_id: orgId && UUID.test(orgId) ? orgId : null,
+      user_email: email,
+      function_name: fnName,
+      model,
+      input_tokens: usage?.input_tokens ?? 0,
+      output_tokens: usage?.output_tokens ?? 0,
+    })
+  } catch {
+    // best-effort
+  }
 }
 
 const MAX_IMAGES = 20
@@ -138,12 +166,14 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) return json({ error: 'AI is not configured.' }, 500)
 
-  let payload: { images?: unknown }
+  let payload: { images?: unknown; org_id?: unknown }
   try {
     payload = await req.json()
   } catch {
     return json({ error: 'Invalid request body.' }, 400)
   }
+  const orgId = String(payload.org_id ?? '')
+  const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
   const images = Array.isArray(payload.images)
     ? payload.images.filter((u) => typeof u === 'string').slice(0, MAX_IMAGES)
     : []
@@ -182,6 +212,7 @@ Deno.serve(async (req: Request) => {
     } catch {
       return json({ error: 'Could not read the pages. Try clearer photos.' }, 502)
     }
+    await logAiUsage('structure-logbook', 'claude-opus-4-8', message.usage, orgId, jwt)
     const eq = result.equipment && typeof result.equipment === 'object' ? result.equipment : EMPTY_EQUIPMENT
     return json({
       logbooks: Array.isArray(result.logbooks) ? result.logbooks : [],

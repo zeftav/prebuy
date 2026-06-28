@@ -116,7 +116,7 @@ export default function AircraftProfile() {
       listEvents(inspection.id),
     ])
     const ctx = buildSummaryContext(inspection, profile, events, items)
-    const { data, error } = await generateNarrative(ctx)
+    const { data, error } = await generateNarrative(ctx, inspection.org_id)
     setGenBusy(false)
     if (error) return setGenError(error.message)
     edit((p) => { p.summary = data.summary })

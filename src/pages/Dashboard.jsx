@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { Plane, LogOut, Plus, Ship } from 'lucide-react'
+import { Plane, LogOut, Plus, Ship, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { fetchMemberships, pickActiveOrg } from '../lib/shops.js'
 import { listInspectionsForOrg } from '../lib/inspections.js'
@@ -16,7 +16,7 @@ import './inspections.css'
 const ACTIVE_ORG_KEY = 'prebuy:activeOrg'
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, isSuperAdmin } = useAuth()
   const navigate = useNavigate()
   const [memberships, setMemberships] = useState(null) // null = loading
   const [activeOrgId, setActiveOrgId] = useState(null)
@@ -88,6 +88,11 @@ export default function Dashboard() {
         </span>
         <span className="insp__user">
           {user?.email}
+          {isSuperAdmin && (
+            <Link to="/admin" className="auth__toggle">
+              <ShieldCheck size={14} aria-hidden="true" /> Platform
+            </Link>
+          )}
           <button className="auth__toggle" onClick={onSignOut}>
             <LogOut size={14} aria-hidden="true" /> Sign out
           </button>

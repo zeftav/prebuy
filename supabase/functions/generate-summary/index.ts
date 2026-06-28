@@ -13,6 +13,7 @@
 // from any listing, and no invented figures.
 
 import Anthropic from 'npm:@anthropic-ai/sdk'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +25,33 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   })
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Fire-and-forget AI usage log (cost attribution). Never throws.
+async function logAiUsage(fnName: string, model: string, usage: { input_tokens?: number; output_tokens?: number } | undefined, orgId: string, jwt: string) {
+  try {
+    const url = Deno.env.get('SUPABASE_URL')
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!url || !key) return
+    const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+    let email: string | null = null
+    if (jwt) {
+      const { data } = await admin.auth.getUser(jwt)
+      email = data?.user?.email ?? null
+    }
+    await admin.from('ai_usage').insert({
+      org_id: orgId && UUID.test(orgId) ? orgId : null,
+      user_email: email,
+      function_name: fnName,
+      model,
+      input_tokens: usage?.input_tokens ?? 0,
+      output_tokens: usage?.output_tokens ?? 0,
+    })
+  } catch {
+    // best-effort
+  }
 }
 
 const SCHEMA = {
@@ -46,12 +74,14 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) return json({ error: 'AI is not configured.' }, 500)
 
-  let payload: { context?: unknown }
+  let payload: { context?: unknown; org_id?: unknown }
   try {
     payload = await req.json()
   } catch {
     return json({ error: 'Invalid request body.' }, 400)
   }
+  const orgId = String(payload.org_id ?? '')
+  const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
   const context = payload.context && typeof payload.context === 'object' ? payload.context : null
   if (!context) return json({ error: 'Nothing to summarize yet.' }, 400)
   // Cap the payload so a huge inspection can't blow the prompt.
@@ -87,6 +117,7 @@ Deno.serve(async (req: Request) => {
     }
     const summary = String(result.summary ?? '').trim()
     if (!summary) return json({ error: 'Could not generate a summary. Try again.' }, 502)
+    await logAiUsage('generate-summary', 'claude-opus-4-8', message.usage, orgId, jwt)
     return json({ summary })
   } catch (e) {
     const status = (e as { status?: number })?.status

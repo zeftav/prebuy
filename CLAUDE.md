@@ -311,6 +311,24 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   feature outline to spec it. Likely: cross-org overview (orgs/users/inspections counts + recent
   activity), per-org drill-in, impersonate/support, system health — gated to a platform-owner role
   (NOT org RLS; service-role edge fn or a `super_admin` flag). Spec pending from Brett.
+- Session 3 (2026-06-28) — **Super-admin / platform-owner dashboard** (v0.27.0), from Brett's Yellowtag
+  spec. Gated ABOVE org RLS; Brett's note: build it but billing isn't wired so don't make that part
+  live → **Financial tab is a placeholder**, no subscription/seat/comp controls anywhere.
+  Migration `019` (`super_admins` + `is_super_admin()` RPC + `ai_usage` log; RLS on, no client
+  policies). **Two-tier gate:** hardcoded founder `brett@zeftingaviation.com` (mirrored in `auth.jsx`
+  + every gated edge fn) PLUS the `super_admins` table. `auth.jsx` `isSuperAdmin` (founder OR rpc);
+  `SuperAdminRoute` guards `/admin/*`; "Platform" link in Dashboard topbar (super-admin only).
+  Edge fns (**JWT ON**, service role, super-admin re-check): **`admin-orgs`** (shop list + engagement
+  metrics + totals + roster add/remove + rename/delete-org) and **`admin-ai-cost`** (aggregate
+  `ai_usage` → est. USD by feature/shop/day; rate map tunable in the fn). AI usage logging added to
+  `structure-finding`/`structure-logbook`/`generate-summary` (fire-and-forget; `org_id` threaded
+  through the 3 wrappers + call sites). `lib/admin.js` (+tests: formatUsd/formatCount/daysSince/
+  relativeTime/engagementFlag), `pages/Admin.jsx` + `admin.css` (Customers/Engagement/AI-cost/
+  Financial-stub/Super-admins). NOT in the in-app "What's new" (platform tool, not a shop feature).
+  Lint + 127 tests + build green. ⚠️ **Run migration 019; deploy `admin-orgs` + `admin-ai-cost`
+  (JWT ON); redeploy the 3 AI fns (JWT ON) for usage logging.**
+  **NEXT (with billing):** Stripe sync + `finance_*` tables + Financial tab (MRR/ARR/margin/CAC,
+  snapshot-on-read); later a DB-backed editable AI rate table + per-org feature flags.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

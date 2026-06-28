@@ -3,6 +3,40 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.27.0] — 2026-06-28
+
+### Added
+- **Super-admin / platform-owner dashboard (Phase 1–3).** A platform-owner view that sits ABOVE the
+  per-org RLS model — gated to super admins, invisible to normal shop users. Billing/Stripe is NOT
+  wired up yet, so the **Financial** tab is a deliberate placeholder (no subscription/seat/comp
+  controls anywhere).
+  - `supabase/migrations/019_super_admin.sql` — `super_admins` table (email PK) + `is_super_admin()`
+    SECURITY DEFINER RPC + `ai_usage` log table. RLS enabled, **no client policies** (service-role
+    writes; client only reads its own super-admin status via the RPC). **Needs running.**
+  - **Gate (two-tier):** a hardcoded founder (`brett@zeftingaviation.com`), mirrored in the client
+    `AuthProvider` and every gated edge fn, PLUS the manageable `super_admins` table.
+    `auth.jsx` exposes `isSuperAdmin`; `SuperAdminRoute` guards `/admin/*` (bounces non-admins to
+    `/app`); a "Platform" link shows in the Dashboard top bar for super admins only.
+  - `supabase/functions/admin-orgs/index.ts` — **new edge fn (JWT ON, service role, super-admin
+    re-check).** Lists every shop with engagement metrics (members by role, inspections total/30d,
+    listings, published, last-active), platform totals, and the roster; `add/remove_super_admin`
+    (founder locked), `rename_org`, `delete_org` (cascade; auth users kept). **Deploy (JWT ON).**
+  - `supabase/functions/admin-ai-cost/index.ts` — **new edge fn (JWT ON, service role).** Aggregates
+    `ai_usage` over a window into estimated USD cost (per-model rate table, tunable in the fn) by
+    feature, by shop, and by day. **Deploy (JWT ON).**
+  - **AI usage logging:** `structure-finding`, `structure-logbook`, `generate-summary` now fire-and-
+    forget a row to `ai_usage` (tokens + caller email + optional `org_id`) after a successful call.
+    The 3 client wrappers + their call sites thread `org_id` for per-shop cost attribution.
+    **Redeploy all three (JWT ON).**
+  - `src/lib/admin.js` (+`admin.test.js`) — edge-fn wrappers + pure tested helpers (`formatUsd`/
+    `formatCount`/`daysSince`/`relativeTime`/`engagementFlag`). `src/pages/Admin.jsx` + `admin.css` —
+    Customers, Engagement (at-risk outreach list), AI cost, Financial (placeholder), Super admins.
+
+### Notes
+- Not surfaced in the in-app "What's new" by design — it's a platform-owner tool, not a shop feature.
+- **Next (with billing):** Stripe sync + `finance_*` tables + the Financial tab (MRR/ARR/margin/CAC,
+  snapshot-on-read). Optional later: a DB-backed editable AI rate table; per-org feature flags.
+
 ## [0.26.0] — 2026-06-28
 
 ### Added

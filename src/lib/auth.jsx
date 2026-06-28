@@ -10,11 +10,19 @@ import { supabase } from './supabase.js'
 
 const AuthContext = createContext(null)
 
+// Hardcoded founder(s): always a super admin, never removable. Mirrors the same
+// constant in the gated edge functions (admin-orgs, admin-ai-cost). Other super
+// admins are managed in the dashboard (super_admins table) and resolved via the
+// is_super_admin() RPC — which checks the TABLE only, hence the founder OR here.
+const SUPER_ADMINS = ['brett@zeftingaviation.com']
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   // `loading` is true until we know whether there's a restored session, so
   // protected routes don't flash the login screen on a hard refresh.
   const [loading, setLoading] = useState(true)
+  // DB-managed super-admin flag (the founder list is checked separately).
+  const [dbSuperAdmin, setDbSuperAdmin] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -35,11 +43,32 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  // Resolve DB-managed super-admin status whenever the user changes.
+  const userId = session?.user?.id ?? null
+  useEffect(() => {
+    if (!userId) {
+      setDbSuperAdmin(false)
+      return
+    }
+    let active = true
+    supabase.rpc('is_super_admin').then(
+      ({ data }) => active && setDbSuperAdmin(!!data),
+      () => active && setDbSuperAdmin(false),
+    )
+    return () => {
+      active = false
+    }
+  }, [userId])
+
+  const email = session?.user?.email ?? null
+  const isSuperAdmin = (email ? SUPER_ADMINS.includes(email.toLowerCase()) : false) || dbSuperAdmin
+
   const value = useMemo(
     () => ({
       session,
       user: session?.user ?? null,
       loading,
+      isSuperAdmin,
       signIn: (email, password) =>
         supabase.auth.signInWithPassword({ email, password }),
       signUp: (email, password) => supabase.auth.signUp({ email, password }),
@@ -53,7 +82,7 @@ export function AuthProvider({ children }) {
       // Sets a new password for the (recovery- or normally-) authenticated user.
       updatePassword: (password) => supabase.auth.updateUser({ password }),
     }),
-    [session, loading],
+    [session, loading, isSuperAdmin],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

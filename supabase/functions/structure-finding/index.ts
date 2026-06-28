@@ -12,6 +12,7 @@
 // response is validated JSON we can use directly — no brittle parsing.
 
 import Anthropic from 'npm:@anthropic-ai/sdk'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +25,34 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   })
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Fire-and-forget AI usage log (cost attribution for the super-admin dashboard).
+// Never throws — logging must not break the actual response.
+async function logAiUsage(fnName: string, model: string, usage: { input_tokens?: number; output_tokens?: number } | undefined, orgId: string, jwt: string) {
+  try {
+    const url = Deno.env.get('SUPABASE_URL')
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!url || !key) return
+    const admin = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } })
+    let email: string | null = null
+    if (jwt) {
+      const { data } = await admin.auth.getUser(jwt)
+      email = data?.user?.email ?? null
+    }
+    await admin.from('ai_usage').insert({
+      org_id: orgId && UUID.test(orgId) ? orgId : null,
+      user_email: email,
+      function_name: fnName,
+      model,
+      input_tokens: usage?.input_tokens ?? 0,
+      output_tokens: usage?.output_tokens ?? 0,
+    })
+  } catch {
+    // swallow — usage logging is best-effort
+  }
 }
 
 // Validated shape of a structured finding.
@@ -54,7 +83,7 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) return json({ error: 'AI is not configured.' }, 500)
 
-  let payload: { transcript?: unknown; item?: unknown }
+  let payload: { transcript?: unknown; item?: unknown; org_id?: unknown }
   try {
     payload = await req.json()
   } catch {
@@ -64,6 +93,8 @@ Deno.serve(async (req: Request) => {
   if (!transcript) return json({ error: 'Nothing to structure — dictate a note first.' }, 400)
   // Optional context: the checklist item title/category, to ground the finding.
   const item = typeof payload.item === 'string' ? payload.item.slice(0, 200) : ''
+  const orgId = String(payload.org_id ?? '')
+  const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '')
 
   const anthropic = new Anthropic({ apiKey })
 
@@ -95,6 +126,7 @@ Deno.serve(async (req: Request) => {
     } catch {
       return json({ error: 'Could not structure the note. Try again.' }, 502)
     }
+    await logAiUsage('structure-finding', 'claude-opus-4-8', message.usage, orgId, jwt)
     // Clamp severity defensively (schema can't enforce numeric range).
     const severity = Math.max(0, Math.min(100, Number(result.severity) || 0))
     return json({

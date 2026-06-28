@@ -8,7 +8,7 @@ import { supabase } from './supabase.js'
  * Structure a dictated note into a finding via the edge function.
  * @returns {Promise<{data: {finding, severity, suggested_status}|null, error: Error|null}>}
  */
-export async function structureFinding(transcript, itemTitle) {
+export async function structureFinding(transcript, itemTitle, orgId) {
   const text = String(transcript ?? '').trim()
   if (!text) return { data: null, error: new Error('Dictate or type a note first.') }
 
@@ -24,7 +24,7 @@ export async function structureFinding(transcript, itemTitle) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ transcript: text, item: itemTitle || '' }),
+      body: JSON.stringify({ transcript: text, item: itemTitle || '', org_id: orgId || null }),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) {

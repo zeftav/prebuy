@@ -335,7 +335,7 @@ export function buildSummaryContext(inspection, profile, events, items) {
 }
 
 /** Generate a broker-style narrative summary from structured context. */
-export async function generateNarrative(context) {
+export async function generateNarrative(context, orgId) {
   const { data: sessionData } = await supabase.auth.getSession()
   const token = sessionData.session?.access_token
   if (!token) return { data: null, error: new Error('You must be signed in.') }
@@ -345,7 +345,7 @@ export async function generateNarrative(context) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ context }),
+      body: JSON.stringify({ context, org_id: orgId || null }),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }
@@ -356,7 +356,7 @@ export async function generateNarrative(context) {
 }
 
 /** Extract profile fields from photographed records (signed image URLs). */
-export async function extractProfile(imageUrls) {
+export async function extractProfile(imageUrls, orgId) {
   if (!imageUrls?.length) return { data: null, error: new Error('No images to read.') }
   const { data: sessionData } = await supabase.auth.getSession()
   const token = sessionData.session?.access_token
@@ -367,7 +367,7 @@ export async function extractProfile(imageUrls) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ images: imageUrls }),
+      body: JSON.stringify({ images: imageUrls, org_id: orgId || null }),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }

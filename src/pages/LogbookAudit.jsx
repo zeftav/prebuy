@@ -235,7 +235,7 @@ function ScanImport({ inspection, onAddBook, onAddEvent }) {
       setPhase('idle')
       return
     }
-    const { data, error } = await extractLogbooks(urls)
+    const { data, error } = await extractLogbooks(urls, inspection.org_id)
     if (error) {
       setError(error.message)
       setPhase('idle')

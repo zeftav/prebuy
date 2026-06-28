@@ -14,7 +14,9 @@ import LogbookAudit from './pages/LogbookAudit.jsx'
 import ClaimListing from './pages/ClaimListing.jsx'
 import ReportView from './pages/ReportView.jsx'
 import Help from './pages/Help.jsx'
+import Admin from './pages/Admin.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import SuperAdminRoute from './components/SuperAdminRoute.jsx'
 import './App.css'
 
 function App() {
@@ -96,6 +98,11 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/admin" element={<SuperAdminRoute><Admin view="customers" /></SuperAdminRoute>} />
+      <Route path="/admin/engagement" element={<SuperAdminRoute><Admin view="engagement" /></SuperAdminRoute>} />
+      <Route path="/admin/ai-cost" element={<SuperAdminRoute><Admin view="ai-cost" /></SuperAdminRoute>} />
+      <Route path="/admin/financial" element={<SuperAdminRoute><Admin view="financial" /></SuperAdminRoute>} />
+      <Route path="/admin/super-admins" element={<SuperAdminRoute><Admin view="super-admins" /></SuperAdminRoute>} />
         </Routes>
       </div>
       {showFooter && <AppFooter />}

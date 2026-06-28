@@ -1,0 +1,230 @@
+/* Platform-owner ("super admin") dashboard styles. Kept self-contained; reuses the
+   shared auth/inspections buttons and spacing where possible. */
+
+.admin {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 4rem;
+}
+
+.admin__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.admin__badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  margin-left: 0.4rem;
+}
+
+.admin__tabs {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.admin__tab {
+  padding: 0.55rem 0.9rem;
+  text-decoration: none;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.92rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.admin__tab:hover { color: #0f172a; }
+.admin__tab.is-active {
+  color: #0f172a;
+  border-bottom-color: #2563eb;
+}
+
+.admin__section { margin-top: 0.5rem; }
+.admin__sectionhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.admin__h2 { font-size: 1.2rem; margin: 0.5rem 0 1rem; }
+.admin__h3 { font-size: 1rem; margin: 1.25rem 0 0.5rem; }
+.admin__count { color: #94a3b8; font-weight: 400; }
+
+/* stat cards */
+.admin__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.admin__stat {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.admin__statnum { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+.admin__statlabel { font-size: 0.8rem; color: #64748b; display: inline-flex; align-items: center; gap: 0.25rem; }
+
+/* org cards */
+.admin__orggrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.85rem;
+}
+.admin__orgcard {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.admin__orgcardhead { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+.admin__orgname { display: block; font-weight: 600; color: #0f172a; }
+.admin__orgmeta { display: block; font-size: 0.78rem; color: #94a3b8; }
+.admin__orgstats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.9rem;
+  font-size: 0.82rem;
+  color: #475569;
+}
+.admin__orgstats strong { color: #0f172a; }
+.admin__orgactions { display: flex; gap: 0.75rem; }
+.admin__danger { color: #dc2626; }
+
+/* status flags */
+.admin__flag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.admin__flag--ok { background: #dcfce7; color: #166534; }
+.admin__flag--warn { background: #fef9c3; color: #854d0e; }
+.admin__flag--risk { background: #fee2e2; color: #991b1b; }
+
+/* engagement list */
+.admin__risklist { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.admin__riskrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+}
+.admin__riskname { font-weight: 600; color: #0f172a; }
+.admin__riskmeta { font-size: 0.82rem; color: #64748b; margin-left: auto; }
+
+/* AI cost */
+.admin__costcols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.admin__table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.admin__table th, .admin__table td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid #f1f5f9; }
+.admin__table th { color: #64748b; font-weight: 600; }
+.admin__table td:nth-child(2), .admin__table td:nth-child(3),
+.admin__table th:nth-child(2), .admin__table th:nth-child(3) { text-align: right; }
+
+.admin__daybars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 120px;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 1.2rem;
+}
+.admin__daybar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 14px; position: relative; }
+.admin__daybarfill { width: 12px; background: #3b82f6; border-radius: 3px 3px 0 0; }
+.admin__daybarlabel { position: absolute; bottom: -1.1rem; font-size: 0.6rem; color: #94a3b8; transform: rotate(-45deg); white-space: nowrap; }
+
+/* roster */
+.admin__roster { list-style: none; padding: 0; margin: 0 0 1rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.admin__rosterrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+}
+.admin__addrow { display: flex; gap: 0.5rem; max-width: 460px; }
+
+/* inputs */
+.admin__input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+.admin__label { display: block; font-size: 0.85rem; color: #475569; margin: 0.75rem 0 0.3rem; }
+
+/* modal */
+.admin__modalwrap {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+.admin__modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+.admin__modalhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.admin__modalhead h3 { margin: 0; font-size: 1.05rem; }
+.admin__modalactions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1rem; }
+.admin__warn {
+  display: flex;
+  gap: 0.6rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  color: #991b1b;
+  font-size: 0.88rem;
+}
+.admin__warn p { margin: 0; }
+.admin__btndanger { background: #dc2626; }
+.admin__btndanger:hover:not(:disabled) { background: #b91c1c; }
+
+.admin__placeholder {
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 1.5rem;
+  background: #f8fafc;
+}
+.admin__placeholder code { background: #e2e8f0; padding: 0.1rem 0.3rem; border-radius: 4px; }

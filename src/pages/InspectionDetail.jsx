@@ -327,7 +327,7 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
   async function cleanUp() {
     setAiError(null)
     setAiBusy(true)
-    const { data, error } = await structureFinding(findings, item.title)
+    const { data, error } = await structureFinding(findings, item.title, inspection.org_id)
     setAiBusy(false)
     if (error) return setAiError(error.message)
     setFindings(data.finding)
