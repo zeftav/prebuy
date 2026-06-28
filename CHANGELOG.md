@@ -3,6 +3,15 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.19.2] — 2026-06-27
+
+### Fixed
+- **Mobile horizontal overflow (app-wide).** `box-sizing: border-box` was only set on `#root`, so
+  `.home` (and any `width:100%` + padding element) rendered 32px wider than the viewport → iOS Safari
+  zoomed out on load. Added a global `*, *::before, *::after { box-sizing: border-box }` in `index.css`.
+- **Stray edge lines on phones.** `#root`'s `border-inline` (the desktop framed-column look) now drops
+  to `0` under 600px, so there are no hairlines down the screen edges on mobile.
+
 ## [0.19.1] — 2026-06-27
 
 ### Fixed

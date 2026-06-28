@@ -1,3 +1,9 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
@@ -64,6 +70,14 @@ body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+/* The framed-column side borders only make sense on wider screens; on phones the
+   app fills the viewport, so they'd just be hairlines down the edges. */
+@media (max-width: 600px) {
+  #root {
+    border-inline: 0;
+  }
 }
 
 h1,

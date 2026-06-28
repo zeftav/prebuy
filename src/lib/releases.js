@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.19.2',
+    date: '2026-06-27',
+    title: 'Mobile layout fix',
+    items: [
+      'Fixed the page rendering wider than the screen on phones (no more pinch-to-zoom on load) and removed stray edge lines on mobile.',
+    ],
+  },
+  {
     version: '0.19.1',
     date: '2026-06-27',
     title: 'Landing page on phones',
