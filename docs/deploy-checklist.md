@@ -44,6 +44,8 @@ Run in order. All are idempotent (safe to re-run).
       (powers the **platform-owner dashboard**). RLS on, no client policies. (run 2026-06-28)
 - [ ] ⬜ `020_marine_mic_seed.sql` — seeds **HUN → Hunter Marine** (verified) so the boat HIN lookup
       names a real builder before the full USCG list is loaded. Idempotent. No edge fn. (2026-06-28)
+- [ ] ⬜ `021_inspection_followups.sql` — `inspection_followups` table + org-scoped RLS (per-inspection
+      "to-investigate" list). Idempotent. (v0.32.0, 2026-06-28)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
@@ -63,6 +65,8 @@ Run in order. All are idempotent (safe to re-run).
   - [ ] 🔁 **REDEPLOY `research-asset` (JWT ON) for v0.30.3** — low effort + fewer searches (no timeout).
 - [ ] ⬜ **`structure-walkaround`** (new, v0.31.0) — Verify JWT **ON**. Dictate-the-whole-walk-around →
       parsed/mapped findings. Reuses `ANTHROPIC_API_KEY`. No migration. (2026-06-28)
+  - [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.32.0** — now also returns the inspection's report-visible
+        follow-ups for the "Recommended for further evaluation" section. (needs migration 021)
 - [x] ✅ **REDEPLOYED `structure-finding`, `structure-logbook`, `generate-summary`** (v0.27.0) — all
       three now log token usage to `ai_usage` (fire-and-forget, service role) for the platform AI-cost
       view. JWT **ON**. (2026-06-28)

@@ -49,7 +49,7 @@ Deno.serve(async (req: Request) => {
     .maybeSingle()
   if (!insp || insp.status !== 'published') return json({ error: 'Report not found.' }, 404)
 
-  const [{ data: org }, { data: items }, { data: media }, { data: events }] = await Promise.all([
+  const [{ data: org }, { data: items }, { data: media }, { data: events }, { data: followups }] = await Promise.all([
     admin.from('orgs').select('name').eq('id', insp.org_id).maybeSingle(),
     admin
       .from('inspection_items')
@@ -63,6 +63,14 @@ Deno.serve(async (req: Request) => {
       .from('logbook_events')
       .select('event_date, tach, category, title, description, position')
       .eq('inspection_id', insp.id),
+    // "Recommended for further evaluation": only follow-ups opted onto the report
+    // and not dismissed.
+    admin
+      .from('inspection_followups')
+      .select('note, reason, status, created_at')
+      .eq('inspection_id', insp.id)
+      .eq('show_on_report', true)
+      .neq('status', 'dismissed'),
   ])
 
   // Sign all media URLs in one batch.
@@ -139,5 +147,11 @@ Deno.serve(async (req: Request) => {
       }))
       .sort((a, b) => String(b.event_date ?? '').localeCompare(String(a.event_date ?? ''))),
     overview,
+    // "Recommended for further evaluation" — opted-in, non-dismissed follow-ups.
+    followups: (followups ?? []).map((f) => ({
+      note: f.note,
+      reason: f.reason,
+      status: f.status,
+    })),
   })
 })

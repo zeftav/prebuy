@@ -406,3 +406,44 @@
   .report__part { break-after: avoid; }
   .report__section { break-inside: avoid; }
 }
+
+/* ── Recommended for further evaluation (follow-ups) ──────────────────── */
+.report__sectionnote {
+  color: #5a6472;
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.report__followups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.report__followup {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e4e8ee;
+  border-left: 3px solid #1a6dd6;
+  border-radius: 8px;
+  background: #f7faff;
+}
+.report__followupicon {
+  color: #1a6dd6;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.report__followupreason {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #1a6dd6;
+}
+.report__followupnote {
+  margin: 2px 0 0;
+  line-height: 1.5;
+}

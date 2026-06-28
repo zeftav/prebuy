@@ -387,6 +387,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   **"fill in the blanks"** (pending items risk-ordered). Linked prominently from InspectionDetail tools
   (inspections only, not listings). Per-vertical. ⚠️ **Deploy `structure-walkaround` (JWT ON)** — no
   migration, reuses `ANTHROPIC_API_KEY`.
+- Session 3 cont. — **Inspection follow-ups / "to-investigate" list** (v0.32.0). Migration `021`
+  (`inspection_followups`: inspection/org/optional item link, `note`, `reason` enum, `status`
+  open|resolved|dismissed, `show_on_report`; org-scoped RLS). `lib/followups.js`: CRUD + pure
+  `openCount`/`groupByStatus`/`groupByReason`/`reportFollowups`/`reasonLabel` (+tests, 11 → 158 total).
+  `InspectionDetail`: Follow-ups panel (quick-add w/ reason + show-on-report, resolve/dismiss/reopen/
+  delete + per-row report toggle, open-count badge) + one-tap "flag for follow-up" (magnifier) on each
+  item + soft publish reminder when open. `report` edge fn returns opted-in non-dismissed follow-ups;
+  `ReportView` renders **"Recommended for further evaluation."** Separate from `inspection_items` so
+  findings stay clean. ⚠️ **Run migration 021 + redeploy `report` (JWT OFF).**
   **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
   Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 

@@ -3,6 +3,28 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.32.0] — 2026-06-28
+
+### Added
+- **Inspection follow-ups / "to-investigate" list.** A per-inspection backlog of open questions, kept
+  separate from `inspection_items` so findings (conclusions) stay clean. Each follow-up has a `reason`
+  (research / look-deeper / awaiting-records / second-opinion / other), a `status` (open / resolved /
+  dismissed), and an opt-in `show_on_report`.
+  - Migration `021_inspection_followups.sql` — `inspection_followups` table + org-scoped RLS (one
+    `for all` policy via `user_org_ids()`), optional `inspection_item_id` link, cascade on inspection.
+  - `lib/followups.js`: CRUD (`listFollowups`/`addFollowup`/`updateFollowup`/`deleteFollowup`) + pure,
+    tested helpers (`openCount`, `groupByStatus`, `groupByReason`, `reportFollowups`, `reasonLabel`).
+  - `InspectionDetail`: a **Follow-ups panel** (quick-add with reason + show-on-report, list with
+    resolve/dismiss/reopen/delete + per-row report toggle, open-count badge) and a one-tap **"flag for
+    follow-up"** (magnifier) on every checklist item. The publish bar shows a soft reminder when
+    follow-ups are still open (non-blocking).
+  - `report` edge fn returns opted-in, non-dismissed follow-ups; `ReportView` renders a
+    **"Recommended for further evaluation"** section.
+
+### Deploy
+- ⚠️ **Run migration `021_inspection_followups.sql`** and **redeploy `report` (Verify JWT OFF)** for the
+  report section.
+
 ## [0.31.0] — 2026-06-28
 
 ### Added

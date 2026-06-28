@@ -89,6 +89,10 @@ const FAQ = [
     a: 'Yes — open an inspection and tap “Dictate walk-around.” Talk through the entire walk-around in one pass, the way you’d normally work it (“left main tire worn, nose strut a little low, small oil weep at the left valve cover, prop looks good…”). We split it into individual findings and map each to the right checklist item, writing a clean note and suggesting a status and severity for each. Then you review everything before it’s applied — fix the wording, change a status, re-map a finding to a different item, or untick it; low-confidence matches are flagged. Anything you didn’t mention is listed afterward as “fill in the blanks,” highest financial risk first. If dictation isn’t available on your browser, type or paste the walk-around instead.',
   },
   {
+    q: 'What are follow-ups, and how are they different from findings?',
+    a: 'A finding is a conclusion about a checklist item (OK, monitor, or a discrepancy). A follow-up is an open question — something you noticed that needs more work before you can conclude: “needs research,” “look deeper,” “awaiting records,” or “second opinion.” Open an inspection and use the Follow-ups list to jot these as you go (or tap the magnifier on any checklist item to flag it). Work the list down before publishing — the publish bar reminds you when follow-ups are still open. You can mark any follow-up to appear on the customer report under “Recommended for further evaluation,” which buyers value as an honest list of areas to look into more closely.',
+  },
+  {
     q: 'Where does the checklist come from?',
     a: 'Each aircraft model has a starter pre-purchase checklist built into PreBuy, with items weighted by how much they typically cost to fix. The Beech A36 Bonanza is included to start; more models follow. You’ll soon be able to customize and re-prioritize items for your shop or a specific buyer.',
   },

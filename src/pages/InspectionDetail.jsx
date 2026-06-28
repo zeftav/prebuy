@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import {
@@ -25,6 +25,7 @@ import { updateInspectionMeta, startInspectionFromListing, deleteInspection } fr
 import { fetchMemberships } from '../lib/shops.js'
 import { createHandoff, listHandoffs, revokeHandoff, handoffUrl } from '../lib/handoff.js'
 import { publishInspection, unpublishInspection, reportUrl } from '../lib/report.js'
+import { listFollowups, addFollowup, updateFollowup, deleteFollowup, openCount, groupByStatus, reasonLabel, FOLLOWUP_REASONS } from '../lib/followups.js'
 import './auth.css'
 import './inspections.css'
 
@@ -42,6 +43,7 @@ export default function InspectionDetail() {
   const [inspection, setInspection] = useState(null)
   const [items, setItems] = useState([])
   const [media, setMedia] = useState([])
+  const [followups, setFollowups] = useState([])
   const [state, setState] = useState('loading') // loading | ready | error | notfound
   const [note, setNote] = useState(null)
   const [role, setRole] = useState(null) // caller's role in this inspection's org
@@ -63,6 +65,8 @@ export default function InspectionDetail() {
       setState('ready')
       const { data: m } = await listMedia(insp.id)
       if (active) setMedia(m)
+      const { data: fu } = await listFollowups(insp.id)
+      if (active) setFollowups(fu)
     })()
     return () => {
       active = false
@@ -113,6 +117,32 @@ export default function InspectionDetail() {
     setItems((prev) => prev.filter((i) => i.id !== item.id))
     const { error } = await deleteInspectionItem(item.id)
     if (error) setItems((prev) => [...prev, item])
+  }
+
+  // ── Follow-ups ("to-investigate" list) ────────────────────────────────────
+  async function addFu(draft) {
+    const { data, error } = await addFollowup(inspection, draft, user?.id)
+    if (!error && data) setFollowups((prev) => [data, ...prev])
+    return error
+  }
+
+  async function patchFu(fu, patch) {
+    setFollowups((prev) => prev.map((f) => (f.id === fu.id ? { ...f, ...patch } : f)))
+    const { data, error } = await updateFollowup(fu.id, patch)
+    if (error) setFollowups((prev) => prev.map((f) => (f.id === fu.id ? fu : f)))
+    else if (data) setFollowups((prev) => prev.map((f) => (f.id === fu.id ? data : f)))
+  }
+
+  async function removeFu(fu) {
+    setFollowups((prev) => prev.filter((f) => f.id !== fu.id))
+    const { error } = await deleteFollowup(fu.id)
+    if (error) setFollowups((prev) => [fu, ...prev])
+  }
+
+  // One-tap "flag for follow-up" from a checklist item.
+  async function flagFollowup(item) {
+    const note = [item.category, item.title].filter(Boolean).join(' — ')
+    await addFu({ note, reason: 'look-deeper', inspectionItemId: item.id })
   }
 
   async function publish() {
@@ -229,7 +259,7 @@ export default function InspectionDetail() {
         </Link>
       </div>
 
-      <PublishBar inspection={inspection} onPublish={publish} onUnpublish={unpublish} />
+      <PublishBar inspection={inspection} onPublish={publish} onUnpublish={unpublish} openFollowups={openCount(followups)} />
 
       {isListing ? (
         <>
@@ -271,11 +301,14 @@ export default function InspectionDetail() {
                 onPatch={patchItem}
                 onRemove={removeItem}
                 onMediaChange={refreshMedia}
+                onFlagFollowup={flagFollowup}
               />
             ))}
           </ol>
 
           <AddItem onAdd={addItem} />
+
+          <FollowupsPanel followups={followups} onAdd={addFu} onPatch={patchFu} onRemove={removeFu} />
         </>
       )}
 
@@ -349,7 +382,7 @@ function DangerZone({ inspection, isListing, onDelete }) {
   )
 }
 
-function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMediaChange }) {
+function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup }) {
   const [open, setOpen] = useState(false)
   const [findings, setFindings] = useState(item.findings ?? '')
   const [aiBusy, setAiBusy] = useState(false)
@@ -456,6 +489,15 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
           title="Owner priority — float this item to the top"
         >
           <Flag size={15} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="insp__flag"
+          onClick={() => onFlagFollowup(item)}
+          aria-label="Flag for follow-up"
+          title="Flag for follow-up — add to the to-investigate list"
+        >
+          <Search size={15} aria-hidden="true" />
         </button>
         {!item.template_item_id && (
           <button type="button" className="insp__flag" onClick={() => onRemove(item)} aria-label="Remove item" title="Remove custom item">
@@ -624,7 +666,7 @@ function InspectionMeta({ inspection, onSave }) {
   )
 }
 
-function PublishBar({ inspection, onPublish, onUnpublish }) {
+function PublishBar({ inspection, onPublish, onUnpublish, openFollowups = 0 }) {
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
   const published = inspection.status === 'published'
@@ -652,6 +694,11 @@ function PublishBar({ inspection, onPublish, onUnpublish }) {
         <div>
           <strong>Share with your customer</strong>
           <p className="auth__hint">Publish to create a read-only report link (and PDF).</p>
+          {openFollowups > 0 && (
+            <p className="auth__hint insp__pubwarn">
+              {openFollowups} open follow-up{openFollowups === 1 ? '' : 's'} — work or resolve them first, or mark them to show on the report.
+            </p>
+          )}
         </div>
         <button type="button" className="auth__btn" disabled={busy} onClick={() => act(onPublish)}>
           <Share2 size={15} aria-hidden="true" /> {busy ? 'Publishing…' : 'Publish report'}
@@ -867,5 +914,136 @@ function AddItem({ onAdd }) {
         <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setOpen(false)}>Cancel</button>
       </div>
     </form>
+  )
+}
+
+// Follow-ups / "to-investigate" list — a running backlog of open questions, kept
+// separate from findings. Work the list down before publishing; opt any one into
+// the customer report's "Recommended for further evaluation" section.
+function FollowupsPanel({ followups, onAdd, onPatch, onRemove }) {
+  const [adding, setAdding] = useState(false)
+  const [note, setNote] = useState('')
+  const [reason, setReason] = useState('research')
+  const [onReport, setOnReport] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  const open = openCount(followups)
+  const { open: openList, resolved, dismissed } = groupByStatus(followups)
+  const closed = [...resolved, ...dismissed]
+
+  async function submit(e) {
+    e.preventDefault()
+    setError(null)
+    if (!note.trim()) return setError('Write what to follow up on.')
+    setBusy(true)
+    const err = await onAdd({ note, reason, showOnReport: onReport })
+    setBusy(false)
+    if (err) return setError(err.message)
+    setNote('')
+    setReason('research')
+    setOnReport(false)
+    setAdding(false)
+  }
+
+  return (
+    <section className="insp__followups">
+      <div className="insp__sectionhead">
+        <h2><ListChecks size={18} aria-hidden="true" /> Follow-ups {open > 0 && <span className="insp__fucount">{open} open</span>}</h2>
+      </div>
+      <p className="auth__hint">
+        Open questions to chase down — “needs research,” “look deeper,” “awaiting records,” “second opinion.”
+        Kept separate from your findings. Mark any to show on the report’s “Recommended for further evaluation.”
+      </p>
+
+      {followups.length > 0 && (
+        <ul className="insp__fulist">
+          {[...openList, ...closed].map((f) => (
+            <FollowupRow key={f.id} fu={f} onPatch={onPatch} onRemove={onRemove} />
+          ))}
+        </ul>
+      )}
+
+      {adding ? (
+        <form className="auth__form insp__additem" onSubmit={submit}>
+          <div className="auth__field">
+            <label htmlFor="fu-note">Follow-up</label>
+            <textarea
+              id="fu-note"
+              className="insp__summaryinput"
+              rows={2}
+              placeholder="e.g. Corrosion at the aft bulkhead — get a borescope look before closing."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+          <div className="auth__field">
+            <label htmlFor="fu-reason">Reason</label>
+            <select id="fu-reason" value={reason} onChange={(e) => setReason(e.target.value)}>
+              {FOLLOWUP_REASONS.map((r) => (
+                <option key={r.key} value={r.key}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+          <label className="insp__ownercheck">
+            <input type="checkbox" checked={onReport} onChange={(e) => setOnReport(e.target.checked)} />
+            Show on the customer report (“Recommended for further evaluation”)
+          </label>
+          {error && <div className="auth__error" role="alert">{error}</div>}
+          <div className="insp__capture">
+            <button type="submit" className="auth__btn" disabled={busy}>{busy ? 'Adding…' : 'Add follow-up'}</button>
+            <button type="button" className="auth__btn auth__btn--ghost" onClick={() => { setAdding(false); setError(null) }}>Cancel</button>
+          </div>
+        </form>
+      ) : (
+        <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={() => setAdding(true)}>
+          <Plus size={15} aria-hidden="true" /> Add follow-up
+        </button>
+      )}
+    </section>
+  )
+}
+
+function FollowupRow({ fu, onPatch, onRemove }) {
+  const isOpen = fu.status === 'open'
+  return (
+    <li className={`insp__furow insp__furow--${fu.status}`}>
+      <div className="insp__fumain">
+        <span className="insp__fureason">{reasonLabel(fu.reason)}</span>
+        <span className="insp__funote">{fu.note}</span>
+        <span className="insp__fumeta">
+          {fu.status !== 'open' && <span className="insp__fustatus">{fu.status}</span>}
+          {fu.show_on_report && <span className="insp__fureport" title="Shows on the customer report">on report</span>}
+        </span>
+      </div>
+      <div className="insp__fuactions">
+        <button
+          type="button"
+          className={`insp__flag ${fu.show_on_report ? 'is-on' : ''}`}
+          onClick={() => onPatch(fu, { show_on_report: !fu.show_on_report })}
+          aria-pressed={fu.show_on_report}
+          title="Show on the customer report"
+        >
+          <FileText size={14} aria-hidden="true" />
+        </button>
+        {isOpen ? (
+          <>
+            <button type="button" className="insp__flag" onClick={() => onPatch(fu, { status: 'resolved' })} aria-label="Resolve" title="Mark resolved">
+              <Check size={15} aria-hidden="true" />
+            </button>
+            <button type="button" className="insp__flag" onClick={() => onPatch(fu, { status: 'dismissed' })} aria-label="Dismiss" title="Dismiss">
+              <X size={15} aria-hidden="true" />
+            </button>
+          </>
+        ) : (
+          <button type="button" className="auth__toggle" onClick={() => onPatch(fu, { status: 'open' })} title="Reopen">
+            Reopen
+          </button>
+        )}
+        <button type="button" className="insp__flag" onClick={() => onRemove(fu)} aria-label="Delete follow-up" title="Delete">
+          <Trash2 size={14} aria-hidden="true" />
+        </button>
+      </div>
+    </li>
   )
 }

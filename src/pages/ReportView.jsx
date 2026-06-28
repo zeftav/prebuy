@@ -9,8 +9,9 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Plane, Ship, Printer, AlertTriangle, Eye, Check, ShieldCheck, Wrench, Paperclip } from 'lucide-react'
+import { Plane, Ship, Printer, AlertTriangle, Eye, Check, ShieldCheck, Wrench, Paperclip, Search } from 'lucide-react'
 import { fetchReport, reportSummary } from '../lib/report.js'
+import { reasonLabel } from '../lib/followups.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
   normalizeProfile,
@@ -66,7 +67,7 @@ export default function ReportView() {
     )
   }
 
-  const { shop, inspection, items, overview, events = [] } = data
+  const { shop, inspection, items, overview, events = [], followups = [] } = data
   const ordered = orderByFinancialRisk(items)
   const discrepancies = ordered.filter((i) => i.status === 'discrepancy')
   const monitors = ordered.filter((i) => i.status === 'monitor')
@@ -294,6 +295,26 @@ export default function ReportView() {
                   ))}
                 </span>
                 <span className="report__clearedstatus">{STATUS_LABEL[i.status]}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {followups.length > 0 && (
+        <section className="report__section">
+          <h2>Recommended for further evaluation</h2>
+          <p className="report__sectionnote">
+            Areas the inspector recommends looking into more closely before purchase.
+          </p>
+          <ul className="report__followups">
+            {followups.map((f, i) => (
+              <li key={i} className="report__followup">
+                <Search size={15} aria-hidden="true" className="report__followupicon" />
+                <div>
+                  <span className="report__followupreason">{reasonLabel(f.reason)}</span>
+                  <p className="report__followupnote">{f.note}</p>
+                </div>
               </li>
             ))}
           </ul>

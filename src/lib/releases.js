@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.32.0',
+    date: '2026-06-28',
+    title: 'Follow-ups / “to-investigate” list',
+    items: [
+      'New per-inspection Follow-ups list: jot the open questions you want to chase down — “needs research,” “look deeper,” “awaiting records,” “second opinion” — kept separate from your findings so conclusions stay clean.',
+      'Flag any checklist item for follow-up with one tap (the magnifier icon), then work the list down. The publish bar reminds you when follow-ups are still open.',
+      'Mark any follow-up to appear on the customer report under “Recommended for further evaluation” — buyers value an honest list of areas that warrant a closer look.',
+    ],
+  },
+  {
     version: '0.31.0',
     date: '2026-06-28',
     title: 'Dictate the whole walk-around',

@@ -1129,3 +1129,88 @@
   color: #1a7f37;
   font-weight: 600;
 }
+
+/* ── Follow-ups / to-investigate list ─────────────────────────────────── */
+.insp__followups {
+  margin-top: 22px;
+  border-top: 1px solid var(--line, #e4e8ee);
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.insp__fucount {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b26a00;
+  background: rgba(224, 160, 0, 0.12);
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+}
+.insp__pubwarn {
+  color: #b26a00;
+}
+.insp__fulist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.insp__furow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line, #e4e8ee);
+  border-radius: 10px;
+  background: #fff;
+}
+.insp__furow--resolved,
+.insp__furow--dismissed {
+  opacity: 0.6;
+}
+.insp__fumain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.insp__fureason {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted, #6b7280);
+}
+.insp__funote {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.insp__fumeta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.insp__fustatus {
+  font-size: 11px;
+  text-transform: capitalize;
+  color: var(--muted, #6b7280);
+}
+.insp__fureport {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1a6dd6;
+  background: rgba(26, 109, 214, 0.1);
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+.insp__fuactions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
