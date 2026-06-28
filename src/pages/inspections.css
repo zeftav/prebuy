@@ -686,6 +686,7 @@
 }
 .insp__shot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -717,9 +718,15 @@
   color: var(--text-h);
   font-size: 14px;
 }
+.insp__shotcount {
+  color: var(--accent);
+  font-weight: 700;
+}
 .insp__shotcaptured {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
 }
 .insp__findings {

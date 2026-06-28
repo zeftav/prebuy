@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.22.1',
+    date: '2026-06-28',
+    title: 'Multiple photos per shot',
+    items: [
+      'You can now take more than one photo for any walkthrough spot — in the guided run, “Keep & add another”; in the list, “Add another.”',
+      'Each photo can be removed individually, and all of them show in the report’s photo documentation.',
+    ],
+  },
+  {
     version: '0.22.0',
     date: '2026-06-28',
     title: 'One-button photo walkthrough',

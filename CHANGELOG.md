@@ -3,6 +3,15 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.22.1] — 2026-06-28
+
+### Changed
+- **Multiple photos per overview shot.** `OverviewCapture` now groups overview media by caption (a shot
+  can hold many photos) instead of one-per-shot. Guided run: "Keep & add another" vs "Keep & continue";
+  the per-shot list shows all thumbs with individual delete + an "Add another" picker. No DB change
+  (already multiple `media` rows; the one-per-caption assumption was only in the UI). The report gallery
+  already renders all overview photos. Frontend only.
+
 ## [0.22.0] — 2026-06-28
 
 ### Added
