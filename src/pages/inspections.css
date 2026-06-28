@@ -663,6 +663,48 @@
 .insp__sourcenote {
   margin-top: 4px;
 }
+.insp__danger {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.insp__dangerlink {
+  color: #dc2626;
+}
+.insp__dangerbox {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  max-width: 520px;
+}
+.insp__dangerbox p {
+  margin: 0;
+  color: #7f1d1d;
+  font-size: 0.9rem;
+}
+.insp__dangerbox input {
+  width: 100%;
+  max-width: 280px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+.insp__dangeractions {
+  display: flex;
+  gap: 10px;
+}
+.insp__btndanger {
+  background: #dc2626;
+}
+.insp__btndanger:hover:not(:disabled) {
+  background: #b91c1c;
+}
 .insp__handoff {
   display: flex;
   flex-direction: column;

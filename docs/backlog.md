@@ -52,6 +52,10 @@ objects; `pages/InspectionDetail.jsx` a "Danger zone" delete with type-to-confir
 via membership role); optionally a delete affordance on the Dashboard list. Add a Help/FAQ note.
 **Likely a quick win** vs. #1 — could ship first.
 
+**DONE (v0.28.0, 2026-06-28):** shipped the InspectionDetail "Danger zone" (owner/admin, type-the-
+identifier confirm), `deleteInspection` with Storage cleanup. Remaining options (not done): a delete
+affordance on the Dashboard list; tightening the owner/admin gate from UI-only to an RLS role check.
+
 ### 3. Signup: "account already exists" message  ← (the real "email bug", 2026-06-28)
 The "confirmation email didn't show up" was **signing up with an email that already has an account.**
 Supabase deliberately returns a *fake success* and sends **no email** for an existing address

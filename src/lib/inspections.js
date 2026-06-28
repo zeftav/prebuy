@@ -4,6 +4,7 @@
 
 import { supabase } from './supabase.js'
 import { validateIdentifier } from './verticals.js'
+import { removeInspectionStorage } from './media.js'
 
 /**
  * Validate a new-inspection form. Returns { valid, value, error }.
@@ -80,6 +81,21 @@ export async function createInspection(orgId, draft, userId) {
     .select('id, vertical, mode, identifier, make, model, customer_name, status, created_at')
     .single()
   return { data, error }
+}
+
+/**
+ * Permanently delete an inspection (and its report). DB children cascade via FKs
+ * — inspection_items, media rows, logbooks, logbook_events, and any handoffs;
+ * `source_inspection_id`/`claimed_inspection_id` on other rows are set null. The
+ * Storage objects don't cascade, so we remove them first. Deleting a published
+ * inspection also kills its public report link. RLS lets org members delete; the
+ * UI gates this to owners/admins. Returns { error }.
+ */
+export async function deleteInspection(inspectionId) {
+  if (!inspectionId) return { error: new Error('No inspection to delete.') }
+  await removeInspectionStorage(inspectionId)
+  const { error } = await supabase.from('inspections').delete().eq('id', inspectionId)
+  return { error }
 }
 
 /** List an org's inspections, newest first. */

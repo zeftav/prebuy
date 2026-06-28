@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.28.0',
+    date: '2026-06-28',
+    title: 'Delete an inspection',
+    items: [
+      'Owners and admins can now delete an inspection or listing — open it and scroll to the bottom.',
+      'You’ll type the identifier to confirm; deleting removes everything (items, photos, documents, logbooks) and takes any published report offline. It can’t be undone — to just hide a report, use “Unpublish” instead.',
+    ],
+  },
+  {
     version: '0.27.2',
     date: '2026-06-28',
     title: 'Clearer sign-up',

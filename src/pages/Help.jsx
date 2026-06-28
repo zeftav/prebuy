@@ -49,6 +49,10 @@ const FAQ = [
     a: 'Open the inspection and tap “Publish report”. You’ll get a private share link you can copy and send — your customer opens it in any browser, no login needed, and can save it as a PDF. The link only works once you’ve published; tap “Unpublish” to turn it off again.',
   },
   {
+    q: 'How do I delete an inspection or its report?',
+    a: 'Open the inspection and scroll to the bottom — owners and admins see “Delete this inspection.” You’ll be asked to type the identifier (N-number / HIN / address) to confirm. Deleting permanently removes the inspection and everything in it — items, photos, documents and logbooks — and takes any published report offline. It can’t be undone, so to just hide a report instead, use “Unpublish.”',
+  },
+  {
     q: 'What is the Aircraft profile, and what shows on the report?',
     a: 'The Aircraft profile (tap it on an inspection) is the “spec sheet” half of the report: a short summary, specs and times, currency/due dates, damage history, and a categorized equipment list. The customer report is a two-part document — the profile first, then your inspection findings. Anything you leave blank is simply left off, so fill in as much or as little as you like. The report also builds a dated maintenance timeline automatically from your logbook events.',
   },

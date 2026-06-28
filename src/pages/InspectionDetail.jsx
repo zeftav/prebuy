@@ -21,7 +21,8 @@ import { getVertical } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
 import { structureFinding } from '../lib/findings.js'
 import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
-import { updateInspectionMeta, startInspectionFromListing } from '../lib/inspections.js'
+import { updateInspectionMeta, startInspectionFromListing, deleteInspection } from '../lib/inspections.js'
+import { fetchMemberships } from '../lib/shops.js'
 import { createHandoff, listHandoffs, revokeHandoff, handoffUrl } from '../lib/handoff.js'
 import { publishInspection, unpublishInspection, reportUrl } from '../lib/report.js'
 import './auth.css'
@@ -43,6 +44,7 @@ export default function InspectionDetail() {
   const [media, setMedia] = useState([])
   const [state, setState] = useState('loading') // loading | ready | error | notfound
   const [note, setNote] = useState(null)
+  const [role, setRole] = useState(null) // caller's role in this inspection's org
 
   useEffect(() => {
     let active = true
@@ -71,6 +73,20 @@ export default function InspectionDetail() {
     const { data } = await listMedia(id)
     setMedia(data)
   }
+
+  // Resolve the caller's role in this inspection's org (gates delete to owner/admin).
+  useEffect(() => {
+    if (!inspection?.org_id) return
+    let active = true
+    fetchMemberships().then(({ data }) => {
+      if (!active) return
+      const m = (data ?? []).find((x) => x.org_id === inspection.org_id)
+      setRole(m?.role ?? null)
+    })
+    return () => {
+      active = false
+    }
+  }, [inspection?.org_id])
 
   const ordered = useMemo(() => orderByFinancialRisk(items), [items])
   const reviewed = items.filter((i) => i.status && i.status !== 'pending').length
@@ -123,6 +139,13 @@ export default function InspectionDetail() {
     const { data, error } = await startInspectionFromListing(inspection, user?.id)
     setHandoffBusy(false)
     if (!error && data) navigate(`/app/inspections/${data.id}`)
+  }
+
+  async function removeInspection() {
+    const { error } = await deleteInspection(inspection.id)
+    if (error) return error
+    navigate('/app', { replace: true })
+    return null
   }
 
   if (state === 'loading') {
@@ -253,7 +276,70 @@ export default function InspectionDetail() {
       {inspection.source_inspection_id && (
         <p className="auth__hint insp__sourcenote">Started from a broker listing.</p>
       )}
+
+      {(role === 'owner' || role === 'admin') && (
+        <DangerZone inspection={inspection} isListing={isListing} onDelete={removeInspection} />
+      )}
     </main>
+  )
+}
+
+function DangerZone({ inspection, isListing, onDelete }) {
+  const [open, setOpen] = useState(false)
+  const [confirm, setConfirm] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const noun = isListing ? 'listing' : 'inspection'
+  const match = (inspection.identifier || '').trim()
+  const ready = confirm.trim().toUpperCase() === match.toUpperCase() && match.length > 0
+
+  async function doDelete() {
+    setBusy(true)
+    setError(null)
+    const err = await onDelete()
+    if (err) {
+      setBusy(false)
+      setError(err.message || 'Could not delete.')
+    }
+    // on success the page navigates away
+  }
+
+  return (
+    <section className="insp__danger">
+      {!open ? (
+        <button type="button" className="auth__toggle insp__dangerlink" onClick={() => setOpen(true)}>
+          <Trash2 size={14} aria-hidden="true" /> Delete this {noun}
+        </button>
+      ) : (
+        <div className="insp__dangerbox">
+          <p>
+            <strong>Delete this {noun}?</strong> This permanently removes it and all its items, photos,
+            documents and logbooks{inspection.status === 'published' ? ', and takes its published report offline' : ''}.
+            This can’t be undone.
+          </p>
+          {error && <div className="auth__error" role="alert">{error}</div>}
+          <label className="auth__hint" htmlFor="delconfirm">
+            Type <strong>{match}</strong> to confirm
+          </label>
+          <input
+            id="delconfirm"
+            type="text"
+            autoComplete="off"
+            placeholder={match}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
+          <div className="insp__dangeractions">
+            <button type="button" className="auth__btn auth__btn--ghost" onClick={() => { setOpen(false); setConfirm(''); setError(null) }}>
+              Cancel
+            </button>
+            <button type="button" className="auth__btn insp__btndanger" onClick={doDelete} disabled={busy || !ready}>
+              {busy ? 'Deleting…' : `Delete ${noun}`}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   )
 }
 

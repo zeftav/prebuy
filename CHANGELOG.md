@@ -3,6 +3,20 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.28.0] — 2026-06-28
+
+### Added
+- **Delete an inspection / report (shop-side).** Owners and admins can permanently delete an inspection
+  or listing from its detail page (a "Danger zone" with type-the-identifier confirmation).
+  - `lib/inspections.js` `deleteInspection(id)` — removes the inspection's Storage objects first
+    (`lib/media.js` `removeInspectionStorage`), then deletes the row. DB children cascade via FKs
+    (items, media rows, logbooks, events, handoffs); `source/claimed_inspection_id` set null. A
+    published inspection's report link goes dead. No migration.
+  - `pages/InspectionDetail.jsx` — `DangerZone` (gated to owner/admin via the caller's membership
+    role), type-to-confirm on the identifier. Help FAQ +1.
+  - Note: RLS lets any org member delete; the owner/admin gate is enforced in the UI for now
+    (tightening to an RLS role check is a possible follow-up).
+
 ## [0.27.2] — 2026-06-28
 
 ### Fixed

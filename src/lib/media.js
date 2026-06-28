@@ -104,3 +104,16 @@ export async function deleteMedia(row) {
   await supabase.storage.from(BUCKET).remove([row.storage_path])
   return { error: null }
 }
+
+/**
+ * Remove ALL Storage objects for an inspection. The `media` rows themselves
+ * cascade-delete with the inspection (FK), but the files in the bucket do not —
+ * so call this BEFORE deleting the inspection, while the rows are still readable.
+ */
+export async function removeInspectionStorage(inspectionId) {
+  if (!inspectionId) return { removed: 0 }
+  const { data } = await supabase.from('media').select('storage_path').eq('inspection_id', inspectionId)
+  const paths = (data ?? []).map((r) => r.storage_path).filter(Boolean)
+  if (paths.length) await supabase.storage.from(BUCKET).remove(paths)
+  return { removed: paths.length }
+}
