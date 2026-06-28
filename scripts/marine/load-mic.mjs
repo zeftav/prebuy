@@ -71,7 +71,9 @@ try {
   await client.query('drop table if exists stg_mic')
   await client.query(`create temp table stg_mic (${ddl})`)
   console.log('Staging MIC CSV…')
-  const dst = client.query(copyFrom('copy stg_mic from stdin with (format csv, header true)'))
+  // The USCG MIC.csv is Windows-1252 (smart quotes etc. → bytes like 0x91), not
+  // UTF-8 — tell COPY so Postgres transcodes instead of erroring on 0x91.
+  const dst = client.query(copyFrom("copy stg_mic from stdin with (format csv, header true, encoding 'WIN1252')"))
   await pipeline(createReadStream(csvPath), dst)
   const { rows: staged } = await client.query('select count(*)::int n from stg_mic')
   console.log(`  staged ${staged[0].n.toLocaleString()} rows`)

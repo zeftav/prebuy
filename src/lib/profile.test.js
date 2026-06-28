@@ -8,6 +8,7 @@ import {
   currencyStatus,
   draftFromExtraction,
   mergeProfileDraft,
+  mergeResearchDraft,
   buildSummaryContext,
   engineLabel,
   propLabel,
@@ -253,5 +254,34 @@ describe('per-vertical profile schema', () => {
       [],
     )
     expect(ctx.engines[0].hours).toBe('1200')
+  })
+})
+
+describe('mergeResearchDraft', () => {
+  it('fills blanks, sets summary, fills engine slots, appends equipment — without clobbering', () => {
+    const existing = normalizeProfile(
+      { summary: 'Mine.', specs: { loa: '35' }, engines: [{ hours: '1200', notes: '' }], engine_count: 1 },
+      'marine',
+    )
+    const draft = {
+      summary: 'AI-written overview.',
+      specs: { loa: '999', beam: '12' }, // loa already set → kept; beam fills
+      currency: { last_haul_out: '2024-06' },
+      engines: [{ hours: '9999', notes: 'Yanmar 4JH' }], // hours kept; notes fills
+      equipment: { avionics: [{ name: 'Garmin GPSMAP', notes: 'radar' }], additional: [] },
+    }
+    const merged = mergeResearchDraft(existing, draft, 'marine')
+    expect(merged.summary).toBe('Mine.') // not clobbered
+    expect(merged.specs.loa).toBe('35') // not clobbered
+    expect(merged.specs.beam).toBe('12') // filled
+    expect(merged.currency.last_haul_out).toBe('2024-06')
+    expect(merged.engines[0].hours).toBe('1200') // not clobbered
+    expect(merged.engines[0].notes).toBe('Yanmar 4JH') // filled
+    expect(merged.equipment.avionics.map((r) => r.name)).toContain('Garmin GPSMAP')
+  })
+
+  it('writes the summary when the profile has none', () => {
+    const merged = mergeResearchDraft({}, { summary: 'Fresh.' }, 'aviation')
+    expect(merged.summary).toBe('Fresh.')
   })
 })

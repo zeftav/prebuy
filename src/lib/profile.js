@@ -241,31 +241,52 @@ export function draftFromExtraction(raw) {
  * unless an item with the same name (case-insensitive) is already present. Returns
  * a normalized profile. Pure — the UI pre-filters the draft to the user's picks.
  */
+// Fill only blank fields of `into` from `from` (never clobber). Pure helper.
+function fillBlanks(into, from) {
+  for (const k of Object.keys(into)) if (!into[k] && from?.[k]) into[k] = str(from[k]).trim()
+}
+// Append equipment rows whose name isn't already present (case-insensitive). Pure helper.
+function appendEquipment(existing, incoming) {
+  const seen = new Set(existing.map((r) => r.name.toLowerCase()))
+  for (const r of incoming ?? []) {
+    const name = str(r?.name).trim()
+    if (name && !seen.has(name.toLowerCase())) {
+      existing.push({ name, notes: str(r?.notes).trim() })
+      seen.add(name.toLowerCase())
+    }
+  }
+}
+
 export function mergeProfileDraft(profile, draft) {
   const p = normalizeProfile(profile)
   const d = draft || {}
-
-  const fillBlanks = (into, from) => {
-    for (const k of Object.keys(into)) if (!into[k] && from?.[k]) into[k] = str(from[k]).trim()
-  }
   fillBlanks(p.specs, d.specs)
   fillBlanks(p.currency, d.currency)
   if (p.engines[0]) fillBlanks(p.engines[0], d.engine)
   if (p.props[0]) fillBlanks(p.props[0], d.prop)
+  appendEquipment(p.equipment.avionics, d.equipment?.avionics)
+  appendEquipment(p.equipment.additional, d.equipment?.additional)
+  return p
+}
 
-  const appendNew = (existing, incoming) => {
-    const seen = new Set(existing.map((r) => r.name.toLowerCase()))
-    for (const r of incoming ?? []) {
-      const name = str(r?.name).trim()
-      if (name && !seen.has(name.toLowerCase())) {
-        existing.push({ name, notes: str(r?.notes).trim() })
-        seen.add(name.toLowerCase())
-      }
-    }
-  }
-  appendNew(p.equipment.avionics, d.equipment?.avionics)
-  appendNew(p.equipment.additional, d.equipment?.additional)
-
+/**
+ * Merge an AI-research draft into a profile WITHOUT clobbering existing entries.
+ * The draft is already in the vertical's key space (the edge fn fills our field
+ * keys): scalar specs/currency fill blanks; engines/props fill per-slot blanks;
+ * equipment rows append (deduped); the summary fills only if empty. The UI
+ * pre-filters the draft to the user's ticked picks. Pure → returns a normalized
+ * profile for the given vertical.
+ */
+export function mergeResearchDraft(profile, draft, verticalKey = 'aviation') {
+  const p = normalizeProfile(profile, verticalKey)
+  const d = draft || {}
+  if (!p.summary && d.summary) p.summary = str(d.summary).trim()
+  fillBlanks(p.specs, d.specs)
+  fillBlanks(p.currency, d.currency)
+  if (Array.isArray(d.engines)) d.engines.forEach((e, i) => p.engines[i] && fillBlanks(p.engines[i], e))
+  if (Array.isArray(d.props)) d.props.forEach((pr, i) => p.props[i] && fillBlanks(p.props[i], pr))
+  appendEquipment(p.equipment.avionics, d.equipment?.avionics)
+  appendEquipment(p.equipment.additional, d.equipment?.additional)
   return p
 }
 
@@ -348,6 +369,57 @@ export async function generateNarrative(context, orgId) {
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }
     return { data: { summary: String(body.summary ?? '').trim() }, error: null }
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e : new Error('Network error') }
+  }
+}
+
+/**
+ * Research the asset's published spec sheet from year/make/model via the
+ * `research-asset` edge fn (Claude + web search). Returns an AI DRAFT for review
+ * (typical-for-the-model specs, not this specific unit) shaped to the vertical's
+ * profile fields, plus a guessed model, confidence and sources. The caller passes
+ * the field defs from profileSchema so the edge fn fills our exact keys.
+ */
+export async function researchAsset(inspection, orgId) {
+  const insp = inspection ?? {}
+  if (!insp.make && !insp.model && !insp.identifier) {
+    return { data: null, error: new Error('Add a make/model (or look up the identifier) first.') }
+  }
+  const schema = profileSchema(insp.vertical)
+  const fieldDefs = (fields) => (fields ?? []).map((f) => ({ key: f.key, label: f.label }))
+
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData.session?.access_token
+  if (!token) return { data: null, error: new Error('You must be signed in.') }
+
+  const body = {
+    org_id: orgId || null,
+    asset: {
+      vertical: insp.vertical || 'aviation',
+      noun: schema.noun,
+      year: insp.year || null,
+      make: insp.make || null,
+      model: insp.model || null,
+      identifier: insp.identifier || null,
+    },
+    spec_fields: fieldDefs(schema.specFields),
+    currency_fields: fieldDefs(schema.currencyFields),
+    has_engines: !!schema.hasEngines,
+    engine_fields: fieldDefs(schema.engineFields),
+    prop_fields: fieldDefs(schema.propFields),
+  }
+
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/research-asset`
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) return { data: null, error: new Error(json.error || `Request failed (${res.status})`) }
+    return { data: json, error: null }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e : new Error('Network error') }
   }

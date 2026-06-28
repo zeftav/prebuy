@@ -8,7 +8,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, FileText, Plus, Trash2, Check, ScanLine, Sparkles } from 'lucide-react'
+import { ChevronLeft, FileText, Plus, Trash2, Check, ScanLine, Sparkles, Globe, ExternalLink } from 'lucide-react'
 import { getInspection, listInspectionItems } from '../lib/checklist.js'
 import { listEvents } from '../lib/logbooks.js'
 import {
@@ -16,6 +16,8 @@ import {
   saveProfile,
   extractProfile,
   mergeProfileDraft,
+  researchAsset,
+  mergeResearchDraft,
   buildSummaryContext,
   generateNarrative,
   engineLabel,
@@ -98,6 +100,12 @@ export default function AircraftProfile() {
     setProfile((p) => mergeProfileDraft(p, filteredDraft))
   }
 
+  // Merge a reviewed AI-research draft into the in-progress form.
+  function applyResearch(filteredDraft) {
+    setSaved(false)
+    setProfile((p) => mergeResearchDraft(p, filteredDraft, inspection.vertical))
+  }
+
   // Draft a broker-style narrative from the structured data into the summary field.
   async function onGenerate() {
     setGenBusy(true)
@@ -157,6 +165,8 @@ export default function AircraftProfile() {
         you can confirm; blank fields are simply left off the report. The dated maintenance
         timeline comes from the <Link to={`/app/inspections/${id}/logbooks`} className="auth__inlinelink">logbook audit</Link>.
       </p>
+
+      <ResearchPrefill inspection={inspection} schema={schema} onApply={applyResearch} />
 
       {schema.canScan && <ScanPrefill inspection={inspection} onApply={applyScan} />}
 
@@ -314,6 +324,183 @@ export default function AircraftProfile() {
         )}
       </div>
     </main>
+  )
+}
+
+// Research the asset's spec sheet from year/make/model (Claude + web search) →
+// review proposed specs/currency/engines/equipment/summary → merge into the form.
+// Works for any vertical (uses the vertical's profile schema); needs make/model.
+function ResearchPrefill({ inspection, schema, onApply }) {
+  const [phase, setPhase] = useState('idle') // idle | working | review | error
+  const [draft, setDraft] = useState(null)
+  const [error, setError] = useState(null)
+  const [pick, setPick] = useState({ specs: new Set(), currency: new Set(), engines: new Set(), avionics: new Set(), additional: new Set(), summary: true })
+
+  const canRun = Boolean(inspection.make || inspection.model || inspection.identifier)
+
+  async function run() {
+    setError(null)
+    setPhase('working')
+    const { data, error } = await researchAsset(inspection, inspection.org_id)
+    if (error) {
+      setError(error.message)
+      return setPhase('idle')
+    }
+    setDraft(data)
+    setPick({
+      specs: new Set(schema.specFields.map((f) => f.key).filter((k) => data.specs?.[k])),
+      currency: new Set((schema.currencyFields ?? []).map((f) => f.key).filter((k) => data.currency?.[k])),
+      engines: new Set((data.engines ?? []).map((_, i) => i)),
+      avionics: new Set((data.equipment?.avionics ?? []).map((_, i) => i)),
+      additional: new Set((data.equipment?.additional ?? []).map((_, i) => i)),
+      summary: Boolean(data.summary),
+    })
+    setPhase('review')
+  }
+
+  function toggle(group, key) {
+    setPick((p) => {
+      const next = new Set(p[group])
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return { ...p, [group]: next }
+    })
+  }
+
+  function apply() {
+    const eng = (draft.engines ?? []).map((e, i) => (pick.engines.has(i) ? e : {}))
+    const prp = (draft.props ?? []).map((p, i) => (pick.engines.has(i) ? p : {}))
+    onApply({
+      summary: pick.summary ? draft.summary : '',
+      specs: Object.fromEntries([...pick.specs].map((k) => [k, draft.specs[k]])),
+      currency: Object.fromEntries([...pick.currency].map((k) => [k, draft.currency?.[k]])),
+      engines: eng,
+      props: prp,
+      equipment: {
+        avionics: [...pick.avionics].map((i) => draft.equipment.avionics[i]),
+        additional: [...pick.additional].map((i) => draft.equipment.additional[i]),
+      },
+    })
+    setPhase('idle')
+    setDraft(null)
+  }
+
+  const specLabel = (k) => schema.specFields.find((f) => f.key === k)?.label ?? k
+  const curLabel = (k) => (schema.currencyFields ?? []).find((f) => f.key === k)?.label ?? k
+  const engineValue = (i) =>
+    [...schema.engineFields.map((f) => draft.engines?.[i]?.[f.key]), ...schema.propFields.map((f) => draft.props?.[i]?.[f.key])]
+      .filter(Boolean)
+      .join(' · ')
+  const count =
+    pick.specs.size + pick.currency.size + pick.engines.size + pick.avionics.size + pick.additional.size + (pick.summary && draft?.summary ? 1 : 0)
+
+  return (
+    <section className="insp__section lb__scan">
+      <div className="insp__sectionhead">
+        <h2><Globe size={18} aria-hidden="true" /> Research with AI <span className="lb__beta">beta</span></h2>
+      </div>
+
+      {phase !== 'review' && (
+        <>
+          <p className="auth__hint">
+            Look up this {schema.noun.toLowerCase()}’s published specs from the make/model and pre-fill the
+            profile. These are <strong>typical for the model</strong> — a draft to verify against the actual
+            {' '}{schema.noun.toLowerCase()}, with sources. We never overwrite anything you’ve filled in.
+          </p>
+          <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={run} disabled={!canRun || phase === 'working'}>
+            <Globe size={15} aria-hidden="true" /> {phase === 'working' ? 'Researching…' : 'Research with AI'}
+          </button>
+          {!canRun && <p className="auth__hint">Add a make/model (or look up the identifier) first.</p>}
+          {error && <div className="auth__error" role="alert">{error}</div>}
+        </>
+      )}
+
+      {phase === 'review' && draft && (
+        <div className="lb__review">
+          <p className="auth__hint">
+            {draft.model_guess ? <>Identified: <strong>{draft.model_guess}</strong>{draft.confidence ? ` (${draft.confidence} confidence)` : ''}. </> : null}
+            Tick what to keep — picked fields fill blanks in the form below; review, then Save.
+          </p>
+
+          {draft.summary && (
+            <ReviewGroup
+              title="Summary"
+              items={[{ key: 'summary', label: draft.summary, value: '' }]}
+              isOn={() => pick.summary}
+              onToggle={() => setPick((p) => ({ ...p, summary: !p.summary }))}
+            />
+          )}
+
+          {schema.specFields.some((f) => draft.specs?.[f.key]) && (
+            <ReviewGroup
+              title="Specifications"
+              items={schema.specFields.filter((f) => draft.specs[f.key]).map((f) => ({ key: f.key, label: specLabel(f.key), value: draft.specs[f.key] }))}
+              isOn={(it) => pick.specs.has(it.key)}
+              onToggle={(it) => toggle('specs', it.key)}
+            />
+          )}
+
+          {(schema.currencyFields ?? []).some((f) => draft.currency?.[f.key]) && (
+            <ReviewGroup
+              title={schema.currencyTitle}
+              items={schema.currencyFields.filter((f) => draft.currency?.[f.key]).map((f) => ({ key: f.key, label: curLabel(f.key), value: draft.currency[f.key] }))}
+              isOn={(it) => pick.currency.has(it.key)}
+              onToggle={(it) => toggle('currency', it.key)}
+            />
+          )}
+
+          {(draft.engines ?? []).length > 0 && (
+            <ReviewGroup
+              title={schema.enginesTitle ?? 'Engines'}
+              items={draft.engines.map((_, i) => ({ key: i, label: engineLabel(i, draft.engines.length, 'conventional'), value: engineValue(i) }))}
+              isOn={(it) => pick.engines.has(it.key)}
+              onToggle={(it) => toggle('engines', it.key)}
+            />
+          )}
+
+          {(draft.equipment?.avionics ?? []).length > 0 && (
+            <ReviewGroup
+              title={schema.equipmentGroups?.[0]?.title ?? 'Avionics'}
+              items={draft.equipment.avionics.map((r, i) => ({ key: i, label: r.name, value: r.notes }))}
+              isOn={(it) => pick.avionics.has(it.key)}
+              onToggle={(it) => toggle('avionics', it.key)}
+            />
+          )}
+
+          {(draft.equipment?.additional ?? []).length > 0 && (
+            <ReviewGroup
+              title={schema.equipmentGroups?.[1]?.title ?? 'Additional equipment'}
+              items={draft.equipment.additional.map((r, i) => ({ key: i, label: r.name, value: r.notes }))}
+              isOn={(it) => pick.additional.has(it.key)}
+              onToggle={(it) => toggle('additional', it.key)}
+            />
+          )}
+
+          {Array.isArray(draft.sources) && draft.sources.length > 0 && (
+            <>
+              <h3 className="lb__reviewh">Sources</h3>
+              <ul className="insp__list">
+                {draft.sources.map((s, i) => (
+                  <li key={i} className="insp__sub">
+                    <a href={s.url} target="_blank" rel="noreferrer" className="auth__inlinelink">
+                      <ExternalLink size={12} aria-hidden="true" /> {s.title || s.url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          <div className="insp__capture">
+            <button type="button" className="auth__btn" disabled={count === 0} onClick={apply}>
+              Add {count} to profile
+            </button>
+            <button type="button" className="auth__btn auth__btn--ghost" onClick={() => { setPhase('idle'); setDraft(null) }}>Discard</button>
+          </div>
+          <p className="auth__hint">AI-suggested and typical for the model — always confirm against the actual {schema.noun.toLowerCase()} before publishing.</p>
+        </div>
+      )}
+    </section>
   )
 }
 
