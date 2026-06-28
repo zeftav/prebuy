@@ -364,6 +364,20 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   CSV w/ browser UA) + `docs/marine-mic-load.md` (USCG DB is a search app, no one-click CSV → operator
   supplies one). Migration `020` seeds **HUN → Hunter Marine** (verified). ⚠️ **Run migration 020**;
   full builder coverage = set `MIC_SOURCE_URL` repo var + run the Action. Lint + 132 tests + build green.
+  **MIC source found:** USCG publishes the official CSV at `uscgboating.org/downloads/MIC.csv` (~16k
+  builders) — the loader Action defaults to it (one click, reuses `SUPABASE_DB_URL`). The file is
+  **Windows-1252**, so the loader's COPY uses `ENCODING 'WIN1252'` (0x91 smart quotes were erroring as
+  invalid UTF-8 — fixed v0.30.0 hotfix).
+- Session 3 cont. — **AI auto-profile "Research with AI"** (v0.30.0). New **`research-asset`** edge fn
+  (**JWT ON**, `claude-opus-4-8` + **web_search_20260209** server tool + structured output; client sends
+  the vertical's `profileSchema` field defs -> fn builds a json_schema filling our keys; returns
+  model_guess/confidence/summary/specs/currency/engines/equipment/sources; `pause_turn` loop; logs
+  `ai_usage`; reuses `ANTHROPIC_API_KEY`). `profile.js`: `researchAsset` + pure `mergeResearchDraft`
+  (+tests, 134). `AircraftProfile` `ResearchPrefill` panel (tick-to-keep, all verticals). Drafts are
+  typical-for-the-model -> verify before publishing. ⚠️ **Deploy `research-asset` (JWT ON)** — no
+  migration, no new secret. Confirmed API specifics via the `claude-api` skill.
+  **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
+  Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

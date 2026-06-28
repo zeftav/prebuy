@@ -57,6 +57,10 @@ const FAQ = [
     a: 'The profile (tap it on an inspection) is the “spec sheet” half of the report, and it matches your industry: an aircraft profile has airframe times, engines/props, and FAA currency dates; a vessel profile has LOA/beam/draft, engine hours, and documentation/haul-out dates; a property profile has square footage, year built, and system ages. All of them also take a summary, a damage/history callout, and a categorized equipment list. The customer report is a two-part document — the profile first, then your inspection findings — and anything you leave blank is simply left off. The report also builds a dated maintenance timeline automatically from your logbook events.',
   },
   {
+    q: 'Can AI look up the specs for me?',
+    a: 'Yes (beta). On the profile, tap “Research with AI” — we look up the make/model’s published specifications from the web and propose the spec sheet (dimensions, weights, capacities, engines, typical equipment) plus a short summary and the sources we used. These are typical-for-the-model figures, so treat them as a draft to verify against the actual asset. Tick what to keep; we never overwrite anything you’ve already entered. Works for aircraft, boats and homes. Add the make/model (or look up the identifier) first.',
+  },
+  {
     q: 'Can I fill the profile from photos instead of typing?',
     a: 'Yes (beta), for aircraft today. On an aircraft profile, tap “Scan to pre-fill” and photograph records — a weight & balance / equipment list, an avionics placard, or logbook pages. We propose specs, currency dates, and equipment for you to review and tick. We never overwrite anything you’ve already entered; picked fields drop into the form for you to check before saving. Scan support for boats and homes is on the way.',
   },

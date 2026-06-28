@@ -3,6 +3,27 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.30.0] — 2026-06-28
+
+### Added
+- **AI auto-profile — "Research with AI."** Drafts the profile spec sheet from year/make/model so the
+  autofill feels professional. For human review (typical-for-the-model, not the specific unit).
+  - `supabase/functions/research-asset/index.ts` — **new edge fn (JWT ON, service role for `ai_usage`).**
+    `claude-opus-4-8` + the **web_search_20260209** server tool (dynamic filtering, no beta header) +
+    structured output (`output_config.format`). The client sends the vertical's profile field defs
+    (keys+labels); the fn builds a json_schema that fills our exact keys and returns
+    `model_guess`/`confidence`/`summary`/`specs`/`currency`/`engines`/`props`/`equipment`/`sources`.
+    Handles `pause_turn`; logs `ai_usage`. **Deploy (JWT ON).** Reuses `ANTHROPIC_API_KEY`.
+  - `src/lib/profile.js` — `researchAsset(inspection, orgId)` (builds the per-vertical payload from
+    `profileSchema`) + pure `mergeResearchDraft` (fill-blanks specs/currency/per-engine, append
+    equipment, set summary only if empty) (+2 tests, 134 total).
+  - `src/pages/AircraftProfile.jsx` — `ResearchPrefill` panel: model guess + confidence + sources,
+    tick-to-keep groups (specs/currency/engines/equipment/summary), merges into the form. All verticals.
+  - Help FAQ +1.
+
+### Notes
+- ⚠️ **Deploy `research-asset` (JWT ON).** No migration, no new secret.
+
 ## [0.29.2] — 2026-06-28
 
 ### Added

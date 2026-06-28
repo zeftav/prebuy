@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.30.0',
+    date: '2026-06-28',
+    title: 'Research the profile with AI',
+    items: [
+      'New on the profile: “Research with AI” looks up the make/model’s published specs from the web and pre-fills the spec sheet — dimensions, weights, capacities, engines, typical equipment, and a short summary — with sources.',
+      'These are typical-for-the-model figures (a draft to verify against the actual asset), and we never overwrite anything you’ve already entered. Tick what to keep, then Save.',
+      'Works for aircraft, boats and homes.',
+    ],
+  },
+  {
     version: '0.29.2',
     date: '2026-06-28',
     title: 'Boat builder lookup',

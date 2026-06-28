@@ -58,6 +58,8 @@ Run in order. All are idempotent (safe to re-run).
   - [x] ✅ Redeployed `structure-logbook` for v0.14.0 (scan-to-pre-fill specs/currency/equipment). (2026-06-27)
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
+- [ ] ⬜ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile
+      from make/model via Claude + web search. Reuses `ANTHROPIC_API_KEY`. No migration, no new secret.
 - [x] ✅ **REDEPLOYED `structure-finding`, `structure-logbook`, `generate-summary`** (v0.27.0) — all
       three now log token usage to `ai_usage` (fire-and-forget, service role) for the platform AI-cost
       view. JWT **ON**. (2026-06-28)
