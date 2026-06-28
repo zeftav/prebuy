@@ -665,6 +665,85 @@ automatically, for human review — the autofill that makes the tool feel profes
 - **Sequence:** strongest combined with the identifier resolvers — vPIC/HIN/FAA give ground-truth
   make/model/year; the AI fills the rest. Big professionalism win; build behind the "verify" framing.
 
+## Dictate the whole walk-around → auto-parse into findings (Brett, 2026-06-28)
+
+Make capture effortless for the mechanic: instead of tapping each checklist item and dictating one note
+at a time, let them **talk through the entire walk-around in one continuous dictation** ("…left main tire
+worn to the cords, nose strut a little low, small oil weep at the left valve cover, prop and spinner look
+good, right brake disc has a lip…"). AI then **splits the monologue into discrete findings and maps each
+to the right checklist item**, sets a status/severity, writes a clean customer-facing note — then prompts
+the mechanic to fill in the blanks (items not mentioned, or low-confidence matches).
+
+**Why it's a big deal:** this is the single biggest friction reducer for the field user — it matches how a
+mechanic actually works a walk-around (talking, not tapping), and it front-loads the whole inspection in
+one pass. Pairs with the one-button **guided photo walkthrough** (talk + shoot).
+
+**Flow:**
+1. **Standalone "Dictate walk-around" tool at the start** of an inspection (its own step/route, e.g.
+   `/app/inspections/:id/walkaround`, linked prominently from the detail "tools" row and ideally offered
+   right after create). Continuous dictation (reuse `lib/dictation.js` `useDictation`; typed/paste
+   fallback for iOS Safari reliability — the known Web-Speech risk). Live transcript, big "Done" button.
+2. **Parse:** send the full transcript + the inspection's current checklist items (id, category, title,
+   risk band) to a new edge fn → AI returns an array of findings, each: `{ item_id (matched | null),
+   suggested_category/title (for unmatched → a new custom item), status (ok/monitor/discrepancy),
+   severity, finding (cleaned), confidence }`, plus any items explicitly called out as OK.
+3. **Review-before-apply** (same trust pattern as scan/research): show each parsed finding mapped to its
+   item (or "new item"), with status/severity/finding editable and a confidence flag; tick to accept.
+   Let the mechanic re-map a finding to a different item or split/merge.
+4. **Apply:** patch matched `inspection_items` (status/severity/findings via `updateInspectionItem`);
+   `addCustomItem` for unmatched discrepancies (with category + notes); optionally mark mentioned items OK.
+5. **Fill in the blanks:** afterward, surface what wasn't covered — list the still-`pending` items
+   (risk-ordered) so the mechanic finishes the high-risk ones, and re-prompt on low-confidence maps.
+
+**Architecture / touchpoints:**
+- New edge fn `structure-walkaround` (JWT ON, `claude-opus-4-8`, structured output `json_schema`; input =
+  transcript + item list; reuse `ANTHROPIC_API_KEY`; log `ai_usage`; cap/chunk very long transcripts).
+  Sibling to `structure-finding` (which does one note) — this does many + mapping.
+- `lib/findings.js` (or new `lib/walkaround.js`): `parseWalkaround(transcript, items, orgId)` + a pure
+  mapper/merge helper (tested) that turns the AI output into item patches + new-item drafts.
+- `pages/Walkaround.jsx` (record → review → apply) + a link from `InspectionDetail` tools; route in `App`.
+- Reuses: `useDictation`, `orderByFinancialRisk`/`riskBand`, `updateInspectionItem`, `addCustomItem`.
+- **Per-vertical:** works for any vertical — the item list is the grounding context, so a boat/home
+  walk-through parses against its own checklist. Photo walkthrough could later auto-attach the photo taken
+  nearest in time to a spoken discrepancy.
+
+**Risks:** mapping accuracy (mitigated by passing the item list + review step); over-creating custom items
+(let the model prefer matching an existing item; threshold confidence); iOS Safari dictation reliability
+(typed fallback). Build review-first, never auto-apply.
+
+## Inspection follow-ups / "to-investigate" list (Brett, 2026-06-28)
+
+A running **follow-up backlog within an inspection** — quick notes the mechanic jots as they go: "noticed
+X, needs more research," "want to look deeper here," "waiting on logbooks/records," "get a second opinion."
+These are **open questions, distinct from findings** (a finding is a conclusion; a follow-up is a TODO).
+The mechanic works the list down before publishing, and each one resolves into a finding, a note, or gets
+dismissed. Pairs with the dictated walk-around above: low-confidence or "look deeper" mentions route
+straight into this list instead of forcing a premature conclusion.
+
+**Two payoffs:**
+1. **Working tool** — a lightweight in-progress checklist so nothing noticed gets forgotten between the
+   walk-around and the writeup; an open-count badge; optionally warn on publish if follow-ups are still open.
+2. **Report value** — a standard PPI section, **"Recommended for further evaluation,"** built from the
+   follow-ups the mechanic chooses to surface (buyers genuinely value an honest "these areas warrant a
+   closer look" list). Per-item opt-in: internal-only vs show-on-report.
+
+**Shape (sketch):**
+- Data: a small `inspection_followups` table (`id`, `inspection_id`, `org_id`, `inspection_item_id`
+  nullable link, `note`, `reason` enum [research / look-deeper / awaiting-records / second-opinion / other],
+  `status` open|resolved|dismissed, `show_on_report` bool, timestamps) + org-scoped RLS. (Migration.)
+  Kept separate from `inspection_items` so findings stay clean.
+- `lib/followups.js` CRUD + pure helpers (open count, group by reason).
+- `InspectionDetail`: a "Follow-ups" panel (quick-add, resolve/dismiss, open badge) + a "flag for
+  follow-up" affordance on any checklist item (one tap → creates a linked follow-up). Optional soft
+  warning in the publish bar when open follow-ups remain.
+- `report` edge fn + `ReportView`: a "Recommended for further evaluation" section from
+  `show_on_report` + unresolved follow-ups (redeploy report).
+- Capture hooks: the dictated-walk-around parser and per-item dictation can both offer "send to
+  follow-ups" for anything uncertain.
+
+Reuses the existing risk-ordering + media/attachment patterns (a follow-up can carry a photo/doc).
+Lightweight; no AI required (though the walk-around tool feeds it).
+
 ## True session impersonation — platform support (Brett, 2026-06-28)
 
 We shipped a **read-only support view** (`/admin/orgs/:id` — team + inspections + report links, via the
