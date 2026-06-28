@@ -45,11 +45,9 @@ Run in order. All are idempotent (safe to re-run).
         for the two-part report (Aircraft profile + maintenance timeline). JWT still **OFF**. No new
         migration (profile lives in the existing `inspections.attributes` JSONB).
 - [x] ✅ `structure-logbook` — Verify JWT **ON**. Logbook OCR import (Claude vision). (2026-06-27)
-  - [ ] 🔁 **REDEPLOY `structure-logbook` for v0.14.0** — vision now also extracts specs / currency /
-        equipment for the Aircraft profile "Scan to pre-fill" (additive; logbook import unaffected).
-        JWT still **ON**; reuses `ANTHROPIC_API_KEY`. No migration.
-- [ ] ⬜ **DEPLOY `generate-summary`** (new, v0.15.0) — Verify JWT **ON**. Powers "Write with AI" on the
-      Aircraft profile (broker-style narrative). Reuses `ANTHROPIC_API_KEY`; no migration.
+  - [x] ✅ Redeployed `structure-logbook` for v0.14.0 (scan-to-pre-fill specs/currency/equipment). (2026-06-27)
+- [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
+      Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 
@@ -63,8 +61,10 @@ Run in order. All are idempotent (safe to re-run).
 
 ## 5. Before real shops sign up (not blocking dev)
 
-- [ ] ⬜ **Resend SMTP** for auth email (confirm/reset/invite). Steps in `docs/deploy.md` → Email.
-      Verify `prebuy.app` domain in Resend. (Built-in sender is fine for your own testing.)
+- [x] ✅ **Resend SMTP** for auth email (confirm/reset/invite) — live (2026-06-28). `prebuy.app`
+      verified in Resend (Cloudflare integration); Supabase custom SMTP → `smtp.resend.com:465`,
+      username `resend`, sender `noreply@prebuy.app`. Password reset tested end-to-end. (Gotcha: a typo
+      in the SMTP username → `535 "Invalid username"`; it must be exactly `resend`.)
 - [ ] ⬜ (optional) **Confirm-email** toggle: Authentication → Providers → Email. OFF = instant
       session while testing; ON = users must click a link (the app handles both).
 
