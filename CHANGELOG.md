@@ -3,6 +3,14 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.29.1] — 2026-06-28
+
+### Added
+- **Delete on the dashboard list.** Owners/admins get a trash icon per inspection row (two-step "Delete?
+  Yes/No" confirm) so test/junk inspections can be cleared without opening each one. Same
+  `deleteInspection` (Storage cleanup + cascade) as the detail-page Danger zone; the detail-page delete
+  stays. `Dashboard.jsx` `RowDelete` + styles. Frontend only.
+
 ## [0.29.0] — 2026-06-28
 
 ### Fixed / Changed

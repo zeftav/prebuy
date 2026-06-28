@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.29.1',
+    date: '2026-06-28',
+    title: 'Delete from the dashboard',
+    items: [
+      'Owners and admins can now delete an inspection right from the dashboard list — tap the trash icon, then confirm. (The full delete is still on each inspection’s page too.)',
+    ],
+  },
+  {
     version: '0.29.0',
     date: '2026-06-28',
     title: 'Reports that match your industry',

@@ -5,10 +5,10 @@
 
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { Plane, LogOut, Plus, Ship, ShieldCheck } from 'lucide-react'
+import { Plane, LogOut, Plus, Ship, ShieldCheck, Trash2 } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import { fetchMemberships, pickActiveOrg } from '../lib/shops.js'
-import { listInspectionsForOrg } from '../lib/inspections.js'
+import { listInspectionsForOrg, deleteInspection } from '../lib/inspections.js'
 import { getVertical } from '../lib/verticals.js'
 import './auth.css'
 import './inspections.css'
@@ -119,7 +119,10 @@ export default function Dashboard() {
         </Link>
       </div>
 
-      <InspectionList orgId={activeMembership.org_id} />
+      <InspectionList
+        orgId={activeMembership.org_id}
+        canManage={activeMembership.role === 'owner' || activeMembership.role === 'admin'}
+      />
 
       <p className="auth__footer-link">
         Need a hand? See <Link to="/help">Help &amp; FAQ</Link>.
@@ -128,7 +131,7 @@ export default function Dashboard() {
   )
 }
 
-function InspectionList({ orgId }) {
+function InspectionList({ orgId, canManage }) {
   const [state, setState] = useState({ status: 'loading', rows: [] })
 
   useEffect(() => {
@@ -142,6 +145,10 @@ function InspectionList({ orgId }) {
       active = false
     }
   }, [orgId])
+
+  function removeRow(id) {
+    setState((s) => ({ ...s, rows: s.rows.filter((r) => r.id !== id) }))
+  }
 
   return (
     <section className="insp__section">
@@ -172,7 +179,7 @@ function InspectionList({ orgId }) {
       {state.status === 'ready' && state.rows.length > 0 && (
         <ul className="insp__list">
           {state.rows.map((row) => (
-            <li key={row.id}>
+            <li key={row.id} className="insp__listrow">
               <Link to={`/app/inspections/${row.id}`} className="insp__row insp__rowlink">
                 <span className="insp__icon" aria-hidden="true">
                   {row.vertical === 'marine' ? <Ship size={18} /> : <Plane size={18} />}
@@ -190,11 +197,54 @@ function InspectionList({ orgId }) {
                 </span>
                 <span className={`insp__status insp__status--${row.status}`}>{row.status}</span>
               </Link>
+              {canManage && <RowDelete row={row} onDeleted={() => removeRow(row.id)} />}
             </li>
           ))}
         </ul>
       )}
     </section>
+  )
+}
+
+// Per-row delete with a two-step confirm (no accidental taps). Owner/admin only.
+function RowDelete({ row, onDeleted }) {
+  const [armed, setArmed] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  async function confirm() {
+    setBusy(true)
+    const { error } = await deleteInspection(row.id)
+    if (error) {
+      setBusy(false)
+      setArmed(false)
+      return
+    }
+    onDeleted()
+  }
+
+  if (!armed) {
+    return (
+      <button
+        type="button"
+        className="insp__rowdelbtn"
+        aria-label={`Delete ${row.identifier}`}
+        title="Delete"
+        onClick={() => setArmed(true)}
+      >
+        <Trash2 size={16} aria-hidden="true" />
+      </button>
+    )
+  }
+  return (
+    <span className="insp__rowconfirm">
+      <span>Delete?</span>
+      <button type="button" className="insp__rowyes" onClick={confirm} disabled={busy}>
+        {busy ? '…' : 'Yes'}
+      </button>
+      <button type="button" className="insp__rowno" onClick={() => setArmed(false)} disabled={busy}>
+        No
+      </button>
+    </span>
   )
 }
 

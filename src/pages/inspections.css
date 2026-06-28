@@ -663,6 +663,61 @@
 .insp__sourcenote {
   margin-top: 4px;
 }
+/* Dashboard list row with an inline delete affordance. */
+.insp__listrow {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.insp__listrow .insp__rowlink {
+  flex: 1;
+  min-width: 0;
+}
+.insp__rowdelbtn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: #94a3b8;
+  cursor: pointer;
+}
+.insp__rowdelbtn:hover {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.insp__rowconfirm {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+}
+.insp__rowyes,
+.insp__rowno {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 2px 4px;
+}
+.insp__rowyes {
+  color: #dc2626;
+}
+.insp__rowno {
+  color: #475569;
+}
+
 .insp__danger {
   margin-top: 32px;
   padding-top: 16px;
