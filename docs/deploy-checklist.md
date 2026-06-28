@@ -36,9 +36,8 @@ Run in order. All are idempotent (safe to re-run).
       `attachments`. (2026-06-28)
 - [x] ✅ `016_inspection_mode.sql` — `inspections.mode` + `source_inspection_id` (broker listings), and
       `report` redeployed (JWT OFF) so listings publish as a listing/spec-sheet. (2026-06-28)
-- [ ] ⬜ `017_handoffs.sql` — `handoffs` table + RLS (cross-org broker handoff). **Run in the SQL editor**
-      (pasted in chat). Then ⬜ **DEPLOY `claim-listing`** edge fn — Verify JWT **ON** (service role; no
-      new secret). Powers the `/claim/:token` claim flow.
+- [x] ✅ `017_handoffs.sql` — `handoffs` table + RLS (cross-org broker handoff), and **`claim-listing`**
+      edge fn deployed (JWT ON). Powers `/claim/:token`. (2026-06-28)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
