@@ -593,11 +593,18 @@ automatically, for human review — the autofill that makes the tool feel profes
   AI proposes **model + typical specs as a DRAFT**, clearly "AI-suggested, verify against the actual
   asset," grounded with web-search citations; the inspector ticks/edits before save (reuse the scan-
   review `mergeProfileDraft` flow — fill-blanks-only).
-- **Architecture:** new edge fn `research-asset` (JWT ON, Claude + the web-search tool, structured
-  output → a `profileSchema`-shaped draft + a guessed model + sources). Called from `AircraftProfile`
-  (and maybe `NewInspection` after identify). Per-vertical prompt (vessel vs aircraft vs vehicle).
-  Log to `ai_usage` like the other AI fns. Confirm Claude web-search tool + model via the `claude-api`
-  skill at build time.
+- **Architecture (API specifics confirmed via the `claude-api` skill, 2026-06-28):** new edge fn
+  `research-asset` (JWT ON, service role for `ai_usage` logging). Model **`claude-opus-4-8`** (what we
+  already use). Give it the **web search server tool** `{ type: 'web_search_20260209', name:
+  'web_search' }` — supported on Opus 4.8, has built-in dynamic filtering, **no beta header**, optional
+  `max_uses`/`allowed_domains`. Constrain the final answer with **structured output**
+  `output_config: { format: { type: 'json_schema', schema } }` shaped to the vertical's `profileSchema`
+  (specs/currency/engines/equipment) plus `model_guess` + `sources[]`. Note: server tools can return
+  `stop_reason: "pause_turn"` (resume by re-sending) — handle the loop; if combining web_search +
+  json_schema in one call misbehaves, fall back to two calls (research → structure). Called from
+  `AircraftProfile` (and optionally `NewInspection` post-identify). Per-vertical prompt (vessel /
+  aircraft / vehicle). Reuse the scan-review `mergeProfileDraft` (fill-blanks-only) UI; log to
+  `ai_usage`.
 - **Sequence:** strongest combined with the identifier resolvers — vPIC/HIN/FAA give ground-truth
   make/model/year; the AI fills the rest. Big professionalism win; build behind the "verify" framing.
 
