@@ -106,6 +106,16 @@ photo per invocation, so "auto-advance" = on accept, immediately focus/open the 
 (may need a tap per OS camera-permission rules, but no app-level extra presses). Keep the current grid as
 the review/After view. Big UX win for field use; do alongside the capture polish.
 
+**Per-vertical fit (Brett, 2026-06-28).** The one-button run shines for **discrete assets with a known
+standard angle set** — **aircraft, boats, cars, RVs** (fixed shot list, walk around it once). **Homes are
+different**: inspectors shoot **as they go**, room by room / system by system, so a rigid linear run
+doesn't fit — there, lean on **add-photos-anywhere** (per-area/per-item capture) instead, and offer at
+most a **short guided run for the high-level exterior elevations** (front/left/right/rear + roof), then
+free-form for the rest. So: make the guided walkthrough a **per-vertical capability** — full run for
+aircraft/marine/auto/RV; for home, a brief exterior-only run + freeform area capture. Drive it off each
+vertical's `overviewShots` (already per-vertical) plus a flag like `guidedCapture: 'full' | 'exterior' |
+'off'`.
+
 **Open content/data questions (gating stage 1–2):**
 - **FAA data source:** ingest the FAA *releasable aircraft database* into our own tables (durable,
   free, fast, no rate limit — recommended; doubles as KB spine) vs. a live third-party API. Until
