@@ -29,7 +29,7 @@ export default function Home() {
         <Plane size={28} aria-hidden="true" />
         <span>PreBuy</span>
         <nav className="home__nav">
-          <a href="#how">How it works</a>
+          <a href="#how" className="home__navhow">How it works</a>
           <Link to="/help">Help</Link>
           <Link to="/login" className="home__signin">Sign in</Link>
         </nav>

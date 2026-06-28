@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.19.1',
+    date: '2026-06-27',
+    title: 'Landing page on phones',
+    items: [
+      'Tidied up the landing page on small screens — cleaner top bar, full-width buttons, and better spacing.',
+    ],
+  },
+  {
     version: '0.19.0',
     date: '2026-06-27',
     title: 'Home & boat inspections',

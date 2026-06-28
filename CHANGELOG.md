@@ -3,6 +3,13 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.19.1] — 2026-06-27
+
+### Fixed
+- **Landing page mobile styling.** Added a `max-width: 600px` block in `App.css`: hide the "How it
+  works" nav anchor + tighten the top bar, smaller hero type/padding, full-width stacked CTAs, and
+  tighter section/who/CTA-band spacing. Tagged the anchor `home__navhow` in `Home.jsx`.
+
 ## [0.19.0] — 2026-06-27
 
 ### Added

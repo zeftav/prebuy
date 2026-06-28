@@ -203,3 +203,53 @@
   margin: 0;
   letter-spacing: -0.01em;
 }
+
+/* ── Mobile ────────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .home {
+    padding: 18px 16px 36px;
+  }
+  /* Keep the top bar on one tidy line: drop the in-page anchor, tighten gaps. */
+  .home__navhow {
+    display: none;
+  }
+  .home__nav {
+    gap: 14px;
+  }
+  .home__hero {
+    padding: 28px 0 24px;
+    gap: 14px;
+  }
+  .home__hero h1 {
+    font-size: 27px;
+  }
+  .home__hero p {
+    font-size: 16px;
+  }
+  /* Full-width stacked CTAs are easier to tap. */
+  .home__ctarow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .home__cta {
+    justify-content: center;
+  }
+  .home__section {
+    padding: 26px 0;
+  }
+  .home__section h2 {
+    font-size: 21px;
+    margin-bottom: 18px;
+  }
+  .home__who {
+    padding: 18px;
+    margin: 26px 0;
+    gap: 12px;
+  }
+  .home__who p {
+    font-size: 15px;
+  }
+  .home__cta-band {
+    padding: 32px 0 4px;
+  }
+}
