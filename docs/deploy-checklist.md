@@ -28,6 +28,9 @@ Run in order. All are idempotent (safe to re-run).
 - [x] ✅ `012_seed_home_checklist.sql` — generic **home** inspection checklist (InterNACHI-based,
       ~101 items). (2026-06-28)
 - [x] ✅ `013_seed_marine_checklist.sql` — generic **boat** survey checklist (~56 items). (2026-06-28)
+- [ ] ⬜ `014_logbook_position.sql` — `position` on `logbooks` + `logbook_events` (per-engine logbook
+      tracking). **Run in the SQL editor** (pasted in chat). Then 🔁 **redeploy `report` (JWT OFF)** so
+      the timeline shows the engine per event.
 
 ## 2. Edge functions (Supabase → Edge Functions)
 

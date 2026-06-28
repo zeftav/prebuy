@@ -221,6 +221,9 @@ export default function ReportView() {
                       <Wrench size={14} aria-hidden="true" />
                       <span className="report__tldate">{fmtEventDate(e.event_date) || '—'}</span>
                       <span className="report__tlcat">{categoryLabel(e.category)}</span>
+                      {e.position && profile.engine_count > 1 && (
+                        <span className="report__tlcat">{engineLabel(e.position - 1, profile.engine_count, profile.layout)}</span>
+                      )}
                     </div>
                     <p className="report__tltitle">{e.title}</p>
                     {e.description && <p className="report__tldesc">{e.description}</p>}

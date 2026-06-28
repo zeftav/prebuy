@@ -3,6 +3,23 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.20.0] — 2026-06-28
+
+### Added
+- **Multi-engine round 2 — logbook position + per-engine checklist fan-out.**
+  - `supabase/migrations/014_logbook_position.sql` — `position smallint` on `logbooks` +
+    `logbook_events`. **Needs running.**
+  - `lib/logbooks.js` — `reconcileLogbooks(logbooks, {engineCount, layout})` now returns position-aware
+    `groups` (engine/prop split by position on a twin; airframe/other by kind) instead of `byKind`;
+    new pure `groupLabel`; `POSITIONAL_KINDS`; CRUD carries `position`. Tests +.
+  - `lib/checklist.js` — pure `fanOutTemplateItems` duplicates aviation Engine/Propeller template items
+    per engine at instantiation (title suffixed `— Engine #1 (Left)` etc.), single-engine/non-aviation
+    unchanged; `ensureInspectionItems` uses it (engine count from profile/attributes). Tests +.
+  - `LogbookAudit` — engine/prop position pickers on the add-logbook + add-event forms (shown on a twin),
+    per-engine reconciliation panel, and position labels in the lists.
+  - `report` edge fn + `ReportView` — events carry `position`; the maintenance timeline shows the engine
+    label. **Redeploy `report` (JWT OFF).** No other deploy.
+
 ## [0.19.2] — 2026-06-27
 
 ### Fixed

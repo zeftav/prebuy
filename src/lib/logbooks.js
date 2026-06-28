@@ -4,8 +4,11 @@
 // tested; CRUD is thin.
 
 import { supabase } from './supabase.js'
+import { engineLabel, propLabel } from './profile.js'
 
 export const LOGBOOK_KINDS = ['airframe', 'engine', 'propeller', 'other']
+// Kinds that are tracked per engine/prop position on a multi-engine aircraft.
+export const POSITIONAL_KINDS = ['engine', 'propeller']
 export const EVENT_CATEGORIES = ['ad', '337', 'overhaul', 'prop_strike', 'damage', 'other']
 const TOL = 0.1 // tach-hour tolerance for "continuous"
 
@@ -63,51 +66,79 @@ export function summarizeKind(books) {
   return { sorted, gaps, overlaps, firstStart, lastEnd, tracked, count: sorted.length }
 }
 
+/** Label a logbook group by kind + (for engine/prop on a twin) position. Pure. */
+export function groupLabel(kind, position, engineCount = 1, layout = 'conventional') {
+  if (!POSITIONAL_KINDS.includes(kind) || engineCount <= 1) return kindLabel(kind)
+  if (!position) return `${kindLabel(kind)} (unassigned)`
+  return kind === 'propeller'
+    ? propLabel(position - 1, engineCount, layout)
+    : engineLabel(position - 1, engineCount, layout)
+}
+
 /**
- * Reconcile all logbooks, grouped by kind. Returns { byKind, issues } where
- * issues is a flat, human-readable list of gaps/overlaps for display.
+ * Reconcile all logbooks into display groups. Engine/propeller books split by
+ * position when the aircraft has >1 engine; everything else groups by kind.
+ * Returns { groups, issues }. Pure.
  */
-export function reconcileLogbooks(logbooks) {
-  const byKind = {}
+export function reconcileLogbooks(logbooks, { engineCount = 1, layout = 'conventional' } = {}) {
+  const groups = []
   const issues = []
+
+  const addGroup = (kind, position, books) => {
+    const s = summarizeKind(books)
+    const label = groupLabel(kind, position, engineCount, layout)
+    groups.push({ key: position ? `${kind}:${position}` : kind, kind, position: position ?? null, label, summary: s })
+    for (const g of s.gaps) {
+      issues.push({ kind, type: 'gap', message: `${label}: ${g.hours.toFixed(1)} hr gap between tach ${g.fromTach} and ${g.toTach} — a logbook may be missing.` })
+    }
+    for (const o of s.overlaps) {
+      issues.push({ kind, type: 'overlap', message: `${label}: ${o.hours.toFixed(1)} hr overlap around tach ${o.fromTach}–${o.toTach} — entries may be duplicated.` })
+    }
+  }
+
   for (const k of LOGBOOK_KINDS) {
     const books = (logbooks ?? []).filter((b) => b.kind === k)
     if (!books.length) continue
-    const s = summarizeKind(books)
-    byKind[k] = s
-    for (const g of s.gaps) {
-      issues.push({
-        kind: k,
-        type: 'gap',
-        message: `${kindLabel(k)}: ${g.hours.toFixed(1)} hr gap between tach ${g.fromTach} and ${g.toTach} — a logbook may be missing.`,
-      })
-    }
-    for (const o of s.overlaps) {
-      issues.push({
-        kind: k,
-        type: 'overlap',
-        message: `${kindLabel(k)}: ${o.hours.toFixed(1)} hr overlap around tach ${o.fromTach}–${o.toTach} — entries may be duplicated.`,
-      })
+    if (POSITIONAL_KINDS.includes(k) && engineCount > 1) {
+      // One group per position (1..N), plus an "unassigned" (position 0/null) bucket.
+      const byPos = new Map()
+      for (const b of books) {
+        const p = Number(b.position) > 0 ? Number(b.position) : 0
+        if (!byPos.has(p)) byPos.set(p, [])
+        byPos.get(p).push(b)
+      }
+      for (const p of [...byPos.keys()].sort((a, b) => a - b)) addGroup(k, p || null, byPos.get(p))
+    } else {
+      addGroup(k, null, books)
     }
   }
-  return { byKind, issues }
+  return { groups, issues }
 }
 
 // ── CRUD ────────────────────────────────────────────────────────────────────
 
+// Normalize a position to a positive int for engine/prop, else null.
+function posFor(kind, position) {
+  if (!POSITIONAL_KINDS.includes(kind)) return null
+  const p = Number(position)
+  return Number.isFinite(p) && p > 0 ? p : null
+}
+
 export async function listLogbooks(inspectionId) {
   const { data, error } = await supabase
     .from('logbooks')
-    .select('id, kind, label, start_date, start_tach, end_date, end_tach, sort_order, notes')
+    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes')
     .eq('inspection_id', inspectionId)
   return { data: data ?? [], error }
 }
 
 export async function addLogbook(inspection, draft) {
+  const kind = LOGBOOK_KINDS.includes(draft.kind) ? draft.kind : 'airframe'
   const row = {
     inspection_id: inspection.id,
     org_id: inspection.org_id,
-    kind: LOGBOOK_KINDS.includes(draft.kind) ? draft.kind : 'airframe',
+    kind,
+    position: posFor(kind, draft.position),
     label: draft.label?.trim() || null,
     start_date: draft.start_date || null,
     start_tach: num(draft.start_tach),
@@ -118,7 +149,7 @@ export async function addLogbook(inspection, draft) {
   const { data, error } = await supabase
     .from('logbooks')
     .insert(row)
-    .select('id, kind, label, start_date, start_tach, end_date, end_tach, sort_order, notes')
+    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes')
     .single()
   return { data, error }
 }
@@ -131,7 +162,7 @@ export async function deleteLogbook(id) {
 export async function listEvents(inspectionId) {
   const { data, error } = await supabase
     .from('logbook_events')
-    .select('id, logbook_id, event_date, tach, category, title, description')
+    .select('id, logbook_id, position, event_date, tach, category, title, description')
     .eq('inspection_id', inspectionId)
     .order('event_date', { ascending: true })
   return { data: data ?? [], error }
@@ -140,11 +171,13 @@ export async function listEvents(inspectionId) {
 export async function addEvent(inspection, draft) {
   const t = String(draft.title ?? '').trim()
   if (!t) return { data: null, error: new Error('Give the event a title.') }
+  const p = Number(draft.position)
   const row = {
     inspection_id: inspection.id,
     org_id: inspection.org_id,
     category: EVENT_CATEGORIES.includes(draft.category) ? draft.category : 'other',
     title: t,
+    position: Number.isFinite(p) && p > 0 ? p : null,
     event_date: draft.event_date || null,
     tach: num(draft.tach),
     description: draft.description?.trim() || null,
@@ -152,7 +185,7 @@ export async function addEvent(inspection, draft) {
   const { data, error } = await supabase
     .from('logbook_events')
     .insert(row)
-    .select('id, logbook_id, event_date, tach, category, title, description')
+    .select('id, logbook_id, position, event_date, tach, category, title, description')
     .single()
   return { data, error }
 }

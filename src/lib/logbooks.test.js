@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks, cleanDraftValue } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue } from './logbooks.js'
+
+const groupBy = (groups, key) => groups.find((g) => g.key === key)
 
 describe('cleanDraftValue', () => {
   it('maps empty/zero placeholders to null', () => {
@@ -48,18 +50,52 @@ describe('summarizeKind', () => {
 
 describe('reconcileLogbooks', () => {
   it('groups by kind and reports issues across types', () => {
-    const { byKind, issues } = reconcileLogbooks([
+    const { groups, issues } = reconcileLogbooks([
       book(0, 1000),
       book(1300, 1800), // airframe gap
       { kind: 'engine', start_tach: 0, end_tach: 800 },
     ])
-    expect(byKind.airframe.count).toBe(2)
-    expect(byKind.engine.count).toBe(1)
+    expect(groupBy(groups, 'airframe').summary.count).toBe(2)
+    expect(groupBy(groups, 'engine').summary.count).toBe(1)
     expect(issues.some((i) => i.kind === 'airframe' && i.type === 'gap')).toBe(true)
   })
 
   it('returns no issues for a clean set', () => {
     const { issues } = reconcileLogbooks([book(0, 1000), book(1000, 2000)])
     expect(issues).toHaveLength(0)
+  })
+
+  it('splits engine/prop books by position on a twin and reconciles each separately', () => {
+    const { groups, issues } = reconcileLogbooks(
+      [
+        { kind: 'engine', position: 1, start_tach: 0, end_tach: 1000 },
+        { kind: 'engine', position: 2, start_tach: 0, end_tach: 1000 },
+        { kind: 'engine', position: 2, start_tach: 1300, end_tach: 1800 }, // gap on #2 only
+      ],
+      { engineCount: 2, layout: 'conventional' },
+    )
+    expect(groupBy(groups, 'engine:1').summary.gaps).toHaveLength(0)
+    expect(groupBy(groups, 'engine:2').summary.gaps).toHaveLength(1)
+    expect(groupBy(groups, 'engine:1').label).toBe('Engine #1 (Left)')
+    expect(issues).toHaveLength(1)
+    expect(issues[0].message).toContain('Engine #2 (Right)')
+  })
+
+  it('keeps engine books in one group when single-engine', () => {
+    const { groups } = reconcileLogbooks(
+      [{ kind: 'engine', position: 1, start_tach: 0, end_tach: 800 }],
+      { engineCount: 1 },
+    )
+    expect(groupBy(groups, 'engine').summary.count).toBe(1)
+  })
+})
+
+describe('groupLabel', () => {
+  it('labels positional kinds on a twin, plain otherwise', () => {
+    expect(groupLabel('engine', 1, 2, 'conventional')).toBe('Engine #1 (Left)')
+    expect(groupLabel('propeller', 2, 2, 'centerline')).toBe('Prop #2 (Rear)')
+    expect(groupLabel('engine', null, 2)).toBe('Engine (unassigned)')
+    expect(groupLabel('engine', 1, 1)).toBe('Engine') // single-engine
+    expect(groupLabel('airframe', null, 2)).toBe('Airframe')
   })
 })

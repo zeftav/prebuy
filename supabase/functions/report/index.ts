@@ -61,7 +61,7 @@ Deno.serve(async (req: Request) => {
       .eq('inspection_id', insp.id),
     admin
       .from('logbook_events')
-      .select('event_date, tach, category, title, description')
+      .select('event_date, tach, category, title, description, position')
       .eq('inspection_id', insp.id),
   ])
 
@@ -126,6 +126,7 @@ Deno.serve(async (req: Request) => {
         category: e.category,
         title: e.title,
         description: e.description,
+        position: e.position ?? null,
       }))
       .sort((a, b) => String(b.event_date ?? '').localeCompare(String(a.event_date ?? ''))),
     overview,

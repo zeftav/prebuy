@@ -255,9 +255,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   as global fallback templates (`model IS NULL`); area→category, inspect/describe/report_if→items,
   not_required kept in JSON for a future scope drawer. Slots into the existing engine, no schema change.
   Lint + 99 tests + build green. ⚠️ **Run migrations 012 + 013.**
-  **NEXT:** scope/disclaimer drawer (not_required/limitations), gear-rigging measurement forms, invite
-  teammates, server-side PDF, Resend SMTP (pre-beta); plus logbook/checklist multi-engine,
-  aircraft-as-entity + broker intake, and the research project.
+- Session 2 cont. — **Multi-engine round 2** (v0.20.0). Migration `014` adds `position` to `logbooks` +
+  `logbook_events`. `logbooks.js` `reconcileLogbooks(.,{engineCount,layout})` → position-aware `groups`
+  (engine/prop split per position on a twin) + pure `groupLabel` + `POSITIONAL_KINDS`; CRUD carries
+  position. `checklist.js` pure `fanOutTemplateItems` duplicates aviation Engine/Propeller items per
+  engine at instantiation (title suffixed); single-engine/non-aviation untouched; existing inspections
+  unaffected (only first-open instantiation). LogbookAudit: position pickers + per-engine reconcile +
+  labels. `report` edge fn returns event `position`; ReportView timeline shows the engine. Tests 107.
+  ⚠️ **Run migration 014 + redeploy `report` (JWT OFF).**
+  **NEXT:** document/oil-analysis upload (next), scope/disclaimer drawer, gear-rigging forms, invite
+  teammates, server-side PDF, Resend SMTP (pre-beta); aircraft-as-entity + broker intake; research project.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

@@ -6,6 +6,35 @@
 // RLS — the client may read global templates and write its own org's items.
 
 import { supabase } from './supabase.js'
+import { normalizeProfile, engineLabel, propLabel } from './profile.js'
+
+/**
+ * Expand template items for a multi-engine aircraft: Engine/Propeller items are
+ * duplicated per engine (title suffixed with the position label); everything else
+ * passes through unchanged. Single-engine or non-aviation → no expansion. Pure.
+ * Returns insert-ready partials (sans inspection_id/org_id/status).
+ */
+export function fanOutTemplateItems(tItems, { vertical, engineCount = 1, layout = 'conventional' } = {}) {
+  const count = vertical === 'aviation' && engineCount > 1 ? engineCount : 1
+  const rows = []
+  for (const ti of tItems ?? []) {
+    const cat = String(ti.category ?? '')
+    const fan = count > 1 && (cat === 'Engine' || cat === 'Propeller')
+    const copies = fan ? count : 1
+    for (let i = 0; i < copies; i++) {
+      const label = !fan ? '' : cat === 'Propeller' ? propLabel(i, count, layout) : engineLabel(i, count, layout)
+      rows.push({
+        template_item_id: ti.id,
+        category: ti.category,
+        title: fan ? `${ti.title} — ${label}` : ti.title,
+        description: ti.description,
+        sort_order: (Number(ti.sort_order) || 0) * 10 + i,
+        risk_weight: ti.risk_weight,
+      })
+    }
+  }
+  return rows
+}
 
 /** Load one inspection by id (RLS scopes it to the user's orgs). */
 export async function getInspection(id) {
@@ -78,15 +107,12 @@ export async function ensureInspectionItems(inspection) {
     .eq('template_id', template.id)
   if (tiErr) return { data: [], error: tiErr, templateMatched: null, generic }
 
-  const rows = (tItems ?? []).map((ti) => ({
+  const prof = normalizeProfile(inspection.attributes?.profile)
+  const engineCount = Math.max(prof.engine_count, Number(inspection.attributes?.engine_count) || 1)
+  const rows = fanOutTemplateItems(tItems, { vertical: inspection.vertical, engineCount, layout: prof.layout }).map((r) => ({
     inspection_id: inspection.id,
     org_id: inspection.org_id,
-    template_item_id: ti.id,
-    category: ti.category,
-    title: ti.title,
-    description: ti.description,
-    sort_order: ti.sort_order,
-    risk_weight: ti.risk_weight,
+    ...r,
     status: 'pending',
   }))
   if (rows.length === 0) return { data: [], error: null, templateMatched: true, generic }

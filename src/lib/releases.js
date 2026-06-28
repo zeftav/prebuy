@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.20.0',
+    date: '2026-06-28',
+    title: 'Multi-engine, deeper',
+    items: [
+      'Logbooks and notable events can now be assigned to a specific engine/prop (#1 left, #2 right; front/rear for centerline twins), and times reconcile per engine.',
+      'On a twin, the checklist automatically splits engine and propeller items per engine, so you inspect each one.',
+      'The report’s maintenance timeline shows which engine an event belongs to.',
+    ],
+  },
+  {
     version: '0.19.2',
     date: '2026-06-27',
     title: 'Mobile layout fix',

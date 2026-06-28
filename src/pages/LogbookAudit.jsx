@@ -13,8 +13,9 @@ import {
   listLogbooks, addLogbook, deleteLogbook,
   listEvents, addEvent, deleteEvent,
   reconcileLogbooks, kindLabel, categoryLabel, cleanDraftValue, extractLogbooks,
-  LOGBOOK_KINDS, EVENT_CATEGORIES,
+  LOGBOOK_KINDS, EVENT_CATEGORIES, POSITIONAL_KINDS,
 } from '../lib/logbooks.js'
+import { normalizeProfile, engineLabel, propLabel } from '../lib/profile.js'
 import { uploadMedia, signedUrlsFor } from '../lib/media.js'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import './auth.css'
@@ -49,7 +50,18 @@ export default function LogbookAudit() {
     }
   }, [id])
 
-  const recon = useMemo(() => reconcileLogbooks(logbooks), [logbooks])
+  // Engine count/layout drive per-engine reconcile + position pickers. Seed from
+  // the FAA-derived attributes when the profile hasn't set a count yet.
+  const { engineCount, layout } = useMemo(() => {
+    const prof = normalizeProfile(inspection?.attributes?.profile)
+    const seeded = Number(inspection?.attributes?.engine_count) || 1
+    return { engineCount: Math.max(prof.engine_count, seeded), layout: prof.layout }
+  }, [inspection])
+
+  const recon = useMemo(
+    () => reconcileLogbooks(logbooks, { engineCount, layout }),
+    [logbooks, engineCount, layout],
+  )
 
   async function onAddBook(draft) {
     const { data, error } = await addLogbook(inspection, draft)
@@ -86,7 +98,10 @@ export default function LogbookAudit() {
     )
   }
 
-  const kindsPresent = LOGBOOK_KINDS.filter((k) => recon.byKind[k])
+  const posLabel = (kind, position) =>
+    POSITIONAL_KINDS.includes(kind) && engineCount > 1 && position
+      ? (kind === 'propeller' ? propLabel(position - 1, engineCount, layout) : engineLabel(position - 1, engineCount, layout))
+      : null
 
   return (
     <main className="insp">
@@ -104,15 +119,15 @@ export default function LogbookAudit() {
       {/* Reconciliation */}
       <section className="insp__section">
         <h2>Reconciliation</h2>
-        {kindsPresent.length === 0 ? (
+        {recon.groups.length === 0 ? (
           <p className="auth__hint">Add logbooks below to reconcile times.</p>
         ) : (
           <div className="lb__recon">
-            {kindsPresent.map((k) => {
-              const s = recon.byKind[k]
+            {recon.groups.map((g) => {
+              const s = g.summary
               return (
-                <div key={k} className="lb__reconrow">
-                  <span className="lb__reconkind">{kindLabel(k)}</span>
+                <div key={g.key} className="lb__reconrow">
+                  <span className="lb__reconkind">{g.label}</span>
                   <span className="lb__recontotal">
                     {s.tracked != null ? `${s.tracked.toFixed(1)} hrs tracked` : '— hrs'}
                     {s.firstStart != null && ` (tach ${fmtTach(s.firstStart)}–${fmtTach(s.lastEnd)})`}
@@ -146,7 +161,7 @@ export default function LogbookAudit() {
                 <li key={b.id} className="insp__row">
                   <span className="insp__main">
                     <span className="insp__id">{b.label || kindLabel(b.kind)}</span>
-                    <span className="insp__sub">{kindLabel(b.kind)} · {fmtRange(b)}</span>
+                    <span className="insp__sub">{posLabel(b.kind, b.position) || kindLabel(b.kind)} · {fmtRange(b)}</span>
                   </span>
                   <button type="button" className="insp__flag" onClick={() => onDeleteBook(b)} aria-label="Delete logbook">
                     <Trash2 size={15} aria-hidden="true" />
@@ -155,7 +170,7 @@ export default function LogbookAudit() {
               ))}
           </ul>
         )}
-        <AddLogbook onAdd={onAddBook} />
+        <AddLogbook onAdd={onAddBook} engineCount={engineCount} layout={layout} />
       </section>
 
       {/* Notable events */}
@@ -172,7 +187,7 @@ export default function LogbookAudit() {
                     <span className={`lb__cat lb__cat--${e.category}`}>{categoryLabel(e.category)}</span> {e.title}
                   </span>
                   <span className="insp__sub">
-                    {[e.event_date, e.tach != null ? `tach ${fmtTach(e.tach)}` : null, e.description]
+                    {[posLabel('engine', e.position), e.event_date, e.tach != null ? `tach ${fmtTach(e.tach)}` : null, e.description]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
@@ -184,7 +199,7 @@ export default function LogbookAudit() {
             ))}
           </ul>
         )}
-        <AddEvent onAdd={onAddEvent} />
+        <AddEvent onAdd={onAddEvent} engineCount={engineCount} layout={layout} />
       </section>
     </main>
   )
@@ -353,9 +368,25 @@ function ScanImport({ inspection, onAddBook, onAddEvent }) {
   )
 }
 
-function AddLogbook({ onAdd }) {
+function PositionField({ kind, value, onChange, engineCount, layout }) {
+  if (!POSITIONAL_KINDS.includes(kind) || engineCount <= 1) return null
+  const labelFor = (i) => (kind === 'propeller' ? propLabel(i, engineCount, layout) : engineLabel(i, engineCount, layout))
+  return (
+    <div className="auth__field">
+      <label>Position</label>
+      <select value={value} onChange={onChange}>
+        <option value="">Unassigned</option>
+        {Array.from({ length: engineCount }, (_, i) => (
+          <option key={i} value={i + 1}>{labelFor(i)}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function AddLogbook({ onAdd, engineCount, layout }) {
   const [open, setOpen] = useState(false)
-  const [f, setF] = useState({ kind: 'airframe', label: '', start_date: '', start_tach: '', end_date: '', end_tach: '', notes: '' })
+  const [f, setF] = useState({ kind: 'airframe', position: '', label: '', start_date: '', start_tach: '', end_date: '', end_tach: '', notes: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }))
@@ -374,7 +405,7 @@ function AddLogbook({ onAdd }) {
     const err = await onAdd(f)
     setBusy(false)
     if (err) return setError(err.message)
-    setF({ kind: 'airframe', label: '', start_date: '', start_tach: '', end_date: '', end_tach: '', notes: '' })
+    setF({ kind: 'airframe', position: '', label: '', start_date: '', start_tach: '', end_date: '', end_tach: '', notes: '' })
     setOpen(false)
   }
   return (
@@ -386,6 +417,7 @@ function AddLogbook({ onAdd }) {
             {LOGBOOK_KINDS.map((k) => <option key={k} value={k}>{kindLabel(k)}</option>)}
           </select>
         </div>
+        <PositionField kind={f.kind} value={f.position} onChange={set('position')} engineCount={engineCount} layout={layout} />
         <div className="auth__field">
           <label>Label</label>
           <input type="text" placeholder="Airframe Book 2" value={f.label} onChange={set('label')} />
@@ -408,9 +440,9 @@ function AddLogbook({ onAdd }) {
   )
 }
 
-function AddEvent({ onAdd }) {
+function AddEvent({ onAdd, engineCount, layout }) {
   const [open, setOpen] = useState(false)
-  const [f, setF] = useState({ category: 'ad', title: '', event_date: '', tach: '', description: '' })
+  const [f, setF] = useState({ category: 'ad', title: '', position: '', event_date: '', tach: '', description: '' })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }))
@@ -430,7 +462,7 @@ function AddEvent({ onAdd }) {
     const err = await onAdd(f)
     setBusy(false)
     if (err) return setError(err.message)
-    setF({ category: 'ad', title: '', event_date: '', tach: '', description: '' })
+    setF({ category: 'ad', title: '', position: '', event_date: '', tach: '', description: '' })
     setOpen(false)
   }
   return (
@@ -444,6 +476,19 @@ function AddEvent({ onAdd }) {
         </div>
         <div className="auth__field"><label>Tach</label><input type="number" inputMode="decimal" step="0.1" placeholder="850.0" value={f.tach} onChange={set('tach')} /></div>
       </div>
+      {engineCount > 1 && (
+        <div className="insp__row2">
+          <div className="auth__field">
+            <label>Engine (if engine-specific)</label>
+            <select value={f.position} onChange={set('position')}>
+              <option value="">Not engine-specific</option>
+              {Array.from({ length: engineCount }, (_, i) => (
+                <option key={i} value={i + 1}>{engineLabel(i, engineCount, layout)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
       <div className="auth__field">
         <label>Title</label>
         <input type="text" placeholder="AD 2015-19-07 complied with" value={f.title} onChange={set('title')} />
