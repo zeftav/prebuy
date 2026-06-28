@@ -95,6 +95,17 @@ differ). Distinct from the per-item discrepancy photos captured during the guide
 'overview' vs 'discrepancy') likely needed on `media`. Pairs naturally with the photo-capture build
 (stage 4b). Mobile camera capture → Storage. Log as part of the capture epic.
 
+**▶ Streamlined "one-button walkthrough" (Brett, 2026-06-28).** The shot list ships (`OverviewCapture`)
+but it's **too many taps** — each shot is its own take/upload press. Build a **guided run mode**: tap
+**Start walkthrough** once and it steps through the required shots **one at a time**, opening the camera
+for the current prompt, showing the prompt ("Now: instrument panel"), and **auto-advancing** to the next
+shot as soon as a photo is accepted. Per shot: a quick **Accept / Retake** (and **Skip**) on the preview,
+then straight to the next — no menu-diving between shots. Show progress ("4 of 15") and let them resume
+where they left off / re-shoot any single one afterward. iOS detail: the native capture input returns one
+photo per invocation, so "auto-advance" = on accept, immediately focus/open the next shot's capture input
+(may need a tap per OS camera-permission rules, but no app-level extra presses). Keep the current grid as
+the review/After view. Big UX win for field use; do alongside the capture polish.
+
 **Open content/data questions (gating stage 1–2):**
 - **FAA data source:** ingest the FAA *releasable aircraft database* into our own tables (durable,
   free, fast, no rate limit — recommended; doubles as KB spine) vs. a live third-party API. Until
