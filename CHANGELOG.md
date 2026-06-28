@@ -3,6 +3,20 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.22.0] — 2026-06-28
+
+### Added
+- **One-button guided photo walkthrough** (additive — the per-shot list stays). Frontend only; no
+  migration/redeploy.
+  - `verticals.js` — `guidedCapture: 'full' | 'exterior' | 'off'` per vertical (aviation/marine `full`,
+    home `exterior`) + pure `guidedShots(key)` (full list, or exterior+roof only for homes). Tests +.
+  - `OverviewCapture.jsx` — "Start guided walkthrough" enters a run mode that steps through the shots
+    one at a time: prompt + camera/upload → local preview → **Keep & continue** (auto-advances) or
+    **Retake**; **Skip**; **Replace** when a shot already exists; resumes at the first missing shot;
+    progress "Shot X of N". Uploads on accept (object-URL preview, no orphan uploads). Home shows a note
+    that interior/system shots are added freeform.
+  - Help FAQ updated.
+
 ## [0.21.0] — 2026-06-28
 
 ### Added

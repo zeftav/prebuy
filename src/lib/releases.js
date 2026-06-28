@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.22.0',
+    date: '2026-06-28',
+    title: 'One-button photo walkthrough',
+    items: [
+      'New “Start guided walkthrough” on the Photo walkthrough: it steps you through each required shot one at a time — take the photo, keep or retake, and it advances automatically. Far fewer taps.',
+      'Aircraft and boats run the full shot list; homes run the exterior shots, with interior/system photos added as you go.',
+      'The per-shot list is still there if you’d rather grab one shot at a time.',
+    ],
+  },
+  {
     version: '0.21.0',
     date: '2026-06-28',
     title: 'Attach documents (oil analysis & more)',

@@ -269,6 +269,11 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   docs→download links. `report` edge fn returns per-item `attachments`; ReportView renders them on
   findings + cleared items. Help FAQ +1. Tests 107. ⚠️ **Run migration 015** + the **one `report`
   redeploy (JWT OFF)** also covers v0.20.0 (event position).
+- Session 2 cont. — **One-button guided photo walkthrough** (v0.22.0, frontend-only, additive). `verticals.js`
+  `guidedCapture` flag (aviation/marine `full`, home `exterior`) + pure `guidedShots` (+tests).
+  `OverviewCapture` run mode: Start → step each shot (prompt + capture → preview → Keep&continue
+  auto-advance / Retake / Skip / Replace), resumes at first missing, progress X/N; per-shot list kept.
+  Help FAQ updated. Tests 110.
   **NEXT:** scope/disclaimer drawer (not_required/limitations), gear-rigging forms, invite teammates,
   server-side PDF, Resend SMTP (pre-beta); multi-vertical landing copy; aircraft-as-entity + broker
   intake; research project.

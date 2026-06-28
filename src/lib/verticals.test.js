@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validateIdentifier, getVertical, VERTICAL_OPTIONS } from './verticals.js'
+import { validateIdentifier, getVertical, VERTICAL_OPTIONS, guidedShots } from './verticals.js'
 
 describe('VERTICAL_OPTIONS', () => {
   it('offers aviation, marine and home, aviation first', () => {
@@ -13,6 +13,21 @@ describe('getVertical', () => {
   })
   it('returns null for unknown', () => {
     expect(getVertical('spaceship')).toBeNull()
+  })
+})
+
+describe('guidedShots', () => {
+  it('runs the full shot list for aircraft (full)', () => {
+    expect(guidedShots('aviation')).toEqual(getVertical('aviation').overviewShots)
+  })
+  it('runs only exterior + roof for home (exterior)', () => {
+    const shots = guidedShots('home')
+    expect(shots.length).toBeGreaterThan(0)
+    expect(shots.every((s) => /^(exterior|roof)/i.test(s))).toBe(true)
+    expect(shots.length).toBeLessThan(getVertical('home').overviewShots.length)
+  })
+  it('returns [] for an unknown vertical', () => {
+    expect(guidedShots('spaceship')).toEqual([])
   })
 })
 

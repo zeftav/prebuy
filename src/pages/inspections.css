@@ -637,6 +637,44 @@
   flex-shrink: 0;
 }
 
+/* Guided walkthrough (one-button run) */
+.insp__runstart {
+  width: auto;
+  align-self: flex-start;
+}
+.insp__run {
+  border: 1px solid var(--accent-border, var(--border));
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--accent-bg);
+}
+.insp__runhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.insp__runprogress {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+.insp__runprompt {
+  margin: 0;
+  font-size: 20px;
+}
+.insp__runpreview {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #000;
+}
+
 /* Overview shot list */
 .insp__shotlist {
   list-style: none;

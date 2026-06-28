@@ -70,7 +70,7 @@ const FAQ = [
   },
   {
     q: 'How do I add photos?',
-    a: 'Two ways. On any checklist item, tap “Add photo” to attach discrepancy photos to that finding. For big-picture documentation, open an inspection and tap “Photo walkthrough” — we’ll prompt you through a standard shot list (exterior angles, panel, engine, logbooks, and so on) so the report has consistent coverage. Photos are stored privately to your shop.',
+    a: 'Two ways. On any checklist item, tap “Add photo” to attach discrepancy photos to that finding. For big-picture documentation, open an inspection and tap “Photo walkthrough.” There you can tap “Start guided walkthrough” to be stepped through the standard shots one at a time — take the photo, keep or retake, and it advances automatically — or capture any single shot from the list. (Aircraft, boats and similar run the full list; homes run the exterior shots and you add interior/system photos as you go.) Photos are stored privately to your shop.',
   },
   {
     q: 'Can I dictate my findings instead of typing?',

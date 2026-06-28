@@ -19,6 +19,7 @@ export const VERTICALS = {
     makePlaceholder: 'Cessna',
     modelPlaceholder: '172S',
     hasLookup: true, // FAA registry prepopulation (see lib/aircraft.js)
+    guidedCapture: 'full', // one-button walkthrough runs the whole shot list
     // Guided overview shot list — big-picture documentation photos, taken early.
     overviewShots: [
       'Exterior — front 3/4 view',
@@ -50,6 +51,9 @@ export const VERTICALS = {
     makePlaceholder: 'Single-family',
     modelPlaceholder: 'Two-story',
     hasLookup: false, // property-data API later; manual for now
+    // Homes are shot room-by-room as you go; only the exterior elevations suit a
+    // linear one-button run, so the rest stays freeform (per-shot) capture.
+    guidedCapture: 'exterior',
     overviewShots: [
       'Exterior — front elevation',
       'Exterior — left side',
@@ -80,6 +84,7 @@ export const VERTICALS = {
     makePlaceholder: 'Catalina',
     modelPlaceholder: '30',
     hasLookup: false, // no clean public HIN decoder — manual entry for now
+    guidedCapture: 'full',
     overviewShots: [
       'Exterior — bow',
       'Exterior — port side',
@@ -100,6 +105,23 @@ export const VERTICAL_OPTIONS = [VERTICALS.aviation, VERTICALS.marine, VERTICALS
 
 export function getVertical(key) {
   return VERTICALS[key] ?? null
+}
+
+/**
+ * Shots for the one-button guided walkthrough, per the vertical's `guidedCapture`:
+ *   'full'     → the whole overview shot list (discrete assets: aircraft/boat/car/RV)
+ *   'exterior' → just the exterior elevations + roof (homes; rest is freeform)
+ *   'off'/none → empty (no guided run)
+ * Pure.
+ */
+export function guidedShots(verticalKey) {
+  const cfg = getVertical(verticalKey)
+  if (!cfg || cfg.guidedCapture === 'off') return []
+  const shots = cfg.overviewShots ?? []
+  if (cfg.guidedCapture === 'exterior') {
+    return shots.filter((s) => /^(exterior|roof)/i.test(s))
+  }
+  return cfg.guidedCapture === 'full' ? shots : []
 }
 
 /**

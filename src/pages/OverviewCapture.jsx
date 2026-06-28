@@ -1,13 +1,19 @@
 // Guided overview photo capture — a prompted, per-vertical shot list taken early
 // to document the whole asset for the report (big-picture, not discrepancy). Each
 // shot maps to one media row (purpose='overview', caption=the shot label).
+//
+// Two ways to capture, side by side:
+//   • Guided walkthrough (one button) — steps through the required shots one at a
+//     time, accept/retake as you go, auto-advancing. Best for discrete assets
+//     (aircraft/boat/car/RV); homes run only the exterior elevations.
+//   • The per-shot list below — capture/replace any single shot directly.
 
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Camera, Check, ChevronLeft, Plane, Ship } from 'lucide-react'
+import { Camera, Check, ChevronLeft, Plane, Ship, Play, X, RotateCcw } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import { getInspection } from '../lib/checklist.js'
-import { getVertical } from '../lib/verticals.js'
+import { getVertical, guidedShots } from '../lib/verticals.js'
 import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
 import './auth.css'
 import './inspections.css'
@@ -19,6 +25,12 @@ export default function OverviewCapture() {
   const [state, setState] = useState('loading')
   const [busyShot, setBusyShot] = useState(null)
   const [error, setError] = useState(null)
+
+  // Guided run state.
+  const [running, setRunning] = useState(false)
+  const [runIdx, setRunIdx] = useState(0)
+  const [pending, setPending] = useState(null) // { file, url } awaiting accept
+  const [runBusy, setRunBusy] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -87,6 +99,57 @@ export default function OverviewCapture() {
   const byShot = new Map(media.map((m) => [m.caption, m]))
   const done = shots.filter((s) => byShot.has(s)).length
 
+  const runShots = guidedShots(cfg.key)
+  const currentShot = runShots[runIdx]
+  const currentExisting = currentShot ? byShot.get(currentShot) : null
+
+  function clearPending() {
+    setPending((p) => {
+      if (p?.url) URL.revokeObjectURL(p.url)
+      return null
+    })
+  }
+  function startRun() {
+    setError(null)
+    // Resume at the first shot still missing a photo (or the start).
+    const firstMissing = runShots.findIndex((s) => !byShot.has(s))
+    setRunIdx(firstMissing === -1 ? 0 : firstMissing)
+    clearPending()
+    setRunning(true)
+  }
+  function endRun() {
+    clearPending()
+    setRunning(false)
+    setRunIdx(0)
+  }
+  function advance() {
+    clearPending()
+    if (runIdx + 1 < runShots.length) setRunIdx(runIdx + 1)
+    else endRun()
+  }
+  function stagePending(file) {
+    if (!file) return
+    clearPending()
+    setPending({ file, url: URL.createObjectURL(file) })
+  }
+  async function keepAndContinue() {
+    if (!pending) return
+    setRunBusy(true)
+    setError(null)
+    if (currentExisting) await deleteMedia(currentExisting) // replace
+    const { error } = await uploadMedia({
+      orgId: inspection.org_id,
+      inspectionId: inspection.id,
+      purpose: 'overview',
+      caption: currentShot,
+      file: pending.file,
+    })
+    setRunBusy(false)
+    if (error) return setError(error.message)
+    await refresh()
+    advance()
+  }
+
   return (
     <main className="insp">
       <Link to={`/app/inspections/${id}`} className="auth__toggle">
@@ -107,6 +170,62 @@ export default function OverviewCapture() {
       </div>
 
       {error && <div className="auth__error" role="alert">{error}</div>}
+
+      {/* ── Guided walkthrough (one button) ──────────────────────────────── */}
+      {running ? (
+        <section className="insp__run">
+          <div className="insp__runhead">
+            <span className="insp__runprogress">Shot {runIdx + 1} of {runShots.length}</span>
+            <button type="button" className="auth__toggle" onClick={endRun}>
+              <X size={14} aria-hidden="true" /> Exit
+            </button>
+          </div>
+          <h2 className="insp__runprompt">{currentShot}</h2>
+
+          {pending ? (
+            <>
+              <img className="insp__runpreview" src={pending.url} alt={currentShot} />
+              <div className="insp__capture">
+                <button type="button" className="auth__btn" onClick={keepAndContinue} disabled={runBusy}>
+                  <Check size={15} aria-hidden="true" /> {runBusy ? 'Saving…' : 'Keep & continue'}
+                </button>
+                <button type="button" className="auth__btn auth__btn--ghost" onClick={clearPending} disabled={runBusy}>
+                  <RotateCcw size={15} aria-hidden="true" /> Retake
+                </button>
+              </div>
+            </>
+          ) : currentExisting ? (
+            <>
+              <img className="insp__runpreview" src={currentExisting.url} alt={currentShot} />
+              <p className="auth__hint">Already captured.</p>
+              <div className="insp__capture">
+                <button type="button" className="auth__btn" onClick={advance}>Looks good — next</button>
+                <PhotoPicker onPick={(files) => stagePending(files?.[0])} takeLabel="Replace" uploadLabel="Upload" />
+              </div>
+            </>
+          ) : (
+            <>
+              <PhotoPicker onPick={(files) => stagePending(files?.[0])} />
+              <div className="insp__capture">
+                <button type="button" className="auth__btn auth__btn--ghost" onClick={advance}>Skip this shot</button>
+              </div>
+            </>
+          )}
+        </section>
+      ) : (
+        runShots.length > 0 && (
+          <button type="button" className="auth__btn insp__runstart" onClick={startRun}>
+            <Play size={15} aria-hidden="true" /> Start guided walkthrough
+          </button>
+        )
+      )}
+
+      {cfg.guidedCapture === 'exterior' && !running && (
+        <p className="auth__hint">
+          The walkthrough covers the exterior shots; add interior and system photos from the list below
+          (or on each checklist item) as you go.
+        </p>
+      )}
 
       <ol className="insp__shotlist">
         {shots.map((shot) => {
