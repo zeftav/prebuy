@@ -165,6 +165,15 @@ into the shop's org). RLS + ownership questions: who owns the file after handoff
 still see, and whether the broker keeps a (possibly redacted) copy. Decide privacy defaults — a broker
 may not want every internal note exposed, and a shop's findings may not flow back to the broker.
 
+**Handoff target selection (Brett, 2026-06-28).** When a broker hands a listing off for inspection,
+they should be able to: (a) **pick a shop already on PreBuy** (a shop directory/search), or (b) **invite
+a shop by name + email** that isn't on PreBuy yet (sends an invite; on signup they land on the claimed
+listing). **Later: expertise filtering** — once there are many shops, filter/sort the directory by
+vertical + specialization (e.g. "Bonanza/Baron experience", "twin", region) so brokers route to the
+right inspector. Implies: shops have a discoverable profile (name, vertical, specialties, location,
+opt-in to be listed) + an invite/claim flow (ties to the cross-org handoff + invite-teammates work).
+Phase-2 of the broker epic; Phase-1 ships the listing + same-org "start inspection from this listing".
+
 **Listing-creation engine for amateur/occasional brokers (Brett, 2026-06-27).** Beyond pro brokers,
 this is a strong **listing-creation engine for amateur / one-off sellers** — an owner selling their own
 plane, or a part-time broker who lacks the tooling to produce a polished listing. PreBuy walks them
@@ -233,6 +242,22 @@ architecture must not assume aviation. Roadmap of verticals (aviation is the lea
 | **Home / property** | Address | manual now; property-data API later | Home-inspector SME. |
 | **Automotive** | VIN | NHTSA vPIC (free public API) | Mechanic SME. |
 | *(extensible)* | … | … | RVs, heavy equipment, etc. |
+
+**Identifier smart-fill data sources, per vertical (Brett, 2026-06-28) — "is there an FAA-registry
+equivalent for HIN / addresses?"** The aviation resolver (FAA DB) is the gold standard; the others:
+- **Marine / HIN:** no free full decoder, BUT the first **3 chars = MIC** (Manufacturer Identifier Code),
+  and the **USCG MIC database is public** → decode the **builder/manufacturer** from the MIC (the
+  FAA-registry analog, partial). The rest of the HIN encodes serial + model-year/date (positions 9–12),
+  not model — so prefill **builder + approx year**, leave model manual. Could ingest the USCG MIC list
+  into a table like `faa_aircraft_ref` and look up by MIC. (Paid full-decode/valuation services exist —
+  e.g. BoatHistoryReport/ABOS/NADA — later.)
+- **Home / address:** two layers. (1) **Address autocomplete/validation** — Google Places, Mapbox,
+  USPS, or Smarty (mostly paid/free-tier) to normalize the address as they type. (2) **Property facts**
+  (beds/baths/sqft/year-built/lot) — county assessor open data (free, fragmented) or aggregators
+  **ATTOM / Estated / Regrid / CoreLogic** (paid APIs). Prefill the profile's property specs from these.
+- **Automotive / VIN:** **NHTSA vPIC** is a free public API (make/model/year/trim/engine) — the cleanest
+  non-aviation resolver; basically free FAA-equivalent for cars.
+Pattern stays identical: a per-vertical resolver adapter behind the same "identify → prefill" step.
 
 **Shared engine (vertical-agnostic):** checklist-template library, financial-risk ordering (`risk.js`),
 dictation→AI findings, photo/video capture, published report + PDF, multi-tenancy/RLS.
