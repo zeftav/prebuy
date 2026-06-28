@@ -381,6 +381,24 @@ Sorting (newest, last-updated, status). Server-side `ilike`/filters on the exist
 **aircraft-level view** (all inspections for one tail) if/when the aircraft-as-entity lands. Not now —
 trivial until there's real volume, but the beta shops will hit it quickly.
 
+## Landing / first-run should showcase ALL verticals (Brett, 2026-06-28)
+The landing page (and the early/first-login experience) is still **aviation-framed** — hero "from
+N-number to customer report", the "how it works" Identify step talks N-number/FAA. Now that **home** and
+**marine** ship, broaden it so a home inspector or boat surveyor sees themselves: show **home
+inspections** (and marine) in the hero/examples/feature copy, or make the messaging vertical-neutral
+(identifier → checklist → capture → report) with per-vertical examples. Could also reflect the user's
+shop vertical after login (e.g. a home shop sees home-flavored empty states/help). Small copy/UX pass.
+
+## Oil-analysis (and document) upload on engine items (Brett, 2026-06-28)
+Engine inspection items (the "Oil analysis & filter/screen" check on the A36 + generic aviation
+checklists) need a spot to **upload the actual oil-analysis results** — typically a lab PDF or a photo
+of the report — attached to that item and surfaced in the report's engine section. Today per-item media
+is **photos only** (`media.purpose='discrepancy'`, image/*). Generalize: allow **document attachments**
+(PDF, etc.) on an item (and/or on the engine in the multi-engine profile), shown/linked in the report.
+Touchpoints: `media` (accept non-image kinds + a `purpose` like 'attachment'/'oil_analysis'), the
+`PhotoPicker`/upload UI (accept PDFs), Storage policies already org-scoped, and ReportView (render a
+"Lab results / attachments" link or thumbnail). Per-engine attribution once multi-engine logbooks land.
+
 ## Marketing site / landing page (Brett, 2026-06-27)
 Stand up a basic **product/landing page** at the apex `prebuy.app`, modeled on **yellowtag.app**, with
 the app living at **`app.prebuy.app`** (mirrors `app.yellowtag.app`). Landing = what PreBuy is (horizontal
