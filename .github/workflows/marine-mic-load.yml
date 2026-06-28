@@ -1,0 +1,55 @@
+name: Load USCG MIC list
+
+# Bulk-loads the USCG Manufacturer Identifier Code (MIC) list into marine_mic so
+# the boat HIN lookup can name the builder. Runs on demand (Actions tab → Run
+# workflow) and quarterly to keep it fresh.
+#
+# Requires:
+#   - repo secret SUPABASE_DB_URL = Supabase Session-pooler connection string
+#     (same secret the FAA loader uses; runners are IPv4-only).
+#   - repo variable MIC_SOURCE_URL = a URL to a CSV of MIC codes (see
+#     docs/marine-mic-load.md for sourcing). Set under Settings → Secrets and
+#     variables → Actions → Variables. If unset, the run fails with guidance.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_url:
+        description: 'Override CSV URL (else uses the MIC_SOURCE_URL repo variable)'
+        required: false
+  schedule:
+    - cron: '0 9 1 1,4,7,10 *' # 09:00 UTC on the 1st of Jan/Apr/Jul/Oct
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Resolve + download the MIC CSV
+        env:
+          SOURCE_URL: ${{ github.event.inputs.source_url || vars.MIC_SOURCE_URL }}
+        run: |
+          if [ -z "$SOURCE_URL" ]; then
+            echo "::error::No MIC CSV source. Set the MIC_SOURCE_URL repo variable or pass source_url. See docs/marine-mic-load.md."
+            exit 1
+          fi
+          # Some hosts 403 non-browser requests, so send a browser User-Agent.
+          curl -fSL --retry 3 \
+            -A 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36' \
+            -o mic.csv "$SOURCE_URL"
+          head -3 mic.csv
+          wc -l mic.csv
+
+      - name: Install loader deps
+        run: npm --prefix scripts/marine install --no-audit --no-fund
+
+      - name: Load into Supabase
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: node scripts/marine/load-mic.mjs mic.csv

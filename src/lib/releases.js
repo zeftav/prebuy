@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.29.2',
+    date: '2026-06-28',
+    title: 'Boat builder lookup',
+    items: [
+      'When you look up a boat HIN, we now fill in the builder for recognized manufacturer codes (Hunter to start; the full USCG manufacturer list is being loaded).',
+      'Heads up: a HIN encodes the builder, serial and year — not the model — so the Model field is yours to fill in.',
+    ],
+  },
+  {
     version: '0.29.1',
     date: '2026-06-28',
     title: 'Delete from the dashboard',

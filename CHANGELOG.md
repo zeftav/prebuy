@@ -3,6 +3,26 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.29.2] — 2026-06-28
+
+### Added
+- **USCG MIC bulk-loader (boat builder lookup).** The HIN lookup parses serial + model year correctly,
+  but the builder comes from the MIC (first 3 chars) via `marine_mic`, which only had test rows — so
+  real boats showed a blank builder. (A HIN never encodes the *model*, so Model stays manual.)
+  - `scripts/marine/load-mic.mjs` (+`package.json`) — idempotent CSV→`marine_mic` upsert (stage verbatim,
+    auto-detect mic/manufacturer/status columns, dedupe by MIC, 3-char filter). Mirrors the FAA loader;
+    reuses the `SUPABASE_DB_URL` Session-pooler secret.
+  - `.github/workflows/marine-mic-load.yml` — manual + quarterly; downloads a CSV from the
+    `MIC_SOURCE_URL` repo variable (browser UA + retry) and loads it. `docs/marine-mic-load.md` covers
+    sourcing (the USCG DB is a search app with no one-click CSV → operator-supplied).
+  - `supabase/migrations/020_marine_mic_seed.sql` — seeds **HUN → Hunter Marine** (verified) so a real
+    builder resolves before the full list is loaded. **Run it.**
+
+### Notes
+- Diagnosed from a real HIN (`HUN38553A999` → Hunter, serial 38553, 1999) — parsing was correct; only
+  the builder name was missing. Full coverage needs the MIC list loaded (set `MIC_SOURCE_URL` + run the
+  Action), per `docs/marine-mic-load.md`.
+
 ## [0.29.1] — 2026-06-28
 
 ### Added

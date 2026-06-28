@@ -354,6 +354,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   (report edge fn already returns `vertical`); **no migration / no deploy** for v0.27.2/0.28.0/0.29.0.
   Lint + 132 tests + build green. Follow-ups (backlog): marine/home scan extraction; Port/Starboard
   marine engine labels.
+- Session 3 cont. — **Dashboard delete** (v0.29.1) + **boat builder lookup / USCG MIC loader** (v0.29.2).
+  v0.29.1: owner/admin per-row trash on the Dashboard list (two-step confirm) — same `deleteInspection`.
+  v0.29.2: diagnosed Brett's HIN `HUN38553A999` → parsing was correct (serial 38553, model year 1999);
+  the builder was blank because `marine_mic` only had test rows (and a HIN never encodes the *model*).
+  Built `scripts/marine/load-mic.mjs` (+pkg) — idempotent CSV→`marine_mic` upsert (stage verbatim,
+  auto-detect mic/manufacturer/status cols, dedupe, 3-char filter; FAA-pattern, reuses `SUPABASE_DB_URL`
+  Session pooler) + `.github/workflows/marine-mic-load.yml` (manual+quarterly; downloads `MIC_SOURCE_URL`
+  CSV w/ browser UA) + `docs/marine-mic-load.md` (USCG DB is a search app, no one-click CSV → operator
+  supplies one). Migration `020` seeds **HUN → Hunter Marine** (verified). ⚠️ **Run migration 020**;
+  full builder coverage = set `MIC_SOURCE_URL` repo var + run the Action. Lint + 132 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

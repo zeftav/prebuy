@@ -1,0 +1,10 @@
+{
+  "name": "marine-mic-loader",
+  "private": true,
+  "type": "module",
+  "description": "One-off / scheduled loader for the USCG MIC (boat manufacturer code) list into marine_mic. Not part of the app build.",
+  "dependencies": {
+    "pg": "^8.13.1",
+    "pg-copy-streams": "^6.0.6"
+  }
+}

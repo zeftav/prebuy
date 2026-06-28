@@ -42,6 +42,8 @@ Run in order. All are idempotent (safe to re-run).
       builder from MIC). Seeds TEST fixtures only. No edge fn. (run 2026-06-28)
 - [x] ✅ `019_super_admin.sql` — `super_admins` table + `is_super_admin()` RPC + `ai_usage` log table
       (powers the **platform-owner dashboard**). RLS on, no client policies. (run 2026-06-28)
+- [ ] ⬜ `020_marine_mic_seed.sql` — seeds **HUN → Hunter Marine** (verified) so the boat HIN lookup
+      names a real builder before the full USCG list is loaded. Idempotent. No edge fn. (2026-06-28)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
@@ -95,6 +97,9 @@ Run in order. All are idempotent (safe to re-run).
       ⬜ Still: verify `prebuy.app` in Resend (for email); point the **apex** at the landing page once built.
 - [ ] ⬜ **Marketing/landing page** at the apex (basic product page, à la yellowtag.app) with a CTA
       into `app.prebuy.app`. See `docs/backlog.md` → Marketing site.
+- [ ] ⬜ **USCG MIC bulk-load** (boat builder lookup) — set repo **variable** `MIC_SOURCE_URL` to a CSV
+      of MIC codes, then run Actions → **Load USCG MIC list** (reuses the `SUPABASE_DB_URL` secret).
+      Until then only seeded codes (test + HUN) resolve. Steps + sourcing in `docs/marine-mic-load.md`.
 
 ---
 
