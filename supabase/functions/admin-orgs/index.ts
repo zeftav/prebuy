@@ -94,6 +94,37 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true })
   }
 
+  // ----- drill into one shop (read-only support / "view-as") -----
+  if (action === 'org_detail') {
+    const orgId = String(payload.org_id ?? '')
+    if (!UUID.test(orgId)) return json({ error: 'Invalid shop.' }, 400)
+    const { data: org } = await admin.from('orgs').select('id, name, slug, vertical, created_at').eq('id', orgId).maybeSingle()
+    if (!org) return json({ error: 'Shop not found.' }, 404)
+
+    const { data: mems } = await admin.from('memberships').select('user_id, role, created_at').eq('org_id', orgId)
+    const members = []
+    for (const m of mems ?? []) {
+      let email: string | null = null
+      let lastSignIn: string | null = null
+      try {
+        const { data: u } = await admin.auth.admin.getUserById(m.user_id)
+        email = u?.user?.email ?? null
+        lastSignIn = u?.user?.last_sign_in_at ?? null
+      } catch {
+        // user may have been deleted — leave email null
+      }
+      members.push({ user_id: m.user_id, role: m.role, joined: m.created_at, email, last_sign_in: lastSignIn })
+    }
+
+    const { data: inspections } = await admin
+      .from('inspections')
+      .select('id, identifier, vertical, mode, make, model, year, status, share_token, published_at, customer_name, created_at, updated_at')
+      .eq('org_id', orgId)
+      .order('created_at', { ascending: false })
+
+    return json({ org, members, inspections: inspections ?? [] })
+  }
+
   if (action !== 'list') return json({ error: 'Unknown action.' }, 400)
 
   // ----- list orgs + engagement + totals + roster -----

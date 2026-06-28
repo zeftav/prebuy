@@ -329,6 +329,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   (JWT ON); redeploy the 3 AI fns (JWT ON) for usage logging.**
   **NEXT (with billing):** Stripe sync + `finance_*` tables + Financial tab (MRR/ARR/margin/CAC,
   snapshot-on-read); later a DB-backed editable AI rate table + per-org feature flags.
+- Session 3 cont. — **Shop drill-in / support view** (v0.27.1, platform-only). `admin-orgs` gains an
+  `org_detail` action (org + members-with-emails via `auth.admin.getUserById` + inspections);
+  `lib/admin.js` `fetchOrgDetail`; `Admin.jsx` `OrgView` at `/admin/orgs/:id` ("Open" on each org
+  card) — read-only support view (team, inspections, published-report links). NOT true session
+  impersonation (minting a session as another user) — logged as a possible follow-up. Part of the
+  same pending `admin-orgs` deploy. **Email note (2026-06-28):** Brett reported a signup confirmation
+  email not arriving. Not caused by this session — the confirm email is sent by Supabase Auth (Resend
+  SMTP), and nothing this session touched `signup`/auth `signUp`/SMTP. Likeliest causes: Supabase Auth
+  email **rate limit** (Auth → Rate Limits) after heavy testing, Resend deliverability/spam, an
+  undeliverable recipient domain, or the confirm-email toggle. Diagnose via Supabase → Auth → Logs +
+  Resend → Emails (same path that surfaced the earlier `535` SMTP-username typo).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

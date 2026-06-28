@@ -99,6 +99,7 @@ function App() {
         }
       />
       <Route path="/admin" element={<SuperAdminRoute><Admin view="customers" /></SuperAdminRoute>} />
+      <Route path="/admin/orgs/:id" element={<SuperAdminRoute><Admin view="org" /></SuperAdminRoute>} />
       <Route path="/admin/engagement" element={<SuperAdminRoute><Admin view="engagement" /></SuperAdminRoute>} />
       <Route path="/admin/ai-cost" element={<SuperAdminRoute><Admin view="ai-cost" /></SuperAdminRoute>} />
       <Route path="/admin/financial" element={<SuperAdminRoute><Admin view="financial" /></SuperAdminRoute>} />

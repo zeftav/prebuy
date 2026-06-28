@@ -3,6 +3,20 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.27.1] — 2026-06-28
+
+### Added
+- **Shop drill-in / support view (platform dashboard).** Super admins can open any shop from the
+  Customers list into a read-only support view: team (emails, roles, joined, last sign-in),
+  inspections (identifier/asset/type/status/updated) and a link to each published report.
+  - `admin-orgs` edge fn: new `org_detail` action (returns org + members-with-emails via
+    `auth.admin.getUserById` + inspections). Part of the same not-yet-deployed function — no extra
+    redeploy beyond the pending `admin-orgs` deploy.
+  - `src/lib/admin.js` `fetchOrgDetail`; `src/pages/Admin.jsx` `OrgView` at `/admin/orgs/:id` ("Open"
+    on each org card).
+- This is a read-only support view, **not** true session impersonation (which would mint a session as
+  another user — heavier and riskier; logged as a possible follow-up).
+
 ## [0.27.0] — 2026-06-28
 
 ### Added

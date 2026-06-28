@@ -44,6 +44,10 @@ export function renameOrg(orgId, name) {
 export function deleteOrg(orgId) {
   return callAdmin('admin-orgs', { action: 'delete_org', org_id: orgId })
 }
+/** Read-only drill-in for one shop: org + members (with emails) + inspections. */
+export function fetchOrgDetail(orgId) {
+  return callAdmin('admin-orgs', { action: 'org_detail', org_id: orgId })
+}
 /** Anthropic spend aggregated over the last `days`. */
 export function fetchAiCost(days = 30) {
   return callAdmin('admin-ai-cost', { action: 'summary', days })

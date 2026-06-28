@@ -8,11 +8,11 @@
 // (Stripe) exists — see docs/backlog.md.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ShieldCheck, ArrowLeft, AlertTriangle, Trash2, Pencil, Plus, X } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ShieldCheck, ArrowLeft, AlertTriangle, Trash2, Pencil, Plus, X, Eye, ExternalLink } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
 import {
-  fetchAdminOrgs, fetchAiCost, addSuperAdmin, removeSuperAdmin, renameOrg, deleteOrg,
+  fetchAdminOrgs, fetchAiCost, fetchOrgDetail, addSuperAdmin, removeSuperAdmin, renameOrg, deleteOrg,
   formatUsd, formatCount, relativeTime, engagementFlag,
 } from '../lib/admin.js'
 import Tooltip, { InfoDot } from '../components/Tooltip.jsx'
@@ -32,6 +32,7 @@ const TABS = [
 export default function Admin({ view = 'customers' }) {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const { id: orgParam } = useParams()
   const [data, setData] = useState(null) // { orgs, totals, super_admins }
   const [loadError, setLoadError] = useState(null)
 
@@ -43,9 +44,10 @@ export default function Admin({ view = 'customers' }) {
     })
   }, [])
 
+  const needsOrgList = view === 'customers' || view === 'engagement' || view === 'super-admins'
   useEffect(() => {
-    load()
-  }, [load])
+    if (needsOrgList) load()
+  }, [load, needsOrgList])
 
   async function onSignOut() {
     await signOut()
@@ -90,6 +92,7 @@ export default function Admin({ view = 'customers' }) {
       {view === 'ai-cost' && <AiCostView />}
       {view === 'financial' && <FinancialView />}
       {view === 'super-admins' && <SuperAdminsView data={data} onChanged={load} />}
+      {view === 'org' && <OrgView orgId={orgParam} />}
     </main>
   )
 }
@@ -156,6 +159,9 @@ function CustomersView({ data, onChanged }) {
               <span>active {relativeTime(o.last_active)}</span>
             </div>
             <div className="admin__orgactions">
+              <Link className="auth__toggle" to={`/admin/orgs/${o.id}`}>
+                <Eye size={13} aria-hidden="true" /> Open
+              </Link>
               <button className="auth__toggle" onClick={() => setEditing(o)}>
                 <Pencil size={13} aria-hidden="true" /> Rename
               </button>
@@ -425,6 +431,79 @@ function FinancialView() {
           AI cost tab. See <code>docs/backlog.md</code> → Financial.
         </p>
       </div>
+    </section>
+  )
+}
+
+function OrgView({ orgId }) {
+  const [state, setState] = useState({ status: 'loading' })
+
+  useEffect(() => {
+    let active = true
+    setState({ status: 'loading' })
+    fetchOrgDetail(orgId).then(({ data, error }) => {
+      if (!active) return
+      setState(error ? { status: 'error', error } : { status: 'ready', data })
+    })
+    return () => { active = false }
+  }, [orgId])
+
+  if (state.status === 'loading') return <p className="auth__hint">Loading shop…</p>
+  if (state.status === 'error') {
+    return <div className="auth__error" role="alert">Couldn’t load this shop. {state.error?.message || ''}</div>
+  }
+
+  const { org, members, inspections } = state.data
+  const reportOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+
+  return (
+    <section className="admin__section">
+      <Link to="/admin" className="auth__toggle"><ArrowLeft size={14} aria-hidden="true" /> All shops</Link>
+      <h2 className="admin__h2" style={{ marginTop: '0.75rem' }}>
+        {org.name} <span className="admin__count">· {getVertical(org.vertical)?.label || org.vertical}</span>
+      </h2>
+      <p className="auth__hint">Read-only support view. Created {relativeTime(org.created_at)}.</p>
+
+      <h3 className="admin__h3">Team <span className="admin__count">({members.length})</span></h3>
+      <table className="admin__table">
+        <thead><tr><th>Email</th><th>Role</th><th>Joined</th><th>Last sign-in</th></tr></thead>
+        <tbody>
+          {members.map((m) => (
+            <tr key={m.user_id}>
+              <td>{m.email || '(unknown)'}</td>
+              <td>{m.role}</td>
+              <td>{relativeTime(m.joined)}</td>
+              <td>{relativeTime(m.last_sign_in)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 className="admin__h3">Inspections <span className="admin__count">({inspections.length})</span></h3>
+      {inspections.length === 0 && <p className="auth__hint">No inspections yet.</p>}
+      {inspections.length > 0 && (
+        <table className="admin__table">
+          <thead><tr><th>Identifier</th><th>Asset</th><th>Type</th><th>Status</th><th>Updated</th><th>Report</th></tr></thead>
+          <tbody>
+            {inspections.map((i) => (
+              <tr key={i.id}>
+                <td>{i.identifier}</td>
+                <td>{[i.year, i.make, i.model].filter(Boolean).join(' ') || '—'}</td>
+                <td>{i.mode === 'listing' ? 'Listing' : 'Inspection'}</td>
+                <td><span className={`insp__status insp__status--${i.status}`}>{i.status}</span></td>
+                <td>{relativeTime(i.updated_at)}</td>
+                <td>
+                  {i.status === 'published' && i.share_token ? (
+                    <a href={`${reportOrigin}/r/${i.share_token}`} target="_blank" rel="noreferrer" className="auth__toggle">
+                      <ExternalLink size={13} aria-hidden="true" /> Open
+                    </a>
+                  ) : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </section>
   )
 }
