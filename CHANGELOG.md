@@ -3,6 +3,28 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.23.0] — 2026-06-28
+
+### Added
+- **Broker listings (Phase 1 of the broker epic).** A job now has a **mode** — `inspection` (full) or
+  `listing` (broker, capture-only). Mode is per-job, so a shop can do both.
+  - `supabase/migrations/016_inspection_mode.sql` — `inspections.mode` ('inspection'|'listing') +
+    `source_inspection_id` (handoff lineage). **Needs running.**
+  - New form (`NewInspection`) — pick "Pre-purchase inspection" or "Broker listing."
+  - `checklist.js` — listings skip checklist instantiation; `getInspection` returns `mode` +
+    `source_inspection_id`.
+  - `InspectionDetail` — listing layout: capture tools (profile/photos/logbooks) + publish, no
+    checklist; **"Start inspection from this listing"** handoff (same org) via
+    `startInspectionFromListing` — clones profile/attributes + overview media + logbooks/events into a
+    new full inspection. `inspections.js` +test (mode).
+  - `report` edge fn + `ReportView` — listings publish as a single-purpose **listing/spec-sheet**
+    (report Part 1 only; findings half suppressed; title "<Asset> Listing"). **Redeploy `report` (JWT OFF).**
+  - Dashboard tags listings.
+
+### Notes
+- **Cross-org handoff** (broker → a *different* inspecting shop: shop directory + invite + storage copy +
+  claim) is Phase 2 — see `docs/backlog.md`. This ships the listing workflow + same-org handoff.
+
 ## [0.22.1] — 2026-06-28
 
 ### Changed

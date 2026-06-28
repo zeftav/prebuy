@@ -39,4 +39,10 @@ describe('validateInspectionDraft', () => {
     expect(r.valid).toBe(true)
     expect(r.value.identifier).toBe('ABC12345D404')
   })
+
+  it('defaults mode to inspection and accepts listing', () => {
+    expect(validateInspectionDraft({ vertical: 'aviation', identifier: 'N12345' }).value.mode).toBe('inspection')
+    expect(validateInspectionDraft({ vertical: 'aviation', identifier: 'N12345', mode: 'listing' }).value.mode).toBe('listing')
+    expect(validateInspectionDraft({ vertical: 'aviation', identifier: 'N12345', mode: 'bogus' }).value.mode).toBe('inspection')
+  })
 })

@@ -30,6 +30,7 @@ export default function NewInspection() {
   const [year, setYear] = useState('')
   const [serial, setSerial] = useState('')
   const [engineCount, setEngineCount] = useState(null) // seeded from FAA lookup (num_eng)
+  const [mode, setMode] = useState('inspection') // 'inspection' (full) | 'listing' (broker, capture-only)
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
   const [inspectorName, setInspectorName] = useState('')
@@ -100,7 +101,7 @@ export default function NewInspection() {
     setBusy(true)
     const { error } = await createInspection(
       shop.org_id,
-      { vertical: shop.vertical, identifier, make, model, year, serial, engineCount, customerName, customerEmail, inspectorName, location, inspectionDate },
+      { vertical: shop.vertical, mode, identifier, make, model, year, serial, engineCount, customerName, customerEmail, inspectorName, location, inspectionDate },
       user?.id,
     )
     setBusy(false)
@@ -147,6 +148,35 @@ export default function NewInspection() {
       )}
 
       <form className="auth__form" onSubmit={onSubmit}>
+        <div className="auth__field">
+          <label>What are you creating?</label>
+          <div className="insp__verticals" role="radiogroup" aria-label="Job type">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'inspection'}
+              className={`insp__verticalbtn ${mode === 'inspection' ? 'is-active' : ''}`}
+              onClick={() => setMode('inspection')}
+            >
+              Pre-purchase inspection
+            </button>
+            <button
+              type="button"
+              role="radio"
+              aria-checked={mode === 'listing'}
+              className={`insp__verticalbtn ${mode === 'listing' ? 'is-active' : ''}`}
+              onClick={() => setMode('listing')}
+            >
+              Broker listing
+            </button>
+          </div>
+          <span className="auth__hint">
+            {mode === 'listing'
+              ? 'Capture-only: profile, photos, logbooks and an AI write-up — no inspection checklist.'
+              : 'The full guided inspection with the risk-ordered checklist.'}
+          </span>
+        </div>
+
         <div className="auth__field">
           <label htmlFor="identifier">
             {cfg.identifierLabel}

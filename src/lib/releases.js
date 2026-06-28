@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.23.0',
+    date: '2026-06-28',
+    title: 'Broker listings',
+    items: [
+      'New on the New form: choose “Pre-purchase inspection” or “Broker listing.” A listing is capture-only — profile, photos, logbooks and an AI write-up — and publishes as a clean listing/spec-sheet (no checklist or findings).',
+      'Any shop can do both; listings are tagged on your dashboard.',
+      'Turn a listing into a full inspection in one tap — “Start inspection from this listing” carries over the profile, photos and logbooks.',
+    ],
+  },
+  {
     version: '0.22.1',
     date: '2026-06-28',
     title: 'Multiple photos per shot',

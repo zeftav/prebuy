@@ -435,6 +435,19 @@ inspections** (and marine) in the hero/examples/feature copy, or make the messag
 (identifier → checklist → capture → report) with per-vertical examples. Could also reflect the user's
 shop vertical after login (e.g. a home shop sees home-flavored empty states/help). Small copy/UX pass.
 
+**▶ Bigger landing-page story / positioning (Brett, 2026-06-28).** Reframe the marketing to a **much
+broader audience** and the **whole sale/acquisition lifecycle**, not just "shop runs a pre-buy." PreBuy
+is a useful tool at **many points in a transaction**: a **seller/broker creating a listing**, the
+**pre-purchase inspection / survey** itself, **records & valuation summaries**, and the **buyer's**
+due-diligence — across **many industries** (aviation, marine, automotive/RV, real estate, heavy
+equipment…). The narrative hook: **"Forged in aviation — the most exacting, documentation-heavy
+pre-purchase world — and useful anywhere something valuable changes hands."** That origin story is a
+credibility asset: the rigor of aircraft pre-buys (logbooks, ADs, risk-ranked findings, FAA data)
+generalizes to any considered purchase. Landing should speak to **sellers/brokers, inspectors/surveyors,
+and buyers**, show the **listing-creation** use case alongside the **inspection** one, and lead with
+outcomes (a clean, trustworthy report that moves a deal) rather than aviation jargon. Audience-segmented
+sections or a vertical switcher on the page. Pairs with the apex-site split + the broker workflow.
+
 ## Oil-analysis (and document) upload on engine items (Brett, 2026-06-28)
 Engine inspection items (the "Oil analysis & filter/screen" check on the A36 + generic aviation
 checklists) need a spot to **upload the actual oil-analysis results** — typically a lab PDF or a photo

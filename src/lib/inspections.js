@@ -26,6 +26,7 @@ export function validateInspectionDraft(draft) {
     error: null,
     value: {
       vertical,
+      mode: draft.mode === 'listing' ? 'listing' : 'inspection',
       identifier: id.value,
       make: clean(draft.make),
       model: clean(draft.model),
@@ -76,7 +77,7 @@ export async function createInspection(orgId, draft, userId) {
   const { data, error } = await supabase
     .from('inspections')
     .insert(row)
-    .select('id, vertical, identifier, make, model, customer_name, status, created_at')
+    .select('id, vertical, mode, identifier, make, model, customer_name, status, created_at')
     .single()
   return { data, error }
 }
@@ -86,8 +87,59 @@ export async function listInspectionsForOrg(orgId) {
   if (!orgId) return { data: [], error: null }
   const { data, error } = await supabase
     .from('inspections')
-    .select('id, vertical, identifier, make, model, customer_name, status, created_at')
+    .select('id, vertical, mode, identifier, make, model, customer_name, status, created_at')
     .eq('org_id', orgId)
     .order('created_at', { ascending: false })
   return { data: data ?? [], error }
+}
+
+/**
+ * Handoff: start a full inspection from a broker listing (same org). Copies the
+ * aircraft profile (attributes) + provenance, and clones the listing's overview
+ * media, logbooks and events to the new inspection (same org → media rows can
+ * reuse the storage paths). Returns { data: { id }, error }. Cross-org transfer
+ * (a different shop) is a separate flow — see docs/backlog.md.
+ */
+export async function startInspectionFromListing(listing, userId) {
+  if (!listing?.id) return { data: null, error: new Error('No listing to convert.') }
+  const row = {
+    org_id: listing.org_id,
+    status: 'draft',
+    mode: 'inspection',
+    source_inspection_id: listing.id,
+    vertical: listing.vertical,
+    identifier: listing.identifier,
+    make: listing.make,
+    model: listing.model,
+    year: listing.year,
+    attributes: listing.attributes ?? {},
+    customer_name: listing.customer_name,
+    customer_email: listing.customer_email,
+    inspector_name: listing.inspector_name,
+    location: listing.location,
+    inspection_date: listing.inspection_date,
+  }
+  if (userId) row.created_by = userId
+
+  const { data: created, error } = await supabase.from('inspections').insert(row).select('id').single()
+  if (error) return { data: null, error }
+  const newId = created.id
+
+  // Clone media (overview shots / attachments), logbooks and events. Same org, so
+  // media rows can point at the existing storage objects (no file copy needed).
+  const [{ data: mediaRows }, { data: books }, { data: events }] = await Promise.all([
+    supabase.from('media').select('storage_path, kind, purpose, caption').eq('inspection_id', listing.id),
+    supabase.from('logbooks').select('kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes').eq('inspection_id', listing.id),
+    supabase.from('logbook_events').select('category, title, position, event_date, tach, description').eq('inspection_id', listing.id),
+  ])
+  if (mediaRows?.length) {
+    await supabase.from('media').insert(mediaRows.map((m) => ({ ...m, inspection_id: newId, org_id: listing.org_id, inspection_item_id: null })))
+  }
+  if (books?.length) {
+    await supabase.from('logbooks').insert(books.map((b) => ({ ...b, inspection_id: newId, org_id: listing.org_id })))
+  }
+  if (events?.length) {
+    await supabase.from('logbook_events').insert(events.map((e) => ({ ...e, inspection_id: newId, org_id: listing.org_id })))
+  }
+  return { data: { id: newId }, error: null }
 }

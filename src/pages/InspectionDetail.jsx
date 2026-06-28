@@ -5,9 +5,10 @@
 // turns the raw dictation into a customer-facing finding + suggested severity/status.
 
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip } from 'lucide-react'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
+import { useAuth } from '../lib/auth.jsx'
 import {
   getInspection,
   ensureInspectionItems,
@@ -20,7 +21,7 @@ import { getVertical } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
 import { structureFinding } from '../lib/findings.js'
 import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
-import { updateInspectionMeta } from '../lib/inspections.js'
+import { updateInspectionMeta, startInspectionFromListing } from '../lib/inspections.js'
 import { publishInspection, unpublishInspection, reportUrl } from '../lib/report.js'
 import './auth.css'
 import './inspections.css'
@@ -34,6 +35,8 @@ const STATUSES = [
 
 export default function InspectionDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [inspection, setInspection] = useState(null)
   const [items, setItems] = useState([])
   const [media, setMedia] = useState([])
@@ -113,6 +116,14 @@ export default function InspectionDetail() {
     return error
   }
 
+  const [handoffBusy, setHandoffBusy] = useState(false)
+  async function startInspection() {
+    setHandoffBusy(true)
+    const { data, error } = await startInspectionFromListing(inspection, user?.id)
+    setHandoffBusy(false)
+    if (!error && data) navigate(`/app/inspections/${data.id}`)
+  }
+
   if (state === 'loading') {
     return (
       <main className="auth-pending" aria-busy="true">
@@ -139,6 +150,7 @@ export default function InspectionDetail() {
 
   const cfg = getVertical(inspection.vertical) ?? getVertical('aviation')
   const subtitle = [inspection.year, inspection.make, inspection.model].filter(Boolean).join(' ')
+  const isListing = inspection.mode === 'listing'
 
   return (
     <main className="insp">
@@ -161,10 +173,17 @@ export default function InspectionDetail() {
         <span className={`insp__status insp__status--${inspection.status}`}>{inspection.status}</span>
       </div>
 
-      <div className="insp__progress">
-        <span>{reviewed} of {items.length} items reviewed</span>
-        <span className="auth__hint">Worked highest financial risk first.</span>
-      </div>
+      {isListing ? (
+        <div className="insp__progress">
+          <span>Broker listing</span>
+          <span className="auth__hint">Capture-only — profile, photos & logbooks; no checklist.</span>
+        </div>
+      ) : (
+        <div className="insp__progress">
+          <span>{reviewed} of {items.length} items reviewed</span>
+          <span className="auth__hint">Worked highest financial risk first.</span>
+        </div>
+      )}
 
       <InspectionMeta inspection={inspection} onSave={saveMeta} />
 
@@ -182,36 +201,54 @@ export default function InspectionDetail() {
 
       <PublishBar inspection={inspection} onPublish={publish} onUnpublish={unpublish} />
 
-      {note === 'no-template' && (
-        <div className="auth__notice">
-          No checklist template matched {subtitle || 'this aircraft'} yet, so this inspection has no items.
-          A matching template needs seeding for its make/model.
+      {isListing ? (
+        <div className="insp__listingactions">
+          <p className="auth__hint">
+            Build the {cfg.key === 'marine' ? 'vessel' : 'aircraft'} profile, photos and logbooks above,
+            then publish the listing — or start a full pre-purchase inspection from it.
+          </p>
+          <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={startInspection} disabled={handoffBusy}>
+            <ClipboardCheck size={15} aria-hidden="true" /> {handoffBusy ? 'Starting…' : 'Start inspection from this listing'}
+          </button>
         </div>
+      ) : (
+        <>
+          {note === 'no-template' && (
+            <div className="auth__notice">
+              No checklist template matched {subtitle || 'this aircraft'} yet, so this inspection has no items.
+              A matching template needs seeding for its make/model.
+            </div>
+          )}
+
+          {note === 'generic-template' && (
+            <div className="auth__notice">
+              No model-specific checklist for {subtitle || 'this aircraft'} yet — started you on the
+              <strong> general aircraft survey</strong>. Add or re-prioritize items below to tailor it.
+            </div>
+          )}
+
+          <ol className="insp__items">
+            {ordered.map((item) => (
+              <ItemRow
+                key={item.id}
+                item={item}
+                media={media.filter((m) => m.inspection_item_id === item.id)}
+                inspection={inspection}
+                onStatus={setItemStatus}
+                onPatch={patchItem}
+                onRemove={removeItem}
+                onMediaChange={refreshMedia}
+              />
+            ))}
+          </ol>
+
+          <AddItem onAdd={addItem} />
+        </>
       )}
 
-      {note === 'generic-template' && (
-        <div className="auth__notice">
-          No model-specific checklist for {subtitle || 'this aircraft'} yet — started you on the
-          <strong> general aircraft survey</strong>. Add or re-prioritize items below to tailor it.
-        </div>
+      {inspection.source_inspection_id && (
+        <p className="auth__hint insp__sourcenote">Started from a broker listing.</p>
       )}
-
-      <ol className="insp__items">
-        {ordered.map((item) => (
-          <ItemRow
-            key={item.id}
-            item={item}
-            media={media.filter((m) => m.inspection_item_id === item.id)}
-            inspection={inspection}
-            onStatus={setItemStatus}
-            onPatch={patchItem}
-            onRemove={removeItem}
-            onMediaChange={refreshMedia}
-          />
-        ))}
-      </ol>
-
-      <AddItem onAdd={addItem} />
     </main>
   )
 }

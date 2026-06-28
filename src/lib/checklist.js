@@ -40,7 +40,7 @@ export function fanOutTemplateItems(tItems, { vertical, engineCount = 1, layout 
 export async function getInspection(id) {
   const { data, error } = await supabase
     .from('inspections')
-    .select('id, org_id, vertical, identifier, make, model, year, customer_name, customer_email, inspector_name, location, inspection_date, status, attributes, share_token, published_at, created_at')
+    .select('id, org_id, vertical, mode, source_inspection_id, identifier, make, model, year, customer_name, customer_email, inspector_name, location, inspection_date, status, attributes, share_token, published_at, created_at')
     .eq('id', id)
     .maybeSingle()
   return { data, error }
@@ -93,6 +93,8 @@ export async function findTemplateFor({ vertical, make, model }) {
  * { data: items, error, templateMatched }.
  */
 export async function ensureInspectionItems(inspection) {
+  // Listings are capture-only — no checklist to instantiate.
+  if (inspection.mode === 'listing') return { data: [], error: null, templateMatched: null, generic: false }
   const existing = await listInspectionItems(inspection.id)
   if (existing.error) return { data: [], error: existing.error, templateMatched: null, generic: false }
   if (existing.data.length > 0) return { data: existing.data, error: null, templateMatched: null, generic: false }

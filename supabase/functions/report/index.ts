@@ -44,7 +44,7 @@ Deno.serve(async (req: Request) => {
   // Published inspection only.
   const { data: insp } = await admin
     .from('inspections')
-    .select('id, org_id, vertical, identifier, make, model, year, customer_name, inspector_name, location, inspection_date, attributes, published_at, status')
+    .select('id, org_id, vertical, mode, identifier, make, model, year, customer_name, inspector_name, location, inspection_date, attributes, published_at, status')
     .eq('share_token', token)
     .maybeSingle()
   if (!insp || insp.status !== 'published') return json({ error: 'Report not found.' }, 404)
@@ -103,6 +103,7 @@ Deno.serve(async (req: Request) => {
       model: insp.model,
       year: insp.year,
       vertical: insp.vertical,
+      mode: insp.mode ?? 'inspection',
       serial: insp.attributes?.serial ?? null,
       customer_name: insp.customer_name,
       inspector_name: insp.inspector_name,

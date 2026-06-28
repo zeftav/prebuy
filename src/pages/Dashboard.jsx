@@ -173,7 +173,10 @@ function InspectionList({ orgId }) {
                   {row.vertical === 'marine' ? <Ship size={18} /> : <Plane size={18} />}
                 </span>
                 <span className="insp__main">
-                  <span className="insp__id">{row.identifier}</span>
+                  <span className="insp__id">
+                    {row.identifier}
+                    {row.mode === 'listing' && <span className="insp__modetag">Listing</span>}
+                  </span>
                   <span className="insp__sub">
                     {[getVertical(row.vertical)?.label, [row.make, row.model].filter(Boolean).join(' '), row.customer_name]
                       .filter(Boolean)

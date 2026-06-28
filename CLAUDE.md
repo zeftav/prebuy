@@ -274,9 +274,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `OverviewCapture` run mode: Start → step each shot (prompt + capture → preview → Keep&continue
   auto-advance / Retake / Skip / Replace), resumes at first missing, progress X/N; per-shot list kept.
   Help FAQ updated. Tests 110.
-  **NEXT:** scope/disclaimer drawer (not_required/limitations), gear-rigging forms, invite teammates,
-  server-side PDF, Resend SMTP (pre-beta); multi-vertical landing copy; aircraft-as-entity + broker
-  intake; research project.
+- Session 2 cont. — **Broker listings (broker epic Phase 1)** (v0.23.0). Migration `016`
+  (`inspections.mode` 'inspection'|'listing' + `source_inspection_id`). Mode is **per-job** (a shop does
+  both — Brett's call). NewInspection mode picker; `checklist.js` skips checklist for listings;
+  InspectionDetail listing layout (capture tools + publish, no checklist) + **"Start inspection from this
+  listing"** same-org handoff (`startInspectionFromListing` clones profile/attributes + overview media +
+  logbooks/events). `report`+ReportView: listing = Part 1 only ("<Asset> Listing"). Dashboard tags
+  listings. Resend SMTP **live** (auth email works; `noreply@prebuy.app`). Lint + 110 tests + build green.
+  ⚠️ **Run migration 016 + redeploy `report` (JWT OFF).**
+  **NEXT (broker Phase 2):** cross-org handoff — shop directory + invite + storage copy + claim link
+  (+ expertise filtering later). Then scope/disclaimer drawer, gear-rigging forms, invite teammates,
+  server-side PDF; broader landing-page story (all verticals / whole sale lifecycle); per-vertical
+  identifier resolvers (USCG MIC, address/property, NHTSA vPIC); aircraft-as-entity; research project.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

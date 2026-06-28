@@ -84,6 +84,7 @@ export default function ReportView() {
     ? new Date(inspection.inspection_date + 'T00:00:00').toLocaleDateString()
     : published
 
+  const isListing = inspection.mode === 'listing'
   const profile = normalizeProfile(inspection.profile)
   const hasProfile = !isProfileEmpty(profile)
   const specRows = profileRows(profile, SPEC_FIELDS)
@@ -118,7 +119,7 @@ export default function ReportView() {
           {isMarine ? <Ship size={22} aria-hidden="true" /> : <Plane size={22} aria-hidden="true" />}
           <span>{shop.name}</span>
         </div>
-        <h1>Pre-Purchase Inspection Report</h1>
+        <h1>{isListing ? `${assetWord} Listing` : 'Pre-Purchase Inspection Report'}</h1>
         <div className="report__meta">
           <Meta label={assetWord} value={asset || '—'} />
           <Meta label="Identifier" value={inspection.identifier} />
@@ -135,7 +136,7 @@ export default function ReportView() {
       {/* ── Part 1 — Aircraft profile ─────────────────────────────────────── */}
       {hasPart1 && (
         <>
-          <PartHeader n="1" title={`${assetWord} profile`} />
+          {!isListing && <PartHeader n="1" title={`${assetWord} profile`} />}
 
           {(specRows.length > 0 || currencyRows.length > 0) && (
             <section className="report__section">
@@ -258,7 +259,9 @@ export default function ReportView() {
         </>
       )}
 
-      {/* ── Part 2 — Inspection findings ──────────────────────────────────── */}
+      {/* ── Part 2 — Inspection findings (not shown for broker listings) ──── */}
+      {!isListing && (
+      <>
       {hasPart1 && <PartHeader n="2" title="Inspection findings" />}
 
       <section className="report__summary">
@@ -289,6 +292,9 @@ export default function ReportView() {
             ))}
           </ul>
         </section>
+      )}
+
+      </>
       )}
 
       <footer className="report__foot">
