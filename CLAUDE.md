@@ -282,6 +282,10 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   logbooks/events). `report`+ReportView: listing = Part 1 only ("<Asset> Listing"). Dashboard tags
   listings. Resend SMTP **live** (auth email works; `noreply@prebuy.app`). Lint + 110 tests + build green.
   ⚠️ **Run migration 016 + redeploy `report` (JWT OFF).**
+- Session 2 cont. — **Landing-page repositioning** (v0.24.0, frontend-only). `Home.jsx` reframed to the
+  whole deal lifecycle + many industries: audience trio (sellers/brokers · inspectors/surveyors · buyers),
+  vertical-neutral how-it-works/features, industries strip, "Forged in aviation" origin band. `App.css`
+  styles added. **NEXT: broker Phase 2 cross-org handoff** (building now).
   **NEXT (broker Phase 2):** cross-org handoff — shop directory + invite + storage copy + claim link
   (+ expertise filtering later). Then scope/disclaimer drawer, gear-rigging forms, invite teammates,
   server-side PDF; broader landing-page story (all verticals / whole sale lifecycle); per-vertical

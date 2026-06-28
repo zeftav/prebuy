@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.24.0',
+    date: '2026-06-28',
+    title: 'A bigger story',
+    items: [
+      'Reworked the landing page to speak to the whole deal — sellers/brokers, inspectors/surveyors, and buyers — across aviation, marine, automotive/RV and real estate.',
+      'Leads with the outcome (a clean, trustworthy report) and the origin story: built to aviation’s exacting standard, useful anywhere valuable things change hands.',
+    ],
+  },
+  {
     version: '0.23.0',
     date: '2026-06-28',
     title: 'Broker listings',

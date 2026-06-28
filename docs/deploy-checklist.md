@@ -34,9 +34,8 @@ Run in order. All are idempotent (safe to re-run).
       (oil-analysis / doc uploads on items). (2026-06-28)
 - [x] ✅ Redeployed `report` (JWT OFF) — event `position` (timeline engine labels) + per-item
       `attachments`. (2026-06-28)
-- [ ] ⬜ `016_inspection_mode.sql` — `inspections.mode` ('inspection'|'listing') + `source_inspection_id`
-      (broker listings). **Run in the SQL editor** (pasted in chat). Then 🔁 **redeploy `report` (JWT OFF)**
-      so listings publish as a listing/spec-sheet (Part 1 only).
+- [x] ✅ `016_inspection_mode.sql` — `inspections.mode` + `source_inspection_id` (broker listings), and
+      `report` redeployed (JWT OFF) so listings publish as a listing/spec-sheet. (2026-06-28)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 

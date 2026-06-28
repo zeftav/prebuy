@@ -3,6 +3,15 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.24.0] — 2026-06-28
+
+### Changed
+- **Landing-page repositioning.** `Home.jsx` rewritten for a broader audience and the whole
+  sale/acquisition lifecycle: a "useful at every step" audience trio (sellers/brokers · inspectors/
+  surveyors · buyers), vertical-neutral "how it works" + features, an **industries strip** (aviation ·
+  marine · automotive & RV · real estate · more), and a **"Forged in aviation"** origin/credibility
+  band. New `App.css` styles (`home__industries`, `home__industry`, `home__origin`). Frontend only.
+
 ## [0.23.0] — 2026-06-28
 
 ### Added
