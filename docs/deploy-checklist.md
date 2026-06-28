@@ -40,8 +40,8 @@ Run in order. All are idempotent (safe to re-run).
       edge fn deployed (JWT ON). Powers `/claim/:token`. (2026-06-28)
 - [ ] ⬜ `018_marine_mic.sql` — `marine_mic` reference table + RLS read (powers the **boat HIN lookup**;
       builder from MIC). Seeds TEST fixtures only. No edge fn. (2026-06-28)
-- [ ] ⬜ `019_super_admin.sql` — `super_admins` table + `is_super_admin()` RPC + `ai_usage` log table
-      (powers the **platform-owner dashboard**). RLS on, no client policies. (2026-06-28)
+- [x] ✅ `019_super_admin.sql` — `super_admins` table + `is_super_admin()` RPC + `ai_usage` log table
+      (powers the **platform-owner dashboard**). RLS on, no client policies. (run 2026-06-28)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
@@ -56,13 +56,13 @@ Run in order. All are idempotent (safe to re-run).
   - [x] ✅ Redeployed `structure-logbook` for v0.14.0 (scan-to-pre-fill specs/currency/equipment). (2026-06-27)
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
-- [ ] 🔁 **REDEPLOY `structure-finding`, `structure-logbook`, `generate-summary`** (v0.27.0) — all
+- [x] ✅ **REDEPLOYED `structure-finding`, `structure-logbook`, `generate-summary`** (v0.27.0) — all
       three now log token usage to `ai_usage` (fire-and-forget, service role) for the platform AI-cost
-      view. JWT stays **ON**. No new secret (uses auto-injected `SUPABASE_URL`/`SERVICE_ROLE_KEY`).
-- [ ] ⬜ **`admin-orgs`** (new, v0.27.0) — Verify JWT **ON**. Platform-owner shop list + engagement +
-      roster + rename/delete. Super-admin re-checked server-side. No new secret.
-- [ ] ⬜ **`admin-ai-cost`** (new, v0.27.0) — Verify JWT **ON**. Aggregates `ai_usage` → estimated cost.
-      No new secret.
+      view. JWT **ON**. (2026-06-28)
+- [x] ✅ **`admin-orgs`** (new, v0.27.0/0.27.1) — JWT **ON**. Platform-owner shop list + engagement +
+      roster + rename/delete + `org_detail` support view. (deployed 2026-06-28)
+- [x] ✅ **`admin-ai-cost`** (new, v0.27.0) — JWT **ON**. Aggregates `ai_usage` → estimated cost.
+      (deployed 2026-06-28)
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 
