@@ -6,6 +6,62 @@ keep only the big-rock summaries mirrored in `CLAUDE.md`. Build-task checklist l
 
 ---
 
+## ⭐ HIGH PRIORITY (Brett, 2026-06-28)
+
+### 1. Per-vertical profile + report — stop leaking aviation fields
+**Problem (live bug):** a **test boat shop's report shows airplane-specific info.** The whole "profile"
+(spec sheet, Part 1 of the report) is modeled on aircraft and only does a cosmetic word-swap
+("Vessel") for marine — the actual fields are aviation: `engine_count`/engines/props, and FAA currency
+`annual_due` · `ifr_pitot_static (91.411)` · `transponder (91.413)` · `elt_battery` · `o2_hydro`, plus
+aircraft "logbooks" and a maintenance timeline. A boat/home shop should never see any of that.
+
+**Goal:** make the profile **schema + field sets + labels + compliance concepts vertical-specific**,
+driven from `verticals.js` (the one place verticals differ). Each vertical declares its own spec fields,
+"currency/compliance" fields (or none), whether it has engines, and the report section headers.
+- **Marine:** LOA/beam/draft/displacement, fuel/water capacity, engine(s) make + hours (boats *do*
+  have engines — keep that concept, drop *airframe* fields), drive type; compliance = USCG
+  documentation/registration expiry, last haul-out / bottom paint, thru-hull/seacock service — NOT
+  annual/transponder. "Logbooks" → "maintenance records / service history."
+- **Home:** square footage, year built, beds/baths, roof age, system ages (HVAC, water heater,
+  electrical panel); no engines, no "currency" in the aviation sense. Likely a different Part 1 entirely.
+- **Aviation:** unchanged (current behavior is the reference).
+
+**Touchpoints:** `lib/profile.js` (`EMPTY_PROFILE`, `SPEC_FIELDS`, `CURRENCY_FIELDS`, the engine/prop
+model, `normalizeProfile`, `draftFromExtraction`/`mergeProfileDraft`, `buildSummaryContext`) — generalize
+to read a per-vertical descriptor; `pages/AircraftProfile.jsx` (rename → generic Asset/Vessel/Property
+profile; render the vertical's field sets + engine block only if it has engines); `pages/ReportView.jsx`
+Part 1 (spec/currency/engine/equipment/timeline blocks + headers per vertical); `functions/structure-
+logbook` extraction schema (currently forces aviation specs/currency — make per-vertical or at least
+don't inject aviation fields for non-aviation); `verticals.js` (new `profile` descriptor per vertical).
+**Sizable — design first.** Keep legacy aviation profiles rendering unchanged (back-comp).
+
+### 2. Delete an inspection / report as a shop
+**Problem:** there's **no way to delete an inspection or its published report** — only publish/unpublish
+(`lib/inspections.js` has no delete; `lib/report.js` only publishes). A shop is stuck with test/junk
+inspections forever, and can't take down a report except by unpublishing the link.
+
+**Goal:** a shop **owner/admin** can delete an inspection (draft, listing, or published). Deleting the
+`inspections` row cascades `inspection_items` / `media` rows / `logbooks` / `logbook_events` via FKs, but
+**Storage objects are NOT cascaded** — must explicitly remove files under the `{org}/{inspection}/`
+prefix in the `inspection-media` bucket (org-scoped delete policy already exists). Type-to-confirm
+(reuse the platform `DeleteModal` pattern). Deleting a published inspection kills its share link.
+
+**Touchpoints:** `lib/inspections.js` `deleteInspection(inspection)` (list + remove storage objects via
+`lib/media.js`, then delete the row under RLS); `lib/media.js` helper to list/remove an inspection's
+objects; `pages/InspectionDetail.jsx` a "Danger zone" delete with type-to-confirm (gate to owner/admin
+via membership role); optionally a delete affordance on the Dashboard list. Add a Help/FAQ note.
+**Likely a quick win** vs. #1 — could ship first.
+
+### 3. Signup: "account already exists" message  ← (the real "email bug", 2026-06-28)
+The "confirmation email didn't show up" was **signing up with an email that already has an account.**
+Supabase deliberately returns a *fake success* and sends **no email** for an existing address
+(anti-enumeration). So the user saw no error and no email. Detect it (Supabase sets
+`data.user.identities = []` for an already-registered email) and show a friendly
+"An account with this email already exists — sign in or reset your password" with links.
+**(Being built now — 2026-06-28.)**
+
+---
+
 ## Canonical inspection workflow (Brett, 2026-06-27)
 
 The end-to-end flow, in order. Stages are vertical-agnostic; only the resolver + knowledge-base

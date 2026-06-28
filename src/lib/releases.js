@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.27.2',
+    date: '2026-06-28',
+    title: 'Clearer sign-up',
+    items: [
+      'If you try to sign up with an email that already has an account, we now tell you right away and point you to sign in (or reset your password) — instead of waiting on a confirmation email that never comes.',
+    ],
+  },
+  {
     version: '0.26.0',
     date: '2026-06-28',
     title: 'Boat HIN lookup',

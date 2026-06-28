@@ -3,6 +3,23 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.27.2] — 2026-06-28
+
+### Fixed
+- **Sign-up with an existing email now shows a clear message** instead of a confirmation-email prompt
+  that never arrives. Root cause of the reported "confirmation email didn't show up": Supabase's
+  anti-enumeration returns a *fake success* (empty `data.user.identities`, no email) when the address
+  already has an account. `Login.jsx` detects the empty-identities signal → "An account with this email
+  already exists. Sign in below — or use Forgot your password?" and flips to the sign-in tab. Frontend
+  only; no deploy.
+
+### Backlog (high priority, logged in docs/backlog.md)
+- **Per-vertical profile + report** — a boat shop's report currently shows aviation-specific spec/
+  currency/engine fields; make the profile schema + report Part 1 vertical-specific (driven from
+  `verticals.js`). **Sizable.**
+- **Delete an inspection/report as a shop** — no delete exists today (only publish/unpublish); add an
+  owner/admin delete with Storage cleanup + type-to-confirm. **Likely quick.**
+
 ## [0.27.1] — 2026-06-28
 
 ### Added

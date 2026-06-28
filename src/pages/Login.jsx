@@ -34,7 +34,17 @@ export default function Login() {
       if (mode === 'signup') {
         const { data, error } = await signUp(email, password)
         if (error) throw error
-        // If email confirmation is on, there's no session yet.
+        // Supabase anti-enumeration: signing up with an email that ALREADY has an
+        // account returns a fake success — `data.user.identities` is empty and no
+        // email is sent. Detect it so we don't tell the user to "check your email"
+        // for an account that already exists (the cause of the "no email" report).
+        const identities = data?.user?.identities
+        if (Array.isArray(identities) && identities.length === 0) {
+          setNotice('An account with this email already exists. Sign in below — or use “Forgot your password?” if you don’t remember it.')
+          setMode('signin')
+          return
+        }
+        // Genuine new account: if email confirmation is on, there's no session yet.
         if (!data.session) {
           setNotice('Check your email to confirm your account, then sign in.')
           setMode('signin')
