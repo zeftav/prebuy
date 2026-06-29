@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.35.1',
+    date: '2026-06-29',
+    title: 'Faster logbook scanning + fix a mis-typed logbook',
+    items: [
+      'Scanning a logbook now has an in-app camera: tap “Open camera” and shoot page after page without jumping in and out of the camera for each one. (You can still “Add pages” from your camera roll.)',
+      'Picked the wrong type by mistake? Each logbook now has “Change type” — switch an airframe to an engine #2, etc., and we relabel its PDF and re-tag its events automatically.',
+    ],
+  },
+  {
     version: '0.35.0',
     date: '2026-06-29',
     title: 'Scan-driven logbooks',

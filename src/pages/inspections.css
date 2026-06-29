@@ -1377,3 +1377,71 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* ── In-app continuous camera (logbook scanning) ──────────────────────── */
+.cam {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 6px 0;
+}
+.cam__viewport {
+  position: relative;
+  width: 100%;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  max-height: 60vh;
+}
+.cam__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.cam__count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.cam__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cam__shutter {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 4px solid var(--accent, #6b46c1);
+  background: #fff;
+  color: var(--accent, #6b46c1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.cam__shutter:disabled { opacity: 0.5; }
+.cam__done { width: auto; }
+.cam__hint { font-size: 13px; color: var(--muted, #6b7280); flex-basis: 100%; text-align: center; }
+.lb__retype {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--line, #eef1f5);
+  padding-top: 10px;
+}
+.lb__kindbtn.is-current {
+  border-color: var(--accent, #6b46c1);
+  background: var(--accent-bg, #f7f5ff);
+  font-weight: 700;
+}

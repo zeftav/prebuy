@@ -14,6 +14,7 @@ export default function PhotoPicker({
   multiple = false,
   busy = false,
   disabled = false,
+  uploadOnly = false,
   takeLabel = 'Take photo',
   uploadLabel = 'Choose photo',
   busyLabel = 'Uploading…',
@@ -31,18 +32,20 @@ export default function PhotoPicker({
   }
   return (
     <span className="photopick">
-      <label className={className}>
-        <TakeIcon size={15} aria-hidden="true" /> {takeLabel}
-        <input
-          type="file"
-          accept="image/*"
-          capture="environment"
-          multiple={multiple}
-          hidden
-          disabled={disabled}
-          onChange={(e) => onPick(e.target.files)}
-        />
-      </label>
+      {!uploadOnly && (
+        <label className={className}>
+          <TakeIcon size={15} aria-hidden="true" /> {takeLabel}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            multiple={multiple}
+            hidden
+            disabled={disabled}
+            onChange={(e) => onPick(e.target.files)}
+          />
+        </label>
+      )}
       <label className={className}>
         <Upload size={15} aria-hidden="true" /> {uploadLabel}
         <input

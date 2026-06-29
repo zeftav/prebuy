@@ -246,6 +246,16 @@ export async function deleteEvent(id) {
   return { error }
 }
 
+/** Realign a logbook's events to a new position (used when its type is corrected). */
+export async function reassignLogbookEvents(logbookId, position) {
+  const p = Number(position)
+  const { error } = await supabase
+    .from('logbook_events')
+    .update({ position: Number.isFinite(p) && p > 0 ? p : null })
+    .eq('logbook_id', logbookId)
+  return { error }
+}
+
 // ── OCR import (Claude vision via the structure-logbook edge fn) ─────────────
 
 /** Normalize a draft logbook/event field: empty string → null, 0 → null for tach. */

@@ -16,13 +16,14 @@ import {
   listLogbooks, addLogbook, deleteLogbook, updateLogbook,
   listEvents, addEvent, deleteEvent,
   reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
-  extractLogbooksBatched, spanFromDrafts, mergeSpan,
+  extractLogbooksBatched, spanFromDrafts, mergeSpan, reassignLogbookEvents,
   LOGBOOK_KINDS, EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { normalizeProfile, engineLabel } from '../lib/profile.js'
 import { uploadMedia, listMediaByLogbook, updateMedia, deleteMedia } from '../lib/media.js'
 import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
 import PhotoPicker from '../components/PhotoPicker.jsx'
+import CameraCapture from '../components/CameraCapture.jsx'
 import './auth.css'
 import './inspections.css'
 
@@ -99,7 +100,13 @@ export default function LogbookAudit() {
   }
   async function onUpdateBook(book, patch) {
     const { data } = await updateLogbook(book.id, patch)
-    if (data) setLogbooks((p) => p.map((b) => (b.id === book.id ? data : b)))
+    if (!data) return
+    setLogbooks((p) => p.map((b) => (b.id === book.id ? data : b)))
+    // If the type/position was corrected, realign this book's events too.
+    if ('kind' in patch || 'position' in patch) {
+      await reassignLogbookEvents(book.id, data.position)
+      setEvents((p) => p.map((e) => (e.logbook_id === book.id ? { ...e, position: data.position } : e)))
+    }
   }
   async function onAddEvent(draft) {
     const { data, error } = await addEvent(inspection, draft)
@@ -167,6 +174,8 @@ export default function LogbookAudit() {
                   inspection={inspection}
                   book={b}
                   label={posLabel(b.kind, b.position)}
+                  engineCount={engineCount}
+                  layout={layout}
                   onAmend={() => setScan({ mode: 'amend', book: b })}
                   onDelete={() => onDeleteBook(b)}
                   onUpdate={(patch) => onUpdateBook(b, patch)}
@@ -269,6 +278,7 @@ function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCa
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(null)
   const [error, setError] = useState(null)
+  const [cameraOpen, setCameraOpen] = useState(false)
   const opts = useMemo(() => kindOptions(engineCount, layout), [engineCount, layout])
 
   // Amend: find out how many pages the book already has (sort offset + later compile).
@@ -411,19 +421,36 @@ function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCa
 
       {step === 'capture' && (
         <>
-          <p className="auth__hint">
-            Snap the pages in order. Use “Take a page” for one at a time, or “Add pages” to pick several from your
-            camera roll. {existingCount > 0 && `This logbook already has ${existingCount} page${existingCount === 1 ? '' : 's'}.`}
-          </p>
-          <PhotoPicker
-            onPick={addPages}
-            multiple
-            busy={busy}
-            takeLabel="Take a page"
-            uploadLabel="Add pages"
-            takeIcon={ScanLine}
-            className="auth__btn auth__btn--ghost insp__walkthrough"
-          />
+          {cameraOpen ? (
+            <CameraCapture
+              count={captured.length}
+              onCapture={(file) => addPages([file])}
+              onClose={() => setCameraOpen(false)}
+            />
+          ) : (
+            <>
+              <p className="auth__hint">
+                Snap the pages in order. <strong>Open camera</strong> keeps the camera up so you can shoot page
+                after page without leaving — or <strong>Add pages</strong> to pick several from your camera roll.
+                {existingCount > 0 && ` This logbook already has ${existingCount} page${existingCount === 1 ? '' : 's'}.`}
+              </p>
+              <div className="insp__capture">
+                {typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia && (
+                  <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={() => setCameraOpen(true)}>
+                    <ScanLine size={15} aria-hidden="true" /> Open camera
+                  </button>
+                )}
+                <PhotoPicker
+                  onPick={addPages}
+                  multiple
+                  uploadOnly
+                  busy={busy}
+                  uploadLabel="Add pages"
+                  className="auth__btn auth__btn--ghost insp__walkthrough"
+                />
+              </div>
+            </>
+          )}
           {captured.length > 0 && (
             <>
               <p className="auth__hint"><Check size={13} aria-hidden="true" /> {captured.length} page{captured.length === 1 ? '' : 's'} added.</p>
@@ -457,11 +484,12 @@ function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCa
 // A scanned logbook: its compiled PDF (download + show-on-report), read times
 // (editable), an "add pages" amend action, a collapsible page manager
 // (rotate/reorder/delete), and delete-the-logbook — all destructive taps confirmed.
-function LogbookCard({ inspection, book, label, onAmend, onDelete, onUpdate }) {
+function LogbookCard({ inspection, book, label, engineCount, layout, onAmend, onDelete, onUpdate }) {
   const [media, setMedia] = useState([])
   const [loading, setLoading] = useState(true)
   const [managing, setManaging] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [retyping, setRetyping] = useState(false)
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(null)
 
@@ -516,6 +544,16 @@ function LogbookCard({ inspection, book, label, onAmend, onDelete, onUpdate }) {
     setMedia((prev) => prev.map((m) => (m.id === pdf.id ? { ...m, show_on_report: next } : m)))
     await updateMedia(pdf.id, { show_on_report: next })
   }
+  async function changeType(opt) {
+    await onUpdate({ kind: opt.kind, position: opt.position, label: opt.label })
+    // Keep the PDF's display name in sync with the corrected type.
+    if (pdf) {
+      setMedia((prev) => prev.map((m) => (m.id === pdf.id ? { ...m, caption: opt.label } : m)))
+      await updateMedia(pdf.id, { caption: opt.label })
+    }
+    setRetyping(false)
+  }
+  const typeOpts = kindOptions(engineCount, layout)
 
   return (
     <div className="lb__card">
@@ -548,8 +586,27 @@ function LogbookCard({ inspection, book, label, onAmend, onDelete, onUpdate }) {
         <EditTimes book={book} onSave={async (patch) => { await onUpdate(patch); setEditing(false) }} onCancel={() => setEditing(false)} />
       ) : null}
 
+      {retyping && (
+        <div className="lb__retype">
+          <span className="auth__hint">Change this logbook’s type:</span>
+          <div className="lb__kindgrid">
+            {typeOpts.map((o) => (
+              <button
+                key={`${o.kind}:${o.position}`}
+                type="button"
+                className={`lb__kindbtn ${o.kind === book.kind && (o.position || 0) === (book.position || 0) ? 'is-current' : ''}`}
+                onClick={() => changeType(o)}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="insp__capture lb__cardactions">
         <button type="button" className="auth__btn auth__btn--ghost" onClick={onAmend}><Plus size={14} aria-hidden="true" /> Add pages</button>
+        <button type="button" className="auth__toggle" onClick={() => setRetyping((v) => !v)}>Change type</button>
         <button type="button" className="auth__toggle" onClick={() => setEditing((v) => !v)}>Edit times</button>
         {pages.length > 0 && <button type="button" className="auth__toggle" onClick={() => setManaging((v) => !v)}>{managing ? 'Hide pages' : 'Manage pages'}</button>}
       </div>

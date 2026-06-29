@@ -3,6 +3,22 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.35.1] — 2026-06-29
+
+### Added
+- **In-app continuous camera for logbook scanning** (`components/CameraCapture.jsx`, getUserMedia live
+  preview + shutter). Replaces the click-in/click-out per page of the native file-capture input — tap
+  the shutter to grab page after page without leaving. Falls back to the camera-roll upload path when
+  getUserMedia is unavailable / denied. `PhotoPicker` gained an `uploadOnly` prop (the scan flow shows
+  "Open camera" + "Add pages" from the roll).
+- **"Change type" on a logbook** — fix a mis-categorized scan (e.g. engine log saved as airframe). Re-pick
+  type/position; the logbook is updated, its PDF caption relabeled, and its events realigned to the new
+  position (`reassignLogbookEvents`).
+
+### Notes
+- Frontend only — uses existing columns (`logbook_events.position`, `media.logbook_id` from migration
+  023). No new migration or edge-fn change.
+
 ## [0.35.0] — 2026-06-29
 
 ### Changed

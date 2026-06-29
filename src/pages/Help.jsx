@@ -46,7 +46,7 @@ const FAQ = [
   },
   {
     q: 'How do I capture a whole logbook quickly?',
-    a: 'When scanning, use “Add pages” to select many pages at once from your camera roll, or “Take a page” to shoot them one at a time. For a full book it’s usually fastest to photograph all the pages first, then add them all at once. Deleting a page, a PDF, or a whole logbook always asks you to confirm first, so it’s hard to lose a scan by a mis-tap.',
+    a: 'When scanning, tap “Open camera” for the in-app camera — it stays open so you can shoot page after page without jumping in and out for each one. Or use “Add pages” to select many at once from your camera roll (handy if you photographed the book ahead of time). Picked the wrong type? Open the logbook and tap “Change type” to switch it (airframe ↔ engine ↔ prop / position) — we relabel its PDF and re-tag its events. Deleting a page, a PDF, or a whole logbook always asks you to confirm first, so it’s hard to lose a scan by a mis-tap.',
   },
   {
     q: 'How do I send the report to my customer?',
