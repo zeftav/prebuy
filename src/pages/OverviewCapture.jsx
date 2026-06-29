@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Camera, Check, ChevronLeft, Plane, Ship, Play, X, RotateCcw } from 'lucide-react'
+import { Camera, Check, ChevronLeft, Plane, Ship, Play, X } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import { getInspection } from '../lib/checklist.js'
 import { getVertical, guidedShots } from '../lib/verticals.js'
@@ -30,7 +30,6 @@ export default function OverviewCapture() {
   // Guided run state.
   const [running, setRunning] = useState(false)
   const [runIdx, setRunIdx] = useState(0)
-  const [pending, setPending] = useState(null) // { file, url } awaiting accept
   const [runBusy, setRunBusy] = useState(false)
 
   useEffect(() => {
@@ -108,37 +107,30 @@ export default function OverviewCapture() {
   const currentShot = runShots[runIdx]
   const currentPhotos = currentShot ? photosFor(currentShot) : []
 
-  function clearPending() {
-    setPending((p) => {
-      if (p?.url) URL.revokeObjectURL(p.url)
-      return null
-    })
-  }
   function startRun() {
     setError(null)
     const firstMissing = runShots.findIndex((s) => photosFor(s).length === 0)
     setRunIdx(firstMissing === -1 ? 0 : firstMissing)
-    clearPending()
     setRunning(true)
   }
   function endRun() {
-    clearPending()
     setRunning(false)
     setRunIdx(0)
   }
   function advance() {
-    clearPending()
     if (runIdx + 1 < runShots.length) setRunIdx(runIdx + 1)
     else endRun()
   }
-  function stagePending(file) {
-    if (!file) return
-    clearPending()
-    setPending({ file, url: URL.createObjectURL(file) })
+  function goBack() {
+    if (runIdx > 0) setRunIdx(runIdx - 1)
   }
-  // Upload the staged photo to the current shot. `andAdvance` moves to the next.
-  async function keep(andAdvance) {
-    if (!pending) return
+  // Capture during the guided run: iOS already confirms "Use Photo" in the native
+  // camera, so we skip the in-app confirm — upload straight away. The FIRST photo
+  // for a shot auto-advances to the next shot (the fast path); taking extras for
+  // the same shot stays put so you can add several angles.
+  async function captureRun(file) {
+    if (!file) return
+    const hadPhotos = currentPhotos.length > 0
     setRunBusy(true)
     setError(null)
     const { error } = await uploadMedia({
@@ -146,13 +138,12 @@ export default function OverviewCapture() {
       inspectionId: inspection.id,
       purpose: 'overview',
       caption: currentShot,
-      file: pending.file,
+      file,
     })
     setRunBusy(false)
     if (error) return setError(error.message)
-    clearPending()
     await refresh()
-    if (andAdvance) advance()
+    if (!hadPhotos) advance()
   }
 
   return (
@@ -187,50 +178,44 @@ export default function OverviewCapture() {
           </div>
           <h2 className="insp__runprompt">{currentShot}</h2>
 
-          {pending ? (
+          {currentPhotos.length > 0 && (
             <>
-              <img className="insp__runpreview" src={pending.url} alt={currentShot} />
-              <div className="insp__capture">
-                <button type="button" className="auth__btn" onClick={() => keep(true)} disabled={runBusy}>
-                  <Check size={15} aria-hidden="true" /> {runBusy ? 'Saving…' : 'Keep & continue'}
-                </button>
-                <button type="button" className="auth__btn auth__btn--ghost" onClick={() => keep(false)} disabled={runBusy}>
-                  Keep &amp; add another
-                </button>
-                <button type="button" className="auth__btn auth__btn--ghost" onClick={clearPending} disabled={runBusy}>
-                  <RotateCcw size={15} aria-hidden="true" /> Retake
-                </button>
+              <div className="insp__thumbs">
+                {currentPhotos.map((m) => (
+                  <span key={m.id} className="insp__thumbwrap">
+                    {m.url && <img className="insp__thumb" src={m.url} alt={currentShot} loading="lazy" />}
+                    <button type="button" className="insp__thumbdel" onClick={() => deletePhoto(m)} aria-label="Remove photo">
+                      <X size={12} aria-hidden="true" />
+                    </button>
+                  </span>
+                ))}
               </div>
-            </>
-          ) : (
-            <>
-              {currentPhotos.length > 0 && (
-                <>
-                  <div className="insp__thumbs">
-                    {currentPhotos.map((m) => (
-                      <span key={m.id} className="insp__thumbwrap">
-                        {m.url && <img className="insp__thumb" src={m.url} alt={currentShot} loading="lazy" />}
-                        <button type="button" className="insp__thumbdel" onClick={() => deletePhoto(m)} aria-label="Remove photo">
-                          <X size={12} aria-hidden="true" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <p className="auth__hint">{currentPhotos.length} photo{currentPhotos.length > 1 ? 's' : ''} for this shot.</p>
-                </>
-              )}
-              <PhotoPicker
-                onPick={(files) => stagePending(files?.[0])}
-                takeLabel={currentPhotos.length ? 'Take another' : 'Take photo'}
-                uploadLabel="Upload"
-              />
-              <div className="insp__capture">
-                <button type="button" className={`auth__btn ${currentPhotos.length ? '' : 'auth__btn--ghost'}`} onClick={advance}>
-                  {currentPhotos.length ? 'Next shot →' : 'Skip this shot'}
-                </button>
-              </div>
+              <p className="auth__hint">
+                <Check size={13} aria-hidden="true" /> {currentPhotos.length} photo{currentPhotos.length > 1 ? 's' : ''} saved for this shot.
+              </p>
             </>
           )}
+
+          {runBusy ? (
+            <p className="auth__hint" aria-busy="true">Saving…</p>
+          ) : (
+            <PhotoPicker
+              onPick={(files) => captureRun(files?.[0])}
+              takeLabel={currentPhotos.length ? 'Take another' : 'Take photo'}
+              uploadLabel="Upload"
+            />
+          )}
+
+          <div className="insp__capture">
+            {runIdx > 0 && (
+              <button type="button" className="auth__btn auth__btn--ghost" onClick={goBack} disabled={runBusy}>
+                ← Back
+              </button>
+            )}
+            <button type="button" className={`auth__btn ${currentPhotos.length ? '' : 'auth__btn--ghost'}`} onClick={advance} disabled={runBusy}>
+              {currentPhotos.length ? 'Next shot →' : 'Skip this shot'}
+            </button>
+          </div>
         </section>
       ) : (
         runShots.length > 0 && (

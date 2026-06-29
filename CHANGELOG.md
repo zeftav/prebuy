@@ -3,6 +3,16 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.32.3] — 2026-06-28
+
+### Changed
+- **Guided photo walkthrough is faster — removed the redundant in-app confirm.** iOS already makes you
+  confirm "Use Photo" in the native camera, so the in-app "Keep & continue" was a second confirmation of
+  the same thing. Now a captured shot uploads immediately; the **first photo of a shot auto-advances** to
+  the next (the fast path), while **"Take another"** adds extra angles to the same shot without advancing.
+  Added a **"← Back"** control to revisit a shot; retake = remove the photo and reshoot (or via the
+  per-shot list below). `OverviewCapture` only; frontend, no deploy. Help FAQ updated.
+
 ## [0.32.2] — 2026-06-28
 
 ### Fixed

@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.32.3',
+    date: '2026-06-28',
+    title: 'Faster photo walkthrough',
+    items: [
+      'The guided photo walkthrough is quicker now: after you take a shot it saves and moves to the next one automatically — no more “Keep & continue” tap (your phone’s camera already confirmed the photo).',
+      'Need more than one angle? Tap “Take another” to add to the same shot. Use “← Back” to revisit a shot, or remove a photo and reshoot.',
+    ],
+  },
+  {
     version: '0.32.1',
     date: '2026-06-28',
     title: 'Loose-ends badge on the dashboard',
