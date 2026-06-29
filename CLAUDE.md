@@ -396,6 +396,28 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   item + soft publish reminder when open. `report` edge fn returns opted-in non-dismissed follow-ups;
   `ReportView` renders **"Recommended for further evaluation."** Separate from `inspection_items` so
   findings stay clean. ⚠️ **Run migration 021 + redeploy `report` (JWT OFF).**
+- Session 3 cont. — **Dashboard "loose ends" badge** (v0.32.1): `followups.js` `openFollowupCounts(orgId)`
+  (one query/shop) + pure `tallyByInspection`; Dashboard per-row open-follow-up badge. Frontend only.
+- Session 3 cont. — **Research "Load failed" message** (v0.32.2): `researchAsset` now translates a dropped
+  fetch into an actionable message (weak-signal hint) instead of the raw browser error. Frontend only.
+- Session 3 cont. — **Faster guided photo walkthrough** (v0.32.3, frontend only): drop the redundant in-app
+  "Keep & continue" (iOS already confirms "Use Photo"). `OverviewCapture` run mode: capture → upload →
+  **first photo of a shot auto-advances**; "Take another" adds extras; new "← Back". Help updated.
+- Session 3 cont. — **Bulk logbook scanning** (v0.33.0, frontend only — no deploy). A full 80-100pp book
+  didn't fit the vision fn's per-request cap. `logbooks.js`: pure `chunk`/`mergeExtractDrafts` (+tests) +
+  `extractLogbooksBatched` (sequential batches, `onProgress`, `partial` flag). `SCAN_BATCH_SIZE=12`.
+  `LogbookAudit` ScanImport: limited-concurrency bulk upload + batched read, progress bars, partial notice,
+  clearer "Upload pages" copy (calls the existing `structure-logbook` fn N times).
+- Session 3 cont. — **Logbook page manager + compiled PDF** (v0.34.0). Migration `022`
+  (`media.sort_order`/`rotation`/`show_on_report` + `logbook_pdf` purpose). `lib/media.js`
+  `listMediaByPurpose`/`updateMedia`/`sortOrder`. `lib/logbookpdf.js`: client-side compile via
+  **lazy-imported `pdf-lib`** (own ~420KB chunk), pages processed one-at-a-time + downscaled (canvas→JPEG,
+  rotation baked in) so a 100pp book compiles on a phone; pure `normalizeRotation`/`rotateStep`/
+  `reorderUpdates` (+tests, 174 total). `LogbookAudit` "Logbook pages & PDF": rotate/reorder/delete/add +
+  compile-with-progress + PDF card (download, "Show on report" toggle, re-compile). `report` edge fn
+  returns inspection-level `documents` (flagged `logbook_pdf`, signed); `ReportView` Part 1 **Records**
+  section. **PDF = page manager + internal + optional-on-report** (Brett's call). ⚠️ **Run migration 022 +
+  redeploy `report` (JWT OFF)** — one redeploy also covers v0.32.0 follow-ups. New dep: `pdf-lib`.
   **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
   Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 

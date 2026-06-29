@@ -67,7 +67,7 @@ export default function ReportView() {
     )
   }
 
-  const { shop, inspection, items, overview, events = [], followups = [] } = data
+  const { shop, inspection, items, overview, events = [], followups = [], documents = [] } = data
   const ordered = orderByFinancialRisk(items)
   const discrepancies = ordered.filter((i) => i.status === 'discrepancy')
   const monitors = ordered.filter((i) => i.status === 'monitor')
@@ -102,7 +102,7 @@ export default function ReportView() {
     })
     .filter((b) => b.rows.length)
   // Part 1 is worth a header if there's any profile data, a maintenance timeline, or photos.
-  const hasPart1 = hasProfile || events.length > 0 || overview.length > 0
+  const hasPart1 = hasProfile || events.length > 0 || overview.length > 0 || documents.length > 0
 
   return (
     <main className="report">
@@ -247,6 +247,20 @@ export default function ReportView() {
               {schema.equipmentGroups.map((g) => (
                 <EquipmentGroup key={g.key} title={g.title} rows={profile.equipment[g.key]} />
               ))}
+            </section>
+          )}
+
+          {documents.length > 0 && (
+            <section className="report__section">
+              <h2>Records</h2>
+              <ul className="report__attachments">
+                {documents.map((d, i) => (
+                  <li key={i}>
+                    <Paperclip size={13} aria-hidden="true" />{' '}
+                    <a href={d.url} target="_blank" rel="noreferrer">{d.name}</a>
+                  </li>
+                ))}
+              </ul>
             </section>
           )}
 

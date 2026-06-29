@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.34.0',
+    date: '2026-06-28',
+    title: 'Logbook page manager + PDF',
+    items: [
+      'New “Logbook pages & PDF” section in the Logbook audit: rotate a sideways page, reorder them, or drop a bad shot, then compile the whole stack into one PDF copy of the logbook.',
+      'The PDF is stored with the inspection, and you can flip “Show on report” to include it as a download link for the buyer. Re-compile any time after changes.',
+      'Big logbooks are handled gently — pages are shrunk and added one at a time so even an 80–100-page book compiles on your phone.',
+    ],
+  },
+  {
     version: '0.33.0',
     date: '2026-06-28',
     title: 'Scan a whole logbook at once',

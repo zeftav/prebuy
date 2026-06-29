@@ -57,7 +57,7 @@ Deno.serve(async (req: Request) => {
       .eq('inspection_id', insp.id),
     admin
       .from('media')
-      .select('storage_path, kind, purpose, caption, inspection_item_id')
+      .select('storage_path, kind, purpose, caption, inspection_item_id, show_on_report')
       .eq('inspection_id', insp.id),
     admin
       .from('logbook_events')
@@ -85,6 +85,12 @@ Deno.serve(async (req: Request) => {
   const overview = (media ?? [])
     .filter((m) => m.purpose === 'overview')
     .map((m) => ({ caption: m.caption, url: withUrl(m) }))
+
+  // Inspection-level documents opted onto the report (e.g. the compiled logbook PDF).
+  const documents = (media ?? [])
+    .filter((m) => m.purpose === 'logbook_pdf' && m.show_on_report)
+    .map((m) => ({ name: m.caption || 'Document', url: withUrl(m) }))
+    .filter((d) => d.url)
 
   const photosByItem = new Map<string, string[]>()
   const filesByItem = new Map<string, { url: string; name: string }[]>()
@@ -147,6 +153,7 @@ Deno.serve(async (req: Request) => {
       }))
       .sort((a, b) => String(b.event_date ?? '').localeCompare(String(a.event_date ?? ''))),
     overview,
+    documents,
     // "Recommended for further evaluation" — opted-in, non-dismissed follow-ups.
     followups: (followups ?? []).map((f) => ({
       note: f.note,

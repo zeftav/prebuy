@@ -1242,3 +1242,78 @@
   border-radius: 999px;
   transition: width 0.25s ease;
 }
+
+/* ── Logbook page manager + compiled PDF ──────────────────────────────── */
+.lb__pages { margin-top: 8px; }
+.lb__pagegrid {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+.lb__page {
+  position: relative;
+  border: 1px solid var(--line, #e4e8ee);
+  border-radius: 10px;
+  padding: 6px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.lb__pagenum {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 1;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+.lb__pageimg {
+  width: 100%;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: #f3f4f6;
+}
+.lb__pagebtns {
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+.lb__pdfcard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line, #e4e8ee);
+  border-radius: 10px;
+  background: var(--accent-bg, #f7f5ff);
+}
+.lb__pdfmain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.lb__pdftoggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}

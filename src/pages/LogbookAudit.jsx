@@ -7,7 +7,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, Check } from 'lucide-react'
+import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, Check, RotateCw, ArrowUp, ArrowDown, FileText, Download, FileStack } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
   listLogbooks, addLogbook, deleteLogbook,
@@ -16,7 +16,8 @@ import {
   LOGBOOK_KINDS, EVENT_CATEGORIES, POSITIONAL_KINDS,
 } from '../lib/logbooks.js'
 import { normalizeProfile, engineLabel, propLabel } from '../lib/profile.js'
-import { uploadMedia, signedUrlsFor } from '../lib/media.js'
+import { uploadMedia, signedUrlsFor, listMediaByPurpose, updateMedia, deleteMedia } from '../lib/media.js'
+import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import './auth.css'
 import './inspections.css'
@@ -115,6 +116,8 @@ export default function LogbookAudit() {
       </div>
 
       <ScanImport inspection={inspection} onAddBook={onAddBook} onAddEvent={onAddEvent} />
+
+      <LogbookPages inspection={inspection} />
 
       {/* Reconciliation */}
       <section className="insp__section">
@@ -404,6 +407,181 @@ function ScanImport({ inspection, onAddBook, onAddEvent }) {
             </button>
             <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setPhase('idle')}>Discard</button>
           </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
+// Logbook page manager: the captured logbook page photos as an orderable,
+// rotatable set, compiled into one downloadable PDF (a digital copy of the book).
+// The PDF is stored internally and can optionally appear on the customer report.
+function LogbookPages({ inspection }) {
+  const [pages, setPages] = useState([])
+  const [pdf, setPdf] = useState(null) // current compiled PDF media row (or null)
+  const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [progress, setProgress] = useState(null)
+  const [error, setError] = useState(null)
+
+  async function refresh() {
+    const [{ data: pg }, { data: docs }] = await Promise.all([
+      listMediaByPurpose(inspection.id, 'logbook'),
+      listMediaByPurpose(inspection.id, 'logbook_pdf'),
+    ])
+    setPages(pg)
+    setPdf(docs[0] ?? null)
+    setLoading(false)
+  }
+  useEffect(() => {
+    refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inspection.id])
+
+  async function addPages(files) {
+    const list = Array.from(files ?? [])
+    if (!list.length) return
+    setAdding(true)
+    setError(null)
+    let order = pages.length
+    for (const f of list) {
+      await uploadMedia({ orgId: inspection.org_id, inspectionId: inspection.id, purpose: 'logbook', file: f, sortOrder: order++ })
+    }
+    setAdding(false)
+    refresh()
+  }
+
+  async function rotate(p) {
+    const rotation = rotateStep(p.rotation)
+    setPages((prev) => prev.map((x) => (x.id === p.id ? { ...x, rotation } : x)))
+    await updateMedia(p.id, { rotation })
+  }
+
+  async function remove(p) {
+    setPages((prev) => prev.filter((x) => x.id !== p.id))
+    await deleteMedia(p)
+  }
+
+  async function move(idx, dir) {
+    const j = idx + dir
+    if (j < 0 || j >= pages.length) return
+    const next = [...pages]
+    ;[next[idx], next[j]] = [next[j], next[idx]]
+    setPages(next)
+    for (const u of reorderUpdates(next)) await updateMedia(u.id, { sort_order: u.sort_order })
+  }
+
+  async function compile() {
+    if (!pages.length) return
+    setBusy(true)
+    setError(null)
+    setProgress({ done: 0, total: pages.length })
+    const { blob, error } = await compileLogbookPdf(
+      pages.map((p) => ({ url: p.url, rotation: p.rotation })),
+      { onProgress: (pr) => setProgress(pr) },
+    )
+    if (error) {
+      setBusy(false)
+      setProgress(null)
+      return setError(error.message)
+    }
+    const keepOnReport = pdf?.show_on_report ?? false
+    if (pdf) await deleteMedia(pdf) // replace the previous compile
+    const file = new File([blob], 'logbook.pdf', { type: 'application/pdf' })
+    const { data, error: upErr } = await uploadMedia({
+      orgId: inspection.org_id,
+      inspectionId: inspection.id,
+      purpose: 'logbook_pdf',
+      caption: 'Logbook (compiled)',
+      file,
+    })
+    setBusy(false)
+    setProgress(null)
+    if (upErr) return setError(upErr.message)
+    if (data && keepOnReport) {
+      await updateMedia(data.id, { show_on_report: true })
+      data.show_on_report = true
+    }
+    setPdf(data ?? null)
+  }
+
+  async function toggleReport() {
+    if (!pdf) return
+    const next = !pdf.show_on_report
+    setPdf({ ...pdf, show_on_report: next })
+    await updateMedia(pdf.id, { show_on_report: next })
+  }
+
+  if (loading) return null
+
+  return (
+    <section className="insp__section lb__pages">
+      <div className="insp__sectionhead">
+        <h2><FileStack size={18} aria-hidden="true" /> Logbook pages &amp; PDF</h2>
+      </div>
+      <p className="auth__hint">
+        Tidy the scanned pages — rotate a sideways shot, reorder, or drop a dud — then compile them into a
+        single PDF copy of the logbook. Stored with the inspection; optionally included on the customer report.
+      </p>
+
+      {error && <div className="auth__error" role="alert">{error}</div>}
+
+      {pages.length === 0 ? (
+        <p className="auth__hint">No logbook pages yet — scan or upload them in “Scan &amp; import” above, or add them here.</p>
+      ) : (
+        <ol className="lb__pagegrid">
+          {pages.map((p, i) => (
+            <li key={p.id} className="lb__page">
+              <span className="lb__pagenum">{i + 1}</span>
+              {p.url && <img className="lb__pageimg" src={p.url} alt={`Page ${i + 1}`} loading="lazy" style={{ transform: `rotate(${p.rotation || 0}deg)` }} />}
+              <div className="lb__pagebtns">
+                <button type="button" className="insp__flag" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up" title="Move up"><ArrowUp size={14} aria-hidden="true" /></button>
+                <button type="button" className="insp__flag" onClick={() => move(i, 1)} disabled={i === pages.length - 1} aria-label="Move down" title="Move down"><ArrowDown size={14} aria-hidden="true" /></button>
+                <button type="button" className="insp__flag" onClick={() => rotate(p)} aria-label="Rotate" title="Rotate"><RotateCw size={14} aria-hidden="true" /></button>
+                <button type="button" className="insp__flag" onClick={() => remove(p)} aria-label="Remove page" title="Remove"><Trash2 size={14} aria-hidden="true" /></button>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+
+      <div className="insp__capture">
+        <PhotoPicker
+          onPick={addPages}
+          multiple
+          busy={adding}
+          takeLabel="Add a page"
+          uploadLabel="Add pages"
+          className="auth__btn auth__btn--ghost insp__walkthrough"
+        />
+        {pages.length > 0 && (
+          <button type="button" className="auth__btn" onClick={compile} disabled={busy}>
+            <FileText size={15} aria-hidden="true" /> {busy ? 'Compiling…' : pdf ? 'Re-compile PDF' : 'Compile PDF'}
+          </button>
+        )}
+      </div>
+
+      {progress && (
+        <div className="auth__hint" aria-busy="true">
+          Building PDF — page {progress.done} of {progress.total}…
+          <div className="lb__progressbar"><span style={{ width: `${progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%` }} /></div>
+        </div>
+      )}
+
+      {pdf && (
+        <div className="lb__pdfcard">
+          <FileText size={18} aria-hidden="true" />
+          <div className="lb__pdfmain">
+            <a href={pdf.url} target="_blank" rel="noreferrer">
+              <Download size={13} aria-hidden="true" /> Logbook PDF ({pages.length} page{pages.length === 1 ? '' : 's'})
+            </a>
+            <span className="auth__hint">Compiled from the pages above. Re-compile after any change.</span>
+          </div>
+          <label className="lb__pdftoggle">
+            <input type="checkbox" checked={!!pdf.show_on_report} onChange={toggleReport} />
+            Show on report
+          </label>
         </div>
       )}
     </section>

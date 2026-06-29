@@ -37,6 +37,10 @@ const FAQ = [
     a: 'Open an inspection from your dashboard. We build a checklist matched to the aircraft and order it by financial risk, so the biggest-dollar items come first. Mark each item OK, Monitor, Discrepancy, or N/A, and add notes — your progress saves automatically. Dictation and photos are coming next.',
   },
   {
+    q: 'Can I make a PDF copy of the logbook?',
+    a: 'Yes. In the Logbook audit, the “Logbook pages & PDF” section shows the page photos you scanned. Rotate a sideways page, reorder them, or remove a bad shot, then tap “Compile PDF” to build a single PDF copy of the book. It’s stored with the inspection; flip “Show on report” to include it as a download link for the buyer, and re-compile any time after you change the pages. Large logbooks (80–100 pages) are fine — pages are shrunk and added one at a time so it compiles on your phone.',
+  },
+  {
     q: 'How does the logbook audit work?',
     a: 'Open an inspection and tap “Logbook audit”. Add each physical logbook (airframe, engine, propeller) with its date and tach range — we reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). You can also record notable events like ADs, Form 337s, overhauls, prop strikes, and damage.',
   },

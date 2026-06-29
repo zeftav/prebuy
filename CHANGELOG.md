@@ -3,6 +3,27 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.34.0] — 2026-06-28
+
+### Added
+- **Logbook page manager + compiled PDF.** The scanned logbook pages can now be reordered, rotated, and
+  pruned, then compiled into a single PDF copy of the book — stored with the inspection and optionally
+  shown (as a download link) on the customer report.
+  - Migration `022_media_logbook_pdf.sql` — adds `media.sort_order`, `media.rotation`,
+    `media.show_on_report`, and a `logbook_pdf` value to the `media_purpose` check.
+  - `lib/media.js`: `listMediaByPurpose`, `updateMedia`, `sortOrder` on `uploadMedia`; selects the new cols.
+  - `lib/logbookpdf.js`: client-side PDF compile via **lazy-imported `pdf-lib`** (own chunk). Pages are
+    processed **one at a time and downscaled** (canvas → JPEG, rotation baked in) so an 80–100-page book
+    won't exhaust phone memory. Pure tested helpers `normalizeRotation`/`rotateStep`/`reorderUpdates`.
+  - `LogbookAudit`: "Logbook pages & PDF" manager (thumbnail grid, rotate / reorder / delete / add pages,
+    compile with progress, current-PDF card with download + "Show on report" toggle + re-compile).
+  - `report` edge fn returns inspection-level `documents` (logbook PDFs flagged `show_on_report`, signed);
+    `ReportView` renders a **Records** section in Part 1.
+  - New dependency: `pdf-lib` (lazy chunk, ~420 KB — not in the main bundle).
+
+### Deploy
+- ⚠️ **Run migration `022_media_logbook_pdf.sql`** and **redeploy `report` (Verify JWT OFF)**.
+
 ## [0.33.0] — 2026-06-28
 
 ### Added
