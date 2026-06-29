@@ -88,6 +88,31 @@ describe('reconcileLogbooks', () => {
     )
     expect(groupBy(groups, 'engine').summary.count).toBe(1)
   })
+
+  it('flags a book with no readable times (can\'t place in sequence)', () => {
+    const { issues } = reconcileLogbooks([
+      book(0, 1000),
+      { kind: 'airframe', label: 'Book 2', start_tach: null, end_tach: null },
+    ])
+    const untimed = issues.filter((i) => i.type === 'untimed')
+    expect(untimed).toHaveLength(1)
+    expect(untimed[0].message).toContain('Book 2')
+  })
+
+  it('flags airframe coverage when the earliest entry is well above zero', () => {
+    const { issues } = reconcileLogbooks([book(1200, 2400)])
+    expect(issues.some((i) => i.type === 'coverage')).toBe(true)
+  })
+
+  it('does NOT flag coverage when airframe starts near zero', () => {
+    const { issues } = reconcileLogbooks([book(2, 1500)])
+    expect(issues.some((i) => i.type === 'coverage')).toBe(false)
+  })
+
+  it('does NOT flag coverage for an engine/prop that starts later (replacement)', () => {
+    const { issues } = reconcileLogbooks([{ kind: 'engine', start_tach: 1500, end_tach: 2400 }], { engineCount: 1 })
+    expect(issues.some((i) => i.type === 'coverage')).toBe(false)
+  })
 })
 
 describe('groupLabel', () => {

@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.36.1',
+    date: '2026-06-29',
+    title: 'Smarter logbook continuity checks',
+    items: [
+      'The logbook reconciliation now flags a book whose times couldn’t be read — so you know it can’t be placed in the sequence and should be re-checked or entered by hand.',
+      'For the airframe, if the earliest entry isn’t near zero hours, we now advise that an early logbook may be missing (records may not reach back to the aircraft’s first flight). We don’t flag this for engines/props, since a replacement legitimately starts later.',
+      'Scanning books out of order is fine — reconciliation sorts by time, so a missing or duplicated book still gets caught.',
+    ],
+  },
+  {
     version: '0.36.0',
     date: '2026-06-29',
     title: 'AD/337 scans + sharper logbook reads',

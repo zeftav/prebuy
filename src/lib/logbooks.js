@@ -34,6 +34,14 @@ function num(v) {
   return Number.isFinite(n) ? n : null
 }
 
+// A genuinely-recorded tach value (null/blank/0 = not read). Unlike num(), this
+// doesn't coerce null→0, so it's the right test for "did we read a time?".
+function hasTach(v) {
+  if (v == null || v === '') return false
+  const n = Number(v)
+  return Number.isFinite(n) && n !== 0
+}
+
 /**
  * Reconcile one type's logbooks (sorted by start tach, then date). Returns the
  * sorted books plus gaps/overlaps between consecutive books and total tracked
@@ -66,8 +74,16 @@ export function summarizeKind(books) {
   const lastEnd = ends.length ? Math.max(...ends) : null
   const tracked = firstStart != null && lastEnd != null ? Math.round((lastEnd - firstStart) * 10) / 10 : null
 
-  return { sorted, gaps, overlaps, firstStart, lastEnd, tracked, count: sorted.length }
+  // Books with no readable times can't be placed in the sequence → surfaced so the
+  // inspector knows continuity can't be verified for them (and to re-check a scan).
+  const untimed = sorted.filter((b) => !hasTach(b.start_tach) && !hasTach(b.end_tach))
+
+  return { sorted, gaps, overlaps, firstStart, lastEnd, tracked, count: sorted.length, untimed }
 }
+
+// Earliest airframe entry above this (hrs) suggests records may not reach back to
+// the aircraft's first flight. A few hours of test/ferry time is normal.
+const START_COVERAGE_TOL = 5
 
 /** Label a logbook group by kind + (for engine/prop on a twin) position. Pure. */
 export function groupLabel(kind, position, engineCount = 1, layout = 'conventional') {
@@ -96,6 +112,14 @@ export function reconcileLogbooks(logbooks, { engineCount = 1, layout = 'convent
     }
     for (const o of s.overlaps) {
       issues.push({ kind, type: 'overlap', message: `${label}: ${o.hours.toFixed(1)} hr overlap around tach ${o.fromTach}–${o.toTach} — entries may be duplicated.` })
+    }
+    for (const b of s.untimed) {
+      issues.push({ kind, type: 'untimed', message: `${label}: couldn't read times for "${b.label || kindLabel(kind)}" — can't place it in the sequence; check the scan or enter its times.` })
+    }
+    // Coverage back to manufacture — airframe only (engine/prop replacements
+    // legitimately start later, so we don't flag those).
+    if (kind === 'airframe' && s.firstStart != null && s.firstStart > START_COVERAGE_TOL) {
+      issues.push({ kind, type: 'coverage', message: `${label}: earliest entry read is at ${s.firstStart.toFixed(1)} hrs — confirm the records go back to the aircraft's first flight (an early logbook may be missing).` })
     }
   }
 

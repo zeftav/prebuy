@@ -3,6 +3,16 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.36.1] — 2026-06-29
+
+### Added
+- **More logbook continuity checks** (`reconcileLogbooks`, pure + tested): flags a book with **no
+  readable times** (can't be placed in the sequence — re-scan or enter by hand), and an **airframe
+  coverage** advisory when the earliest airframe entry is well above zero (an early logbook may be
+  missing). Coverage is airframe-only — engine/prop replacements legitimately start later. Out-of-order
+  scanning is already handled (reconciliation sorts by time). `summarizeKind` returns `untimed`;
+  `hasTach` helper (raw, doesn't coerce null→0). Frontend only — no migration/deploy.
+
 ## [0.36.0] — 2026-06-29
 
 ### Added
