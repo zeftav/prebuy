@@ -428,7 +428,10 @@ export async function researchAsset(inspection, orgId) {
     if (e?.name === 'AbortError') {
       return { data: null, error: new Error('Research took too long and timed out. Try again, or fill the profile manually.') }
     }
-    return { data: null, error: e instanceof Error ? e : new Error('Network error') }
+    // A failed fetch surfaces as a cryptic browser message ("Load failed" on
+    // Safari, "Failed to fetch" on Chrome) — usually a dropped connection on weak
+    // signal during this long (web-search) call. Give an actionable message.
+    return { data: null, error: new Error('Couldn’t reach the research service — likely a weak connection during this long lookup. Try again on stronger signal/Wi-Fi, or fill the profile manually.') }
   } finally {
     clearTimeout(timer)
   }

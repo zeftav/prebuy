@@ -3,6 +3,15 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.32.2] — 2026-06-28
+
+### Fixed
+- **"Research with AI" showed a cryptic "Load failed".** When the long research call (Claude + web
+  search) dropped at the network level — typically a weak connection — `researchAsset` surfaced the raw
+  browser error. Now it returns an actionable message ("…likely a weak connection during this long
+  lookup. Try again on stronger signal/Wi-Fi, or fill the profile manually."). Frontend only; does not
+  change the underlying cause (see edge-function logs if it persists on a strong connection).
+
 ## [0.32.1] — 2026-06-28
 
 ### Added
