@@ -45,6 +45,10 @@ const FAQ = [
     a: 'Yes — it happens automatically when you scan. Each logbook gets its own PDF, compiled from the pages you snapped, stored with the inspection. Flip “Show on report” on a logbook to include its PDF as a download link for the buyer. On a logbook’s card you can “Add pages” to append more later (it re-compiles and reads the new pages), or “Manage pages” to rotate a sideways page, reorder, or remove one and re-compile. Large books (80–100 pages) are fine — pages are shrunk and added one at a time so it builds on your phone.',
   },
   {
+    q: 'What happens if the scan can’t read part of a logbook?',
+    a: 'It tells you. When a figure or entry is too smudged or faded to read confidently, the AI leaves it blank rather than guessing, and the logbook shows a “Some entries were hard to read — verify against the PDF” note listing what was unclear. The full-resolution PDF of every page is always kept, so you can read the original yourself and fill in or correct anything — the scan is a starting draft, not the source of truth. Tap “Mark reviewed” once you’ve checked it.',
+  },
+  {
     q: 'How do I capture a whole logbook quickly?',
     a: 'When scanning, tap “Open camera” for the in-app camera — it stays open so you can shoot page after page without jumping in and out for each one. Or use “Add pages” to select many at once from your camera roll (handy if you photographed the book ahead of time). Picked the wrong type? Open the logbook and tap “Change type” to switch it (airframe ↔ engine ↔ prop / position) — we relabel its PDF and re-tag its events. You can also scan AD compliance reports and Form 337s as their own records; we read each AD/337 out as a dated event. Deleting a page, a PDF, or a whole logbook always asks you to confirm first, so it’s hard to lose a scan by a mis-tap.',
   },

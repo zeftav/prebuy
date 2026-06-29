@@ -44,14 +44,16 @@ Run in order. All are idempotent (safe to re-run).
       (powers the **platform-owner dashboard**). RLS on, no client policies. (run 2026-06-28)
 - [ ] ⬜ `020_marine_mic_seed.sql` — seeds **HUN → Hunter Marine** (verified) so the boat HIN lookup
       names a real builder before the full USCG list is loaded. Idempotent. No edge fn. (2026-06-28)
-- [ ] ⬜ `021_inspection_followups.sql` — `inspection_followups` table + org-scoped RLS (per-inspection
+- [x] ✅ `021_inspection_followups.sql` — `inspection_followups` table + org-scoped RLS (per-inspection
       "to-investigate" list). Idempotent. (v0.32.0, 2026-06-28)
-- [ ] ⬜ `022_media_logbook_pdf.sql` — `media.sort_order` / `rotation` / `show_on_report` + `logbook_pdf`
+- [x] ✅ `022_media_logbook_pdf.sql` — `media.sort_order` / `rotation` / `show_on_report` + `logbook_pdf`
       purpose (logbook page manager + compiled PDF). Idempotent. (v0.34.0, 2026-06-28)
-- [ ] ⬜ `023_media_logbook_link.sql` — `media.logbook_id` (per-logbook scans/PDFs). Idempotent.
+- [x] ✅ `023_media_logbook_link.sql` — `media.logbook_id` (per-logbook scans/PDFs). Idempotent.
       (v0.35.0, 2026-06-29)
-- [ ] ⬜ `024_logbook_record_kinds.sql` — extend `logbooks.kind` with `ad` + `form_337` (scan AD reports
+- [x] ✅ `024_logbook_record_kinds.sql` — extend `logbooks.kind` with `ad` + `form_337` (scan AD reports
       & 337s as their own records). Idempotent. (v0.36.0, 2026-06-29)
+- [ ] ⬜ `025_logbook_review_note.sql` — `logbooks.review_note` (flag what a scan couldn't read).
+      Idempotent. (v0.37.0, 2026-06-29)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
@@ -64,8 +66,10 @@ Run in order. All are idempotent (safe to re-run).
         migration (profile lives in the existing `inspections.attributes` JSONB).
 - [x] ✅ `structure-logbook` — Verify JWT **ON**. Logbook OCR import (Claude vision). (2026-06-27)
   - [x] ✅ Redeployed `structure-logbook` for v0.14.0 (scan-to-pre-fill specs/currency/equipment). (2026-06-27)
-  - [ ] 🔁 **REDEPLOY `structure-logbook` (JWT ON) for v0.36.0** — context-aware reads (engine/prop report
-        their own time; AD/337 read as events). Needs migration 024. Reuses `ANTHROPIC_API_KEY`.
+  - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.36.0** (2026-06-29) — context-aware reads
+        (engine/prop report their own time; AD/337 read as events).
+  - [ ] 🔁 **REDEPLOY `structure-logbook` (JWT ON) for v0.37.0** — returns `unclear` (flags illegible
+        reads → logbook "verify against PDF" advisory). Needs migration 025.
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile
@@ -73,7 +77,7 @@ Run in order. All are idempotent (safe to re-run).
   - [ ] 🔁 **REDEPLOY `research-asset` (JWT ON) for v0.30.3** — low effort + fewer searches (no timeout).
 - [ ] ⬜ **`structure-walkaround`** (new, v0.31.0) — Verify JWT **ON**. Dictate-the-whole-walk-around →
       parsed/mapped findings. Reuses `ANTHROPIC_API_KEY`. No migration. (2026-06-28)
-  - [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.32.0 + v0.34.0 + v0.35.0** — returns report-visible
+  - [x] ✅ **REDEPLOYED `report` (JWT OFF) for v0.32.0 + v0.34.0 + v0.35.0** (2026-06-29) — returns report-visible
         follow-ups ("Recommended for further evaluation") and inspection-level `documents` (compiled
         logbook PDFs flagged "Show on report" → Records section; v0.35.0 makes these per-logbook, no
         further fn change). One redeploy covers all. (needs migrations 021 + 022 + 023)

@@ -150,9 +150,16 @@ describe('mergeExtractDrafts', () => {
     expect(merged.logbooks).toHaveLength(2)
     expect(merged.events.map((e) => e.title)).toEqual(['A', 'B', 'C'])
   })
+  it('also concatenates the unclear notes', () => {
+    const merged = mergeExtractDrafts([
+      { logbooks: [], events: [], unclear: ['SMOH smudged'] },
+      { logbooks: [], events: [], unclear: ['last date unreadable'] },
+    ])
+    expect(merged.unclear).toEqual(['SMOH smudged', 'last date unreadable'])
+  })
   it('tolerates missing/null arrays and nullish input', () => {
-    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [] })
-    expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [] })
+    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [], unclear: [] })
+    expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [], unclear: [] })
   })
 })
 

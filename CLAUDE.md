@@ -442,6 +442,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   **Reorder fix:** InspectionDetail display order ranked once on load + held stable (was re-sorting live →
   item jumped on "Clean up with AI"). ⚠️ **Run migration 024 + redeploy `structure-logbook` (JWT ON)**;
   reorder fix is frontend-only. Backlog: **logbook time-tracking audit** (per-entry continuity; deferred).
+- Session 3 cont. — **Logbook continuity flags** (v0.36.1, frontend only): `reconcileLogbooks` flags an
+  untimed book (can't place in sequence) + airframe **coverage** advisory (earliest entry well above 0 →
+  early book may be missing; airframe-only — replacements start later). `summarizeKind.untimed` +
+  `hasTach` (+tests).
+- Session 3 cont. — **Flag unclear scan reads** (v0.37.0). Migration `025` (`logbooks.review_note`).
+  `structure-logbook` SCHEMA+prompt gain **`unclear`** (notes on present-but-illegible figures/entries);
+  scan flow stores them as `review_note` (append on amend); `LogbookCard` shows a "verify against the PDF"
+  advisory + "Mark reviewed". Full-res page PDF kept as source of truth. `extractLogbooks`/
+  `mergeExtractDrafts` carry `unclear` (+test). ⚠️ **Run migration 025 + redeploy `structure-logbook`
+  (JWT ON).** Backlog still open: per-entry time-tracking audit.
   **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
   Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 

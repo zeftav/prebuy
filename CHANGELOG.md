@@ -3,6 +3,20 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.37.0] — 2026-06-29
+
+### Added
+- **Logbook scans flag illegible reads.** `structure-logbook` now returns an `unclear` list — short
+  notes on anything present-but-not-readable (smudged figures, faded handwriting). The scan flow stores
+  it on the logbook (`logbooks.review_note`, migration `025`); the logbook card shows a **"Some entries
+  were hard to read — verify against the PDF"** advisory listing what was unclear, with **"Mark
+  reviewed"** to clear it (appends on amend). The full-res page PDF is always retained as the source of
+  truth. `lib/logbooks.js`: `extractLogbooks`/`mergeExtractDrafts` carry `unclear`; `listLogbooks` +
+  logbook selects return `review_note`.
+
+### Deploy
+- ⚠️ **Run migration `025_logbook_review_note.sql`** and **redeploy `structure-logbook` (Verify JWT ON)**.
+
 ## [0.36.1] — 2026-06-29
 
 ### Added

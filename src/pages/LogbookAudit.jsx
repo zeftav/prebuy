@@ -380,7 +380,13 @@ function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCa
       if (draft) {
         const span = spanFromDrafts(draft.logbooks)
         const next = mode === 'amend' ? mergeSpan(book, span) : span
-        await updateLogbook(book.id, next)
+        // Surface anything the AI couldn't confidently read, so the inspector
+        // verifies it against the PDF. Append on amend; cap length.
+        const unclear = (Array.isArray(draft.unclear) ? draft.unclear : []).slice(0, 10).join('; ')
+        const reviewNote = mode === 'amend'
+          ? ([book.review_note, unclear].filter(Boolean).join('; ') || null)
+          : (unclear || null)
+        await updateLogbook(book.id, { ...next, review_note: reviewNote })
         for (const ev of draft.events ?? []) {
           await addEvent(inspection, {
             logbookId: book.id,
@@ -569,6 +575,17 @@ function LogbookCard({ inspection, book, label, engineCount, layout, onAmend, on
           <Trash2 size={15} aria-hidden="true" />
         </ConfirmButton>
       </div>
+
+      {book.review_note && (
+        <div className="lb__review-flag">
+          <AlertTriangle size={15} aria-hidden="true" />
+          <div className="lb__review-main">
+            <strong>Some entries were hard to read — verify against the PDF.</strong>
+            <span className="auth__hint">{book.review_note}</span>
+          </div>
+          <button type="button" className="auth__toggle" onClick={() => onUpdate({ review_note: null })}>Mark reviewed</button>
+        </div>
+      )}
 
       {pdf && (
         <div className="lb__pdfcard">

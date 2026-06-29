@@ -154,7 +154,7 @@ function posFor(kind, position) {
 export async function listLogbooks(inspectionId) {
   const { data, error } = await supabase
     .from('logbooks')
-    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes')
+    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes, review_note')
     .eq('inspection_id', inspectionId)
   return { data: data ?? [], error }
 }
@@ -176,7 +176,7 @@ export async function addLogbook(inspection, draft) {
   const { data, error } = await supabase
     .from('logbooks')
     .insert(row)
-    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes')
+    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes, review_note')
     .single()
   return { data, error }
 }
@@ -190,7 +190,7 @@ export async function updateLogbook(id, patch) {
     .from('logbooks')
     .update(clean)
     .eq('id', id)
-    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes')
+    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes, review_note')
     .single()
   return { data, error }
 }
@@ -312,10 +312,11 @@ export function chunk(arr, size) {
  * them. Pure. Tolerates null/missing arrays.
  */
 export function mergeExtractDrafts(drafts) {
-  const out = { logbooks: [], events: [] }
+  const out = { logbooks: [], events: [], unclear: [] }
   for (const d of drafts ?? []) {
     if (Array.isArray(d?.logbooks)) out.logbooks.push(...d.logbooks)
     if (Array.isArray(d?.events)) out.events.push(...d.events)
+    if (Array.isArray(d?.unclear)) out.unclear.push(...d.unclear)
   }
   return out
 }
@@ -371,7 +372,7 @@ export async function extractLogbooks(imageUrls, orgId, context = null) {
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }
-    return { data: { logbooks: body.logbooks ?? [], events: body.events ?? [] }, error: null }
+    return { data: { logbooks: body.logbooks ?? [], events: body.events ?? [], unclear: body.unclear ?? [] }, error: null }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e : new Error('Network error') }
   }

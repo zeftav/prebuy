@@ -151,8 +151,17 @@ const SCHEMA = {
       },
       required: ['avionics', 'additional'],
     },
+    unclear: {
+      type: 'array',
+      description:
+        'Things you could NOT confidently read on these pages — smudged/faded figures, illegible ' +
+        'handwriting, a cut-off or blurry entry. One short note each, e.g. "Engine SMOH figure smudged ' +
+        'on the 2019 overhaul entry" or "Last airframe entry date unreadable". Empty array if everything ' +
+        'was legible. Do NOT include things simply absent from the pages — only things present but not readable.',
+      items: { type: 'string' },
+    },
   },
-  required: ['logbooks', 'events', 'specs', 'currency', 'equipment'],
+  required: ['logbooks', 'events', 'specs', 'currency', 'equipment', 'unclear'],
 }
 
 const EMPTY_SPECS = { total_time: 0, engine_smoh: 0, engine_notes: '', prop_since: 0, prop_notes: '', mgtow: 0, empty_weight: 0, useful_load: 0, fuel_capacity: 0 }
@@ -226,9 +235,11 @@ Deno.serve(async (req: Request) => {
         'teardowns, damage, AD compliance, major mods/STCs); ' +
         '(3) aircraft specs/times (total time, engine SMOH, prop, weights, fuel); ' +
         '(4) currency due-dates (annual, IFR pitot/static 91.411, transponder 91.413, ELT battery, O2 hydro); ' +
-        '(5) installed equipment, split into avionics vs additional, with short condition notes. ' +
+        '(5) installed equipment, split into avionics vs additional, with short condition notes; ' +
+        '(6) "unclear" — short notes on anything PRESENT on the pages you could not confidently read ' +
+        '(smudged/faded figures, illegible handwriting), so a human knows to verify it. ' +
         'Only report what is legible — do not guess. Use empty strings / 0 for anything you cannot ' +
-        'read. This is a draft a human will review.' +
+        'read, and add it to "unclear". This is a draft a human will review.' +
         contextLine,
     },
     ...images.map((url) => ({ type: 'image', source: { type: 'url', url } })),
@@ -259,6 +270,7 @@ Deno.serve(async (req: Request) => {
         avionics: Array.isArray(eq.avionics) ? eq.avionics : [],
         additional: Array.isArray(eq.additional) ? eq.additional : [],
       },
+      unclear: Array.isArray(result.unclear) ? result.unclear.filter((u: unknown) => typeof u === 'string' && u.trim()).map((u: string) => u.trim()) : [],
     })
   } catch (e) {
     const status = (e as { status?: number })?.status

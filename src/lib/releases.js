@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.37.0',
+    date: '2026-06-29',
+    title: 'Logbook scans flag what they couldn’t read',
+    items: [
+      'When a logbook scan can’t make out a figure or entry (smudged, faded, messy handwriting), it now tells you: the logbook shows a “Some entries were hard to read — verify against the PDF” note listing what was unclear.',
+      'Tap “Mark reviewed” once you’ve checked it against the page. The full-resolution PDF copy of every page is always kept, so nothing is lost — the AI read is just a starting draft.',
+    ],
+  },
+  {
     version: '0.36.1',
     date: '2026-06-29',
     title: 'Smarter logbook continuity checks',
