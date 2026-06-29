@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.35.0',
+    date: '2026-06-29',
+    title: 'Scan-driven logbooks',
+    items: [
+      'The Logbook audit is now scan-first and much simpler: tap “Scan a logbook,” pick what it is (airframe, engine #1, prop #2…), snap the pages, and we compile its PDF and read the times and notable events off the pages automatically.',
+      'Each logbook is its own scan with its own PDF. Open one and “Add pages” to append more later, or “Manage pages” to rotate, reorder, or remove a page and re-compile.',
+      'Entering logbooks by hand is gone — the data comes from the scan (and stays fully editable). Deleting a page, PDF, or logbook now asks you to confirm, so it’s hard to lose a scan by a mis-tap on the phone.',
+    ],
+  },
+  {
     version: '0.34.0',
     date: '2026-06-28',
     title: 'Logbook page manager + PDF',

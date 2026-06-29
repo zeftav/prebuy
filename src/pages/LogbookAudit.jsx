@@ -1,30 +1,51 @@
-// Logbook audit / research tool. Track an aircraft's records across multiple
-// logbooks per type, reconcile time continuity (gaps/overlaps), and capture
-// notable events (ADs, 337s, overhauls, prop strikes, damage).
+// Logbook audit / research tool — scan-driven.
 //
-// Photo→OCR import is a planned follow-up (see docs/backlog.md); for now entry is
-// structured/manual.
+// You build each logbook by SCANNING it: tap "Scan a logbook", pick its
+// type/position (airframe, engine #1, prop #2, …), snap the pages, and we compile
+// them into a per-logbook PDF and read the dates/times/events off the pages
+// (auto). Later you can re-open a logbook and add more pages (amend) — it
+// re-compiles and reads the new pages. Manual "add a logbook by hand" is gone (the
+// data comes from the scan); times and events stay editable, and you can still add
+// an event by hand. Reconciliation (gaps/overlaps) runs on the scanned data.
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, Check, RotateCw, ArrowUp, ArrowDown, FileText, Download, FileStack } from 'lucide-react'
+import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
-  listLogbooks, addLogbook, deleteLogbook,
+  listLogbooks, addLogbook, deleteLogbook, updateLogbook,
   listEvents, addEvent, deleteEvent,
-  reconcileLogbooks, kindLabel, categoryLabel, cleanDraftValue, extractLogbooksBatched,
-  LOGBOOK_KINDS, EVENT_CATEGORIES, POSITIONAL_KINDS,
+  reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
+  extractLogbooksBatched, spanFromDrafts, mergeSpan,
+  LOGBOOK_KINDS, EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
-import { normalizeProfile, engineLabel, propLabel } from '../lib/profile.js'
-import { uploadMedia, signedUrlsFor, listMediaByPurpose, updateMedia, deleteMedia } from '../lib/media.js'
+import { normalizeProfile, engineLabel } from '../lib/profile.js'
+import { uploadMedia, listMediaByLogbook, updateMedia, deleteMedia } from '../lib/media.js'
 import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import './auth.css'
 import './inspections.css'
 
 const fmtTach = (v) => (v == null ? '—' : Number(v).toFixed(1))
-const fmtRange = (b) =>
-  `${b.start_date || '?'} → ${b.end_date || '?'}  ·  tach ${fmtTach(b.start_tach)}–${fmtTach(b.end_tach)}`
+const fmtRange = (b) => {
+  const hasSpan = b.start_date || b.end_date || b.start_tach != null || b.end_tach != null
+  if (!hasSpan) return 'No times read yet'
+  return `${b.start_date || '?'} → ${b.end_date || '?'} · tach ${fmtTach(b.start_tach)}–${fmtTach(b.end_tach)}`
+}
+
+// Scan target options for the picker, from the aircraft's engine count + layout.
+function kindOptions(engineCount, layout) {
+  const opts = [{ kind: 'airframe', position: 0, label: 'Airframe' }]
+  if (engineCount > 1) {
+    for (let i = 1; i <= engineCount; i++) opts.push({ kind: 'engine', position: i, label: groupLabel('engine', i, engineCount, layout) })
+    for (let i = 1; i <= engineCount; i++) opts.push({ kind: 'propeller', position: i, label: groupLabel('propeller', i, engineCount, layout) })
+  } else {
+    opts.push({ kind: 'engine', position: 0, label: 'Engine' })
+    opts.push({ kind: 'propeller', position: 0, label: 'Propeller' })
+  }
+  opts.push({ kind: 'other', position: 0, label: 'Other' })
+  return opts
+}
 
 export default function LogbookAudit() {
   const { id } = useParams()
@@ -32,6 +53,13 @@ export default function LogbookAudit() {
   const [logbooks, setLogbooks] = useState([])
   const [events, setEvents] = useState([])
   const [state, setState] = useState('loading')
+  const [scan, setScan] = useState(null) // { mode:'new'|'amend', book? } | null
+
+  async function reload(inspId) {
+    const [{ data: lb }, { data: ev }] = await Promise.all([listLogbooks(inspId), listEvents(inspId)])
+    setLogbooks(lb)
+    setEvents(ev)
+  }
 
   useEffect(() => {
     let active = true
@@ -40,39 +68,38 @@ export default function LogbookAudit() {
       if (!active) return
       if (error || !insp) return setState('error')
       setInspection(insp)
-      const [{ data: lb }, { data: ev }] = await Promise.all([listLogbooks(insp.id), listEvents(insp.id)])
-      if (!active) return
-      setLogbooks(lb)
-      setEvents(ev)
-      setState('ready')
+      await reload(insp.id)
+      if (active) setState('ready')
     })()
     return () => {
       active = false
     }
   }, [id])
 
-  // Engine count/layout drive per-engine reconcile + position pickers. Seed from
-  // the FAA-derived attributes when the profile hasn't set a count yet.
   const { engineCount, layout } = useMemo(() => {
     const prof = normalizeProfile(inspection?.attributes?.profile)
     const seeded = Number(inspection?.attributes?.engine_count) || 1
     return { engineCount: Math.max(prof.engine_count, seeded), layout: prof.layout }
   }, [inspection])
 
-  const recon = useMemo(
-    () => reconcileLogbooks(logbooks, { engineCount, layout }),
-    [logbooks, engineCount, layout],
-  )
+  const recon = useMemo(() => reconcileLogbooks(logbooks, { engineCount, layout }), [logbooks, engineCount, layout])
 
-  async function onAddBook(draft) {
-    const { data, error } = await addLogbook(inspection, draft)
-    if (!error && data) setLogbooks((p) => [...p, data])
-    return error
+  async function onScanDone() {
+    setScan(null)
+    await reload(inspection.id)
   }
   async function onDeleteBook(book) {
+    // Clean up the book's Storage objects (pages + PDF) first; the media rows
+    // cascade-delete with the logbook.
+    const { data: media } = await listMediaByLogbook(book.id)
+    for (const m of media) await deleteMedia(m)
     setLogbooks((p) => p.filter((b) => b.id !== book.id))
-    const { error } = await deleteLogbook(book.id)
-    if (error) setLogbooks((p) => [...p, book])
+    setEvents((p) => p.filter((e) => e.logbook_id !== book.id))
+    await deleteLogbook(book.id)
+  }
+  async function onUpdateBook(book, patch) {
+    const { data } = await updateLogbook(book.id, patch)
+    if (data) setLogbooks((p) => p.map((b) => (b.id === book.id ? data : b)))
   }
   async function onAddEvent(draft) {
     const { data, error } = await addEvent(inspection, draft)
@@ -86,9 +113,7 @@ export default function LogbookAudit() {
   }
 
   if (state === 'loading') {
-    return (
-      <main className="auth-pending" aria-busy="true"><p>Loading…</p></main>
-    )
+    return <main className="auth-pending" aria-busy="true"><p>Loading…</p></main>
   }
   if (state === 'error') {
     return (
@@ -99,10 +124,7 @@ export default function LogbookAudit() {
     )
   }
 
-  const posLabel = (kind, position) =>
-    POSITIONAL_KINDS.includes(kind) && engineCount > 1 && position
-      ? (kind === 'propeller' ? propLabel(position - 1, engineCount, layout) : engineLabel(position - 1, engineCount, layout))
-      : null
+  const posLabel = (kind, position) => groupLabel(kind, position, engineCount, layout)
 
   return (
     <main className="insp">
@@ -112,18 +134,53 @@ export default function LogbookAudit() {
 
       <div className="auth__heading">
         <h1><BookOpen size={20} aria-hidden="true" /> Logbook audit</h1>
-        <p>Track records across logbooks, reconcile the times, and note key events.</p>
+        <p>Scan each logbook, and we’ll build a PDF copy and read the times and notable events off the pages.</p>
       </div>
 
-      <ScanImport inspection={inspection} onAddBook={onAddBook} onAddEvent={onAddEvent} />
+      {/* Scan flow (modal-ish section) or the start button. */}
+      {scan ? (
+        <ScanFlow
+          inspection={inspection}
+          engineCount={engineCount}
+          layout={layout}
+          mode={scan.mode}
+          book={scan.book}
+          onCancel={() => setScan(null)}
+          onDone={onScanDone}
+        />
+      ) : (
+        <button type="button" className="auth__btn lb__scanbtn" onClick={() => setScan({ mode: 'new' })}>
+          <ScanLine size={16} aria-hidden="true" /> Scan a logbook
+        </button>
+      )}
 
-      <LogbookPages inspection={inspection} />
+      {/* Logbooks (scanned) */}
+      {logbooks.length > 0 && (
+        <section className="insp__section">
+          <div className="insp__sectionhead"><h2>Logbooks</h2></div>
+          <div className="lb__cards">
+            {[...logbooks]
+              .sort((a, b) => LOGBOOK_KINDS.indexOf(a.kind) - LOGBOOK_KINDS.indexOf(b.kind) || (a.position || 0) - (b.position || 0))
+              .map((b) => (
+                <LogbookCard
+                  key={b.id}
+                  inspection={inspection}
+                  book={b}
+                  label={posLabel(b.kind, b.position)}
+                  onAmend={() => setScan({ mode: 'amend', book: b })}
+                  onDelete={() => onDeleteBook(b)}
+                  onUpdate={(patch) => onUpdateBook(b, patch)}
+                />
+              ))}
+          </div>
+        </section>
+      )}
 
       {/* Reconciliation */}
       <section className="insp__section">
         <h2>Reconciliation</h2>
         {recon.groups.length === 0 ? (
-          <p className="auth__hint">Add logbooks below to reconcile times.</p>
+          <p className="auth__hint">Scan a logbook to reconcile times.</p>
         ) : (
           <div className="lb__recon">
             {recon.groups.map((g) => {
@@ -151,36 +208,9 @@ export default function LogbookAudit() {
         )}
       </section>
 
-      {/* Logbooks */}
-      <section className="insp__section">
-        <div className="insp__sectionhead">
-          <h2>Logbooks</h2>
-        </div>
-        {logbooks.length > 0 && (
-          <ul className="insp__list">
-            {[...logbooks]
-              .sort((a, b) => LOGBOOK_KINDS.indexOf(a.kind) - LOGBOOK_KINDS.indexOf(b.kind))
-              .map((b) => (
-                <li key={b.id} className="insp__row">
-                  <span className="insp__main">
-                    <span className="insp__id">{b.label || kindLabel(b.kind)}</span>
-                    <span className="insp__sub">{posLabel(b.kind, b.position) || kindLabel(b.kind)} · {fmtRange(b)}</span>
-                  </span>
-                  <button type="button" className="insp__flag" onClick={() => onDeleteBook(b)} aria-label="Delete logbook">
-                    <Trash2 size={15} aria-hidden="true" />
-                  </button>
-                </li>
-              ))}
-          </ul>
-        )}
-        <AddLogbook onAdd={onAddBook} engineCount={engineCount} layout={layout} />
-      </section>
-
       {/* Notable events */}
       <section className="insp__section">
-        <div className="insp__sectionhead">
-          <h2>Notable events</h2>
-        </div>
+        <div className="insp__sectionhead"><h2>Notable events</h2></div>
         {events.length > 0 && (
           <ul className="insp__list">
             {events.map((e) => (
@@ -190,14 +220,14 @@ export default function LogbookAudit() {
                     <span className={`lb__cat lb__cat--${e.category}`}>{categoryLabel(e.category)}</span> {e.title}
                   </span>
                   <span className="insp__sub">
-                    {[posLabel('engine', e.position), e.event_date, e.tach != null ? `tach ${fmtTach(e.tach)}` : null, e.description]
+                    {[e.position ? posLabel('engine', e.position) : null, e.event_date, e.tach != null ? `tach ${fmtTach(e.tach)}` : null, e.description]
                       .filter(Boolean)
                       .join(' · ')}
                   </span>
                 </span>
-                <button type="button" className="insp__flag" onClick={() => onDeleteEvent(e)} aria-label="Delete event">
+                <ConfirmButton title="Delete event" onConfirm={() => onDeleteEvent(e)}>
                   <Trash2 size={15} aria-hidden="true" />
-                </button>
+                </ConfirmButton>
               </li>
             ))}
           </ul>
@@ -208,455 +238,379 @@ export default function LogbookAudit() {
   )
 }
 
-function ScanImport({ inspection, onAddBook, onAddEvent }) {
-  const [phase, setPhase] = useState('idle') // idle | working | review
+// Two-step delete confirm — guards accidental taps on the phone.
+function ConfirmButton({ onConfirm, title = 'Delete', label = 'Delete', className = 'insp__flag', children }) {
+  const [armed, setArmed] = useState(false)
+  const [busy, setBusy] = useState(false)
+  if (!armed) {
+    return (
+      <button type="button" className={className} title={title} aria-label={title} onClick={() => setArmed(true)}>
+        {children}
+      </button>
+    )
+  }
+  return (
+    <span className="insp__rowconfirm">
+      <span>{label}?</span>
+      <button type="button" className="insp__rowyes" disabled={busy} onClick={async () => { setBusy(true); await onConfirm() }}>{busy ? '…' : 'Yes'}</button>
+      <button type="button" className="insp__rowno" disabled={busy} onClick={() => setArmed(false)}>No</button>
+    </span>
+  )
+}
+
+// Scan a logbook: pick type/position (new) → snap pages sequentially → save +
+// compile a PDF + read the pages (auto). Amend mode skips the picker and appends
+// pages to an existing logbook, then re-compiles + reads the new pages.
+function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCancel, onDone }) {
+  const [step, setStep] = useState(mode === 'amend' ? 'capture' : 'pick')
+  const [book, setBook] = useState(amendBook ?? null)
+  const [captured, setCaptured] = useState([]) // page rows added THIS session
+  const [existingCount, setExistingCount] = useState(0)
+  const [busy, setBusy] = useState(false)
+  const [progress, setProgress] = useState(null)
   const [error, setError] = useState(null)
-  const [note, setNote] = useState(null) // non-fatal notice (e.g. partial read)
-  const [progress, setProgress] = useState(null) // { label, done, total }
-  const [draft, setDraft] = useState({ logbooks: [], events: [] })
-  const [pickLb, setPickLb] = useState(new Set())
-  const [pickEv, setPickEv] = useState(new Set())
-  const [importing, setImporting] = useState(false)
+  const opts = useMemo(() => kindOptions(engineCount, layout), [engineCount, layout])
 
-  async function onPick(files) {
-    const list = Array.from(files ?? [])
-    if (!list.length) return
+  // Amend: find out how many pages the book already has (sort offset + later compile).
+  useEffect(() => {
+    if (mode !== 'amend' || !amendBook) return
+    listMediaByLogbook(amendBook.id).then(({ data }) => {
+      setExistingCount(data.filter((m) => m.purpose === 'logbook').length)
+    })
+  }, [mode, amendBook])
+
+  async function choose(opt) {
     setError(null)
-    setNote(null)
-    setPhase('working')
+    setBusy(true)
+    const { data, error } = await addLogbook(inspection, { kind: opt.kind, position: opt.position, label: opt.label })
+    setBusy(false)
+    if (error) return setError(error.message)
+    setBook(data)
+    setStep('capture')
+  }
 
-    // 1. Upload all pages to private storage (limited concurrency so a whole
-    //    100-page logbook uploads reliably without flooding the network).
-    setProgress({ label: 'Uploading pages', done: 0, total: list.length })
-    const paths = []
-    let uploaded = 0
-    const CONCURRENCY = 4
-    let cursor = 0
-    async function worker() {
-      while (cursor < list.length) {
-        const f = list[cursor++]
-        const { data, error } = await uploadMedia({
-          orgId: inspection.org_id,
-          inspectionId: inspection.id,
-          purpose: 'logbook',
-          file: f,
-        })
-        if (!error && data) paths.push(data.storage_path)
-        uploaded += 1
-        setProgress({ label: 'Uploading pages', done: uploaded, total: list.length })
+  async function addPages(files) {
+    const list = Array.from(files ?? [])
+    if (!list.length || !book) return
+    setBusy(true)
+    setError(null)
+    let order = existingCount + captured.length
+    for (const f of list) {
+      const { data, error } = await uploadMedia({
+        orgId: inspection.org_id,
+        inspectionId: inspection.id,
+        logbookId: book.id,
+        purpose: 'logbook',
+        file: f,
+        sortOrder: order++,
+      })
+      if (!error && data) setCaptured((p) => [...p, data])
+    }
+    setBusy(false)
+  }
+
+  // Abandoning a brand-new logbook with no pages → delete the empty row.
+  async function cancel() {
+    if (mode === 'new' && book && captured.length === 0) {
+      const { data: media } = await listMediaByLogbook(book.id)
+      for (const m of media) await deleteMedia(m)
+      await deleteLogbook(book.id)
+    }
+    onCancel()
+  }
+
+  async function finish() {
+    if (!book) return onDone()
+    if (captured.length === 0 && mode === 'amend') return onDone() // nothing added
+    setStep('process')
+    setError(null)
+
+    // Gather ALL pages (existing + just-added) for the compile.
+    const { data: media } = await listMediaByLogbook(book.id)
+    const pages = media.filter((m) => m.purpose === 'logbook')
+    const existingPdf = media.find((m) => m.purpose === 'logbook_pdf')
+
+    // 1. Compile the PDF from every page, in order.
+    setProgress({ label: 'Building PDF', done: 0, total: pages.length })
+    const { blob, error: cErr } = await compileLogbookPdf(
+      pages.map((p) => ({ url: p.url, rotation: p.rotation })),
+      { onProgress: (pr) => setProgress({ label: 'Building PDF', ...pr }) },
+    )
+    if (cErr) {
+      setError(`${cErr.message} Pages are saved — try “Save & read” again.`)
+      setStep('capture')
+      setProgress(null)
+      return
+    }
+    const keepOnReport = existingPdf?.show_on_report ?? false
+    if (existingPdf) await deleteMedia(existingPdf)
+    const pdfFile = new File([blob], 'logbook.pdf', { type: 'application/pdf' })
+    const { data: pdfRow } = await uploadMedia({
+      orgId: inspection.org_id,
+      inspectionId: inspection.id,
+      logbookId: book.id,
+      purpose: 'logbook_pdf',
+      caption: book.label || kindLabel(book.kind),
+      file: pdfFile,
+    })
+    if (pdfRow && keepOnReport) await updateMedia(pdfRow.id, { show_on_report: true })
+
+    // 2. Read the pages (auto). New scan → read all; amend → only the new pages.
+    const newIds = new Set(captured.map((c) => c.id))
+    const toRead = mode === 'amend' ? pages.filter((p) => newIds.has(p.id)) : pages
+    const urls = toRead.map((p) => p.url).filter(Boolean)
+    if (urls.length) {
+      setProgress({ label: 'Reading pages', done: 0, total: 1 })
+      const { data: draft } = await extractLogbooksBatched(urls, inspection.org_id, {
+        onProgress: (pr) => setProgress({ label: 'Reading pages', ...pr }),
+      })
+      if (draft) {
+        const span = spanFromDrafts(draft.logbooks)
+        const next = mode === 'amend' ? mergeSpan(book, span) : span
+        await updateLogbook(book.id, next)
+        for (const ev of draft.events ?? []) {
+          await addEvent(inspection, {
+            logbookId: book.id,
+            position: book.position,
+            category: ev.category,
+            title: cleanDraftValue(ev.title) || 'Event',
+            event_date: cleanDraftValue(ev.event_date) || '',
+            tach: cleanDraftValue(ev.tach) ?? '',
+            description: cleanDraftValue(ev.description) || '',
+          })
+        }
       }
     }
-    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, list.length) }, worker))
-
-    const urls = await signedUrlsFor(paths)
-    if (!urls.length) {
-      setError('Couldn’t upload the photos. Try again.')
-      setProgress(null)
-      setPhase('idle')
-      return
-    }
-
-    // 2. Read the pages in batches (the vision model caps images per request),
-    //    merging the drafts as we go.
-    setProgress({ label: 'Reading pages', done: 0, total: 1 })
-    const { data, error, partial } = await extractLogbooksBatched(urls, inspection.org_id, {
-      onProgress: ({ done, total }) => setProgress({ label: 'Reading pages', done, total }),
-    })
     setProgress(null)
-    if (error) {
-      setError(error.message)
-      setPhase('idle')
-      return
-    }
-    if (partial) setNote('Some pages couldn’t be read and were skipped — review what came through, and re-scan any you’re missing.')
-    setDraft(data)
-    setPickLb(new Set(data.logbooks.map((_, i) => i)))
-    setPickEv(new Set(data.events.map((_, i) => i)))
-    setPhase('review')
-  }
-
-  function toggle(set, setSet, i) {
-    const next = new Set(set)
-    if (next.has(i)) next.delete(i)
-    else next.add(i)
-    setSet(next)
-  }
-
-  async function doImport() {
-    setImporting(true)
-    for (const i of pickLb) {
-      const d = draft.logbooks[i]
-      await onAddBook({
-        kind: d.kind,
-        label: cleanDraftValue(d.label) || '',
-        start_date: cleanDraftValue(d.start_date) || '',
-        start_tach: cleanDraftValue(d.start_tach) ?? '',
-        end_date: cleanDraftValue(d.end_date) || '',
-        end_tach: cleanDraftValue(d.end_tach) ?? '',
-      })
-    }
-    for (const i of pickEv) {
-      const d = draft.events[i]
-      await onAddEvent({
-        category: d.category,
-        title: cleanDraftValue(d.title) || 'Event',
-        event_date: cleanDraftValue(d.event_date) || '',
-        tach: cleanDraftValue(d.tach) ?? '',
-        description: cleanDraftValue(d.description) || '',
-      })
-    }
-    setImporting(false)
-    setPhase('idle')
-    setDraft({ logbooks: [], events: [] })
+    onDone()
   }
 
   return (
-    <section className="insp__section lb__scan">
+    <section className="insp__section lb__scanflow">
       <div className="insp__sectionhead">
-        <h2><ScanLine size={18} aria-hidden="true" /> Scan &amp; import <span className="lb__beta">beta</span></h2>
+        <h2><ScanLine size={18} aria-hidden="true" /> {mode === 'amend' ? `Add pages — ${amendBook.label || kindLabel(amendBook.kind)}` : 'Scan a logbook'}</h2>
+        {step !== 'process' && (
+          <button type="button" className="auth__toggle" onClick={cancel}><X size={14} aria-hidden="true" /> Cancel</button>
+        )}
       </div>
 
-      {phase === 'idle' && (
+      {error && <div className="auth__error" role="alert">{error}</div>}
+
+      {step === 'pick' && (
         <>
-          <p className="auth__hint">
-            Photograph the logbook pages — we’ll read them and propose logbooks + notable events for you
-            to review. You can do the <strong>whole logbook at once</strong> (80–100 pages is fine — we
-            read them in batches). Tip: use <strong>“Upload files”</strong> to select many pages at once
-            from your camera roll; the camera button captures one page at a time. Handwriting varies, so
-            always confirm before importing.
-          </p>
-          <PhotoPicker
-            onPick={onPick}
-            multiple
-            takeLabel="Scan one page"
-            uploadLabel="Upload pages"
-            takeIcon={ScanLine}
-            className="auth__btn auth__btn--ghost insp__walkthrough"
-          />
-          {error && <div className="auth__error" role="alert">{error}</div>}
+          <p className="auth__hint">Which logbook is this? Pick the type (and which engine/prop on a twin), then snap the pages.</p>
+          <div className="lb__kindgrid">
+            {opts.map((o) => (
+              <button key={`${o.kind}:${o.position}`} type="button" className="lb__kindbtn" disabled={busy} onClick={() => choose(o)}>
+                {o.label}
+              </button>
+            ))}
+          </div>
         </>
       )}
 
-      {phase === 'working' && (
-        <div className="auth__hint" aria-busy="true">
-          {progress ? (
+      {step === 'capture' && (
+        <>
+          <p className="auth__hint">
+            Snap the pages in order. Use “Take a page” for one at a time, or “Add pages” to pick several from your
+            camera roll. {existingCount > 0 && `This logbook already has ${existingCount} page${existingCount === 1 ? '' : 's'}.`}
+          </p>
+          <PhotoPicker
+            onPick={addPages}
+            multiple
+            busy={busy}
+            takeLabel="Take a page"
+            uploadLabel="Add pages"
+            takeIcon={ScanLine}
+            className="auth__btn auth__btn--ghost insp__walkthrough"
+          />
+          {captured.length > 0 && (
             <>
-              {progress.label} {progress.done}{progress.total ? ` of ${progress.total}` : ''}…
-              <div className="lb__progressbar">
-                <span style={{ width: `${progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%` }} />
+              <p className="auth__hint"><Check size={13} aria-hidden="true" /> {captured.length} page{captured.length === 1 ? '' : 's'} added.</p>
+              <div className="insp__thumbs">
+                {captured.map((m, i) => (
+                  <span key={m.id} className="insp__thumbwrap"><span className="lb__pagenum">{existingCount + i + 1}</span></span>
+                ))}
               </div>
             </>
-          ) : (
-            'Working…'
           )}
-        </div>
+          <div className="insp__capture">
+            <button type="button" className="auth__btn" onClick={finish} disabled={busy || captured.length === 0}>
+              <Check size={15} aria-hidden="true" /> Save &amp; read {captured.length > 0 ? `(${captured.length})` : ''}
+            </button>
+          </div>
+        </>
       )}
 
-      {phase === 'review' && (
-        <div className="lb__review">
-          {note && <div className="auth__notice" role="status">{note}</div>}
-          {draft.logbooks.length === 0 && draft.events.length === 0 && (
-            <p className="auth__hint">Nothing legible found. Try clearer, well-lit photos.</p>
+      {step === 'process' && (
+        <div className="auth__hint" aria-busy="true">
+          {progress ? `${progress.label} ${progress.done}${progress.total ? ` of ${progress.total}` : ''}…` : 'Saving…'}
+          {progress && (
+            <div className="lb__progressbar"><span style={{ width: `${progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%` }} /></div>
           )}
-
-          {draft.logbooks.length > 0 && (
-            <>
-              <h3 className="lb__reviewh">Proposed logbooks</h3>
-              <ul className="insp__list">
-                {draft.logbooks.map((d, i) => (
-                  <li key={i} className="lb__pick" onClick={() => toggle(pickLb, setPickLb, i)}>
-                    <span className={`lb__check ${pickLb.has(i) ? 'is-on' : ''}`}>{pickLb.has(i) && <Check size={13} />}</span>
-                    <span className="insp__main">
-                      <span className="insp__id">{cleanDraftValue(d.label) || kindLabel(d.kind)}</span>
-                      <span className="insp__sub">
-                        {kindLabel(d.kind)} · {cleanDraftValue(d.start_date) || '?'}→{cleanDraftValue(d.end_date) || '?'} ·
-                        {' '}tach {cleanDraftValue(d.start_tach) ?? '?'}–{cleanDraftValue(d.end_tach) ?? '?'}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-
-          {draft.events.length > 0 && (
-            <>
-              <h3 className="lb__reviewh">Proposed events</h3>
-              <ul className="insp__list">
-                {draft.events.map((d, i) => (
-                  <li key={i} className="lb__pick" onClick={() => toggle(pickEv, setPickEv, i)}>
-                    <span className={`lb__check ${pickEv.has(i) ? 'is-on' : ''}`}>{pickEv.has(i) && <Check size={13} />}</span>
-                    <span className="insp__main">
-                      <span className="insp__id">
-                        <span className={`lb__cat lb__cat--${d.category}`}>{categoryLabel(d.category)}</span> {d.title}
-                      </span>
-                      <span className="insp__sub">
-                        {[cleanDraftValue(d.event_date), cleanDraftValue(d.tach) != null ? `tach ${cleanDraftValue(d.tach)}` : null, cleanDraftValue(d.description)]
-                          .filter(Boolean).join(' · ')}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-
-          <div className="insp__capture">
-            <button type="button" className="auth__btn" disabled={importing} onClick={doImport}>
-              {importing ? 'Importing…' : `Import ${pickLb.size + pickEv.size} selected`}
-            </button>
-            <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setPhase('idle')}>Discard</button>
-          </div>
         </div>
       )}
     </section>
   )
 }
 
-// Logbook page manager: the captured logbook page photos as an orderable,
-// rotatable set, compiled into one downloadable PDF (a digital copy of the book).
-// The PDF is stored internally and can optionally appear on the customer report.
-function LogbookPages({ inspection }) {
-  const [pages, setPages] = useState([])
-  const [pdf, setPdf] = useState(null) // current compiled PDF media row (or null)
+// A scanned logbook: its compiled PDF (download + show-on-report), read times
+// (editable), an "add pages" amend action, a collapsible page manager
+// (rotate/reorder/delete), and delete-the-logbook — all destructive taps confirmed.
+function LogbookCard({ inspection, book, label, onAmend, onDelete, onUpdate }) {
+  const [media, setMedia] = useState([])
   const [loading, setLoading] = useState(true)
-  const [adding, setAdding] = useState(false)
+  const [managing, setManaging] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(null)
-  const [error, setError] = useState(null)
 
   async function refresh() {
-    const [{ data: pg }, { data: docs }] = await Promise.all([
-      listMediaByPurpose(inspection.id, 'logbook'),
-      listMediaByPurpose(inspection.id, 'logbook_pdf'),
-    ])
-    setPages(pg)
-    setPdf(docs[0] ?? null)
+    const { data } = await listMediaByLogbook(book.id)
+    setMedia(data)
     setLoading(false)
   }
   useEffect(() => {
     refresh()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inspection.id])
+  }, [book.id])
 
-  async function addPages(files) {
-    const list = Array.from(files ?? [])
-    if (!list.length) return
-    setAdding(true)
-    setError(null)
-    let order = pages.length
-    for (const f of list) {
-      await uploadMedia({ orgId: inspection.org_id, inspectionId: inspection.id, purpose: 'logbook', file: f, sortOrder: order++ })
-    }
-    setAdding(false)
-    refresh()
-  }
+  const pages = media.filter((m) => m.purpose === 'logbook')
+  const pdf = media.find((m) => m.purpose === 'logbook_pdf')
 
   async function rotate(p) {
     const rotation = rotateStep(p.rotation)
-    setPages((prev) => prev.map((x) => (x.id === p.id ? { ...x, rotation } : x)))
+    setMedia((prev) => prev.map((x) => (x.id === p.id ? { ...x, rotation } : x)))
     await updateMedia(p.id, { rotation })
   }
-
-  async function remove(p) {
-    setPages((prev) => prev.filter((x) => x.id !== p.id))
+  async function removePage(p) {
+    setMedia((prev) => prev.filter((x) => x.id !== p.id))
     await deleteMedia(p)
   }
-
   async function move(idx, dir) {
     const j = idx + dir
     if (j < 0 || j >= pages.length) return
     const next = [...pages]
     ;[next[idx], next[j]] = [next[j], next[idx]]
-    setPages(next)
+    setMedia((prev) => [...next, ...prev.filter((m) => m.purpose !== 'logbook')])
     for (const u of reorderUpdates(next)) await updateMedia(u.id, { sort_order: u.sort_order })
   }
-
-  async function compile() {
+  async function recompile() {
     if (!pages.length) return
     setBusy(true)
-    setError(null)
     setProgress({ done: 0, total: pages.length })
-    const { blob, error } = await compileLogbookPdf(
-      pages.map((p) => ({ url: p.url, rotation: p.rotation })),
-      { onProgress: (pr) => setProgress(pr) },
-    )
-    if (error) {
-      setBusy(false)
-      setProgress(null)
-      return setError(error.message)
-    }
+    const { blob, error } = await compileLogbookPdf(pages.map((p) => ({ url: p.url, rotation: p.rotation })), { onProgress: (pr) => setProgress(pr) })
+    if (error) { setBusy(false); setProgress(null); return }
     const keepOnReport = pdf?.show_on_report ?? false
-    if (pdf) await deleteMedia(pdf) // replace the previous compile
+    if (pdf) await deleteMedia(pdf)
     const file = new File([blob], 'logbook.pdf', { type: 'application/pdf' })
-    const { data, error: upErr } = await uploadMedia({
-      orgId: inspection.org_id,
-      inspectionId: inspection.id,
-      purpose: 'logbook_pdf',
-      caption: 'Logbook (compiled)',
-      file,
-    })
+    const { data } = await uploadMedia({ orgId: inspection.org_id, inspectionId: inspection.id, logbookId: book.id, purpose: 'logbook_pdf', caption: book.label || kindLabel(book.kind), file })
+    if (data && keepOnReport) await updateMedia(data.id, { show_on_report: true })
     setBusy(false)
     setProgress(null)
-    if (upErr) return setError(upErr.message)
-    if (data && keepOnReport) {
-      await updateMedia(data.id, { show_on_report: true })
-      data.show_on_report = true
-    }
-    setPdf(data ?? null)
+    refresh()
   }
-
   async function toggleReport() {
     if (!pdf) return
     const next = !pdf.show_on_report
-    setPdf({ ...pdf, show_on_report: next })
+    setMedia((prev) => prev.map((m) => (m.id === pdf.id ? { ...m, show_on_report: next } : m)))
     await updateMedia(pdf.id, { show_on_report: next })
   }
 
-  if (loading) return null
-
   return (
-    <section className="insp__section lb__pages">
-      <div className="insp__sectionhead">
-        <h2><FileStack size={18} aria-hidden="true" /> Logbook pages &amp; PDF</h2>
-      </div>
-      <p className="auth__hint">
-        Tidy the scanned pages — rotate a sideways shot, reorder, or drop a dud — then compile them into a
-        single PDF copy of the logbook. Stored with the inspection; optionally included on the customer report.
-      </p>
-
-      {error && <div className="auth__error" role="alert">{error}</div>}
-
-      {pages.length === 0 ? (
-        <p className="auth__hint">No logbook pages yet — scan or upload them in “Scan &amp; import” above, or add them here.</p>
-      ) : (
-        <ol className="lb__pagegrid">
-          {pages.map((p, i) => (
-            <li key={p.id} className="lb__page">
-              <span className="lb__pagenum">{i + 1}</span>
-              {p.url && <img className="lb__pageimg" src={p.url} alt={`Page ${i + 1}`} loading="lazy" style={{ transform: `rotate(${p.rotation || 0}deg)` }} />}
-              <div className="lb__pagebtns">
-                <button type="button" className="insp__flag" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up" title="Move up"><ArrowUp size={14} aria-hidden="true" /></button>
-                <button type="button" className="insp__flag" onClick={() => move(i, 1)} disabled={i === pages.length - 1} aria-label="Move down" title="Move down"><ArrowDown size={14} aria-hidden="true" /></button>
-                <button type="button" className="insp__flag" onClick={() => rotate(p)} aria-label="Rotate" title="Rotate"><RotateCw size={14} aria-hidden="true" /></button>
-                <button type="button" className="insp__flag" onClick={() => remove(p)} aria-label="Remove page" title="Remove"><Trash2 size={14} aria-hidden="true" /></button>
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
-
-      <div className="insp__capture">
-        <PhotoPicker
-          onPick={addPages}
-          multiple
-          busy={adding}
-          takeLabel="Add a page"
-          uploadLabel="Add pages"
-          className="auth__btn auth__btn--ghost insp__walkthrough"
-        />
-        {pages.length > 0 && (
-          <button type="button" className="auth__btn" onClick={compile} disabled={busy}>
-            <FileText size={15} aria-hidden="true" /> {busy ? 'Compiling…' : pdf ? 'Re-compile PDF' : 'Compile PDF'}
-          </button>
-        )}
-      </div>
-
-      {progress && (
-        <div className="auth__hint" aria-busy="true">
-          Building PDF — page {progress.done} of {progress.total}…
-          <div className="lb__progressbar"><span style={{ width: `${progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%` }} /></div>
+    <div className="lb__card">
+      <div className="lb__cardhead">
+        <div>
+          <span className="lb__cardtitle">{label}</span>
+          <span className="lb__cardsub">{loading ? '…' : `${pages.length} page${pages.length === 1 ? '' : 's'}`} · {fmtRange(book)}</span>
         </div>
-      )}
+        <ConfirmButton title="Delete logbook" label="Delete logbook" onConfirm={onDelete}>
+          <Trash2 size={15} aria-hidden="true" />
+        </ConfirmButton>
+      </div>
 
       {pdf && (
         <div className="lb__pdfcard">
           <FileText size={18} aria-hidden="true" />
           <div className="lb__pdfmain">
-            <a href={pdf.url} target="_blank" rel="noreferrer">
-              <Download size={13} aria-hidden="true" /> Logbook PDF ({pages.length} page{pages.length === 1 ? '' : 's'})
-            </a>
-            <span className="auth__hint">Compiled from the pages above. Re-compile after any change.</span>
+            <a href={pdf.url} target="_blank" rel="noreferrer"><Download size={13} aria-hidden="true" /> Logbook PDF</a>
+            <label className="lb__pdftoggle">
+              <input type="checkbox" checked={!!pdf.show_on_report} onChange={toggleReport} /> Show on report
+            </label>
           </div>
-          <label className="lb__pdftoggle">
-            <input type="checkbox" checked={!!pdf.show_on_report} onChange={toggleReport} />
-            Show on report
-          </label>
+          <ConfirmButton title="Delete PDF" label="Delete PDF" onConfirm={() => removePage(pdf)}>
+            <Trash2 size={14} aria-hidden="true" />
+          </ConfirmButton>
         </div>
       )}
-    </section>
-  )
-}
 
-function PositionField({ kind, value, onChange, engineCount, layout }) {
-  if (!POSITIONAL_KINDS.includes(kind) || engineCount <= 1) return null
-  const labelFor = (i) => (kind === 'propeller' ? propLabel(i, engineCount, layout) : engineLabel(i, engineCount, layout))
-  return (
-    <div className="auth__field">
-      <label>Position</label>
-      <select value={value} onChange={onChange}>
-        <option value="">Unassigned</option>
-        {Array.from({ length: engineCount }, (_, i) => (
-          <option key={i} value={i + 1}>{labelFor(i)}</option>
-        ))}
-      </select>
+      {editing ? (
+        <EditTimes book={book} onSave={async (patch) => { await onUpdate(patch); setEditing(false) }} onCancel={() => setEditing(false)} />
+      ) : null}
+
+      <div className="insp__capture lb__cardactions">
+        <button type="button" className="auth__btn auth__btn--ghost" onClick={onAmend}><Plus size={14} aria-hidden="true" /> Add pages</button>
+        <button type="button" className="auth__toggle" onClick={() => setEditing((v) => !v)}>Edit times</button>
+        {pages.length > 0 && <button type="button" className="auth__toggle" onClick={() => setManaging((v) => !v)}>{managing ? 'Hide pages' : 'Manage pages'}</button>}
+      </div>
+
+      {managing && pages.length > 0 && (
+        <>
+          <ol className="lb__pagegrid">
+            {pages.map((p, i) => (
+              <li key={p.id} className="lb__page">
+                <span className="lb__pagenum">{i + 1}</span>
+                {p.url && <img className="lb__pageimg" src={p.url} alt={`Page ${i + 1}`} loading="lazy" style={{ transform: `rotate(${p.rotation || 0}deg)` }} />}
+                <div className="lb__pagebtns">
+                  <button type="button" className="insp__flag" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up"><ArrowUp size={14} aria-hidden="true" /></button>
+                  <button type="button" className="insp__flag" onClick={() => move(i, 1)} disabled={i === pages.length - 1} aria-label="Move down"><ArrowDown size={14} aria-hidden="true" /></button>
+                  <button type="button" className="insp__flag" onClick={() => rotate(p)} aria-label="Rotate"><RotateCw size={14} aria-hidden="true" /></button>
+                  <ConfirmButton title="Delete page" onConfirm={() => removePage(p)}><Trash2 size={14} aria-hidden="true" /></ConfirmButton>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="insp__capture">
+            <button type="button" className="auth__btn" onClick={recompile} disabled={busy}>
+              <FileText size={15} aria-hidden="true" /> {busy ? 'Re-compiling…' : 'Re-compile PDF'}
+            </button>
+          </div>
+          {progress && (
+            <div className="auth__hint" aria-busy="true">
+              Building PDF — page {progress.done} of {progress.total}…
+              <div className="lb__progressbar"><span style={{ width: `${progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%` }} /></div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
 
-function AddLogbook({ onAdd, engineCount, layout }) {
-  const [open, setOpen] = useState(false)
-  const [f, setF] = useState({ kind: 'airframe', position: '', label: '', start_date: '', start_tach: '', end_date: '', end_tach: '', notes: '' })
+function EditTimes({ book, onSave, onCancel }) {
+  const [f, setF] = useState({
+    start_date: book.start_date ?? '',
+    start_tach: book.start_tach ?? '',
+    end_date: book.end_date ?? '',
+    end_tach: book.end_tach ?? '',
+  })
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState(null)
   const set = (k) => (e) => setF((p) => ({ ...p, [k]: e.target.value }))
-
-  if (!open) {
-    return (
-      <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={() => setOpen(true)}>
-        <Plus size={15} aria-hidden="true" /> Add logbook
-      </button>
-    )
-  }
-  async function submit(e) {
-    e.preventDefault()
-    setError(null)
-    setBusy(true)
-    const err = await onAdd(f)
-    setBusy(false)
-    if (err) return setError(err.message)
-    setF({ kind: 'airframe', position: '', label: '', start_date: '', start_tach: '', end_date: '', end_tach: '', notes: '' })
-    setOpen(false)
-  }
   return (
-    <form className="auth__form insp__additem" onSubmit={submit}>
-      <div className="insp__row2">
-        <div className="auth__field">
-          <label>Type</label>
-          <select value={f.kind} onChange={set('kind')}>
-            {LOGBOOK_KINDS.map((k) => <option key={k} value={k}>{kindLabel(k)}</option>)}
-          </select>
-        </div>
-        <PositionField kind={f.kind} value={f.position} onChange={set('position')} engineCount={engineCount} layout={layout} />
-        <div className="auth__field">
-          <label>Label</label>
-          <input type="text" placeholder="Airframe Book 2" value={f.label} onChange={set('label')} />
-        </div>
-      </div>
+    <div className="lb__edittimes">
       <div className="insp__row2">
         <div className="auth__field"><label>Start date</label><input type="date" value={f.start_date} onChange={set('start_date')} /></div>
-        <div className="auth__field"><label>Start tach</label><input type="number" inputMode="decimal" step="0.1" placeholder="0.0" value={f.start_tach} onChange={set('start_tach')} /></div>
+        <div className="auth__field"><label>Start tach</label><input type="number" inputMode="decimal" step="0.1" value={f.start_tach} onChange={set('start_tach')} /></div>
       </div>
       <div className="insp__row2">
         <div className="auth__field"><label>End date</label><input type="date" value={f.end_date} onChange={set('end_date')} /></div>
-        <div className="auth__field"><label>End tach</label><input type="number" inputMode="decimal" step="0.1" placeholder="1200.0" value={f.end_tach} onChange={set('end_tach')} /></div>
+        <div className="auth__field"><label>End tach</label><input type="number" inputMode="decimal" step="0.1" value={f.end_tach} onChange={set('end_tach')} /></div>
       </div>
-      {error && <div className="auth__error" role="alert">{error}</div>}
       <div className="insp__capture">
-        <button type="submit" className="auth__btn" disabled={busy}>{busy ? 'Adding…' : 'Add logbook'}</button>
-        <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setOpen(false)}>Cancel</button>
+        <button type="button" className="auth__btn" disabled={busy} onClick={async () => { setBusy(true); await onSave({ start_date: f.start_date || null, start_tach: f.start_tach, end_date: f.end_date || null, end_tach: f.end_tach }) }}>{busy ? 'Saving…' : 'Save'}</button>
+        <button type="button" className="auth__btn auth__btn--ghost" onClick={onCancel}>Cancel</button>
       </div>
-    </form>
+    </div>
   )
 }
 

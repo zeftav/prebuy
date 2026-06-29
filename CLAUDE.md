@@ -418,6 +418,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   returns inspection-level `documents` (flagged `logbook_pdf`, signed); `ReportView` Part 1 **Records**
   section. **PDF = page manager + internal + optional-on-report** (Brett's call). ⚠️ **Run migration 022 +
   redeploy `report` (JWT OFF)** — one redeploy also covers v0.32.0 follow-ups. New dep: `pdf-lib`.
+- Session 3 cont. — **Scan-driven logbooks** (v0.35.0). Brett: interface too cluttered + too easy to
+  mis-delete on phone. Migration `023` (`media.logbook_id` FK→logbooks, cascade). **Per-logbook** model:
+  `LogbookAudit` rewritten — **"Scan a logbook"** → pick type/position (airframe/engine#1/prop#2…) →
+  sequential snap → on finish **auto-compiles that book's PDF + auto-reads** span + events off the pages
+  (`spanFromDrafts`/`mergeSpan` pure +tests; events linked to the book+position). Each logbook = own
+  scan + own PDF; `LogbookCard` "Add pages" (amend→re-compile+read new) + "Manage pages"
+  (rotate/reorder/delete+re-compile) + editable times. **Manual "add logbook" removed** (kept manual
+  add-event). **`ConfirmButton` two-step delete** on pages/PDFs/logbooks/events. `lib/media.js`
+  `listMediaByLogbook` + `logbookId` on upload; `lib/logbooks.js` `updateLogbook` + `logbook_id` on
+  events. Reconciliation kept (fed by scanned data). Tests 179. ⚠️ **Run migration 023** — no new fn
+  change; the pending `report` redeploy (JWT OFF) already covers per-logbook PDFs on the report.
   **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
   Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 

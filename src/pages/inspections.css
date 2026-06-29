@@ -1317,3 +1317,63 @@
   font-weight: 600;
   white-space: nowrap;
 }
+
+/* ── Logbook audit: scan flow + per-logbook cards ─────────────────────── */
+.lb__scanbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  align-self: flex-start;
+}
+.lb__scanflow {
+  border: 1px dashed var(--accent-border, #c7b9f0);
+  background: var(--accent-bg, #f7f5ff);
+}
+.lb__kindgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+.lb__kindbtn {
+  padding: 12px 10px;
+  border: 1px solid var(--line, #d7dce3);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lb__kindbtn:hover { border-color: var(--accent, #6b46c1); }
+.lb__kindbtn:disabled { opacity: 0.6; }
+.lb__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lb__card {
+  border: 1px solid var(--line, #e4e8ee);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lb__cardhead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.lb__cardtitle { font-weight: 700; display: block; }
+.lb__cardsub { font-size: 13px; color: var(--muted, #6b7280); display: block; margin-top: 2px; }
+.lb__cardactions { flex-wrap: wrap; align-items: center; gap: 10px; }
+.lb__edittimes {
+  border-top: 1px solid var(--line, #eef1f5);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

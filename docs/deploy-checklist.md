@@ -48,6 +48,8 @@ Run in order. All are idempotent (safe to re-run).
       "to-investigate" list). Idempotent. (v0.32.0, 2026-06-28)
 - [ ] ⬜ `022_media_logbook_pdf.sql` — `media.sort_order` / `rotation` / `show_on_report` + `logbook_pdf`
       purpose (logbook page manager + compiled PDF). Idempotent. (v0.34.0, 2026-06-28)
+- [ ] ⬜ `023_media_logbook_link.sql` — `media.logbook_id` (per-logbook scans/PDFs). Idempotent.
+      (v0.35.0, 2026-06-29)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
@@ -67,9 +69,10 @@ Run in order. All are idempotent (safe to re-run).
   - [ ] 🔁 **REDEPLOY `research-asset` (JWT ON) for v0.30.3** — low effort + fewer searches (no timeout).
 - [ ] ⬜ **`structure-walkaround`** (new, v0.31.0) — Verify JWT **ON**. Dictate-the-whole-walk-around →
       parsed/mapped findings. Reuses `ANTHROPIC_API_KEY`. No migration. (2026-06-28)
-  - [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.32.0 + v0.34.0** — returns report-visible follow-ups
-        ("Recommended for further evaluation") and inspection-level `documents` (the compiled logbook PDF
-        when flagged "Show on report" → Records section). One redeploy covers both. (needs migrations 021 + 022)
+  - [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.32.0 + v0.34.0 + v0.35.0** — returns report-visible
+        follow-ups ("Recommended for further evaluation") and inspection-level `documents` (compiled
+        logbook PDFs flagged "Show on report" → Records section; v0.35.0 makes these per-logbook, no
+        further fn change). One redeploy covers all. (needs migrations 021 + 022 + 023)
 - [x] ✅ **REDEPLOYED `structure-finding`, `structure-logbook`, `generate-summary`** (v0.27.0) — all
       three now log token usage to `ai_usage` (fire-and-forget, service role) for the platform AI-cost
       view. JWT **ON**. (2026-06-28)

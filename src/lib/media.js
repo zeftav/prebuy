@@ -39,7 +39,7 @@ function uniqueName(filename) {
  * Upload a file and record it. `purpose` is 'overview' | 'discrepancy';
  * `inspectionItemId` is set for discrepancy shots, null for overview.
  */
-export async function uploadMedia({ orgId, inspectionId, inspectionItemId = null, file, purpose, caption = null, sortOrder = 0 }) {
+export async function uploadMedia({ orgId, inspectionId, inspectionItemId = null, logbookId = null, file, purpose, caption = null, sortOrder = 0 }) {
   if (!orgId || !inspectionId || !file) {
     return { data: null, error: new Error('Missing upload details.') }
   }
@@ -56,6 +56,7 @@ export async function uploadMedia({ orgId, inspectionId, inspectionItemId = null
     .insert({
       inspection_id: inspectionId,
       inspection_item_id: inspectionItemId,
+      logbook_id: logbookId,
       org_id: orgId,
       storage_path: path,
       kind: mediaKind(file.type),
@@ -63,7 +64,7 @@ export async function uploadMedia({ orgId, inspectionId, inspectionItemId = null
       caption,
       sort_order: sortOrder,
     })
-    .select('id, inspection_item_id, storage_path, kind, purpose, caption, sort_order, rotation, show_on_report, created_at')
+    .select('id, inspection_item_id, logbook_id, storage_path, kind, purpose, caption, sort_order, rotation, show_on_report, created_at')
     .single()
   if (error) {
     // Orphan cleanup: remove the uploaded object if the row insert failed.
@@ -73,7 +74,7 @@ export async function uploadMedia({ orgId, inspectionId, inspectionItemId = null
   return { data, error: null }
 }
 
-const MEDIA_COLS = 'id, inspection_item_id, storage_path, kind, purpose, caption, sort_order, rotation, show_on_report, created_at'
+const MEDIA_COLS = 'id, inspection_item_id, logbook_id, storage_path, kind, purpose, caption, sort_order, rotation, show_on_report, created_at'
 
 /** List media for an inspection, with short-lived signed URLs attached. */
 export async function listMedia(inspectionId) {
@@ -104,6 +105,28 @@ export async function listMediaByPurpose(inspectionId, purpose) {
     .select(MEDIA_COLS)
     .eq('inspection_id', inspectionId)
     .eq('purpose', purpose)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+  if (error) return { data: [], error }
+  const rows = data ?? []
+  if (rows.length === 0) return { data: [], error: null }
+  const { data: signed } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrls(rows.map((r) => r.storage_path), 3600)
+  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]))
+  return { data: rows.map((r) => ({ ...r, url: urlByPath.get(r.storage_path) ?? null })), error: null }
+}
+
+/**
+ * All media tied to one logbook (its scanned pages + the compiled PDF), ordered
+ * by sort_order then created, with signed URLs. The caller splits by purpose.
+ */
+export async function listMediaByLogbook(logbookId) {
+  if (!logbookId) return { data: [], error: null }
+  const { data, error } = await supabase
+    .from('media')
+    .select(MEDIA_COLS)
+    .eq('logbook_id', logbookId)
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true })
   if (error) return { data: [], error }

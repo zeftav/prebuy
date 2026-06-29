@@ -154,9 +154,59 @@ export async function addLogbook(inspection, draft) {
   return { data, error }
 }
 
+/** Update a logbook's fields (label / kind / position / dates / tach / notes). */
+export async function updateLogbook(id, patch) {
+  const clean = { ...patch }
+  if ('start_tach' in clean) clean.start_tach = num(clean.start_tach)
+  if ('end_tach' in clean) clean.end_tach = num(clean.end_tach)
+  const { data, error } = await supabase
+    .from('logbooks')
+    .update(clean)
+    .eq('id', id)
+    .select('id, kind, position, label, start_date, start_tach, end_date, end_tach, sort_order, notes')
+    .single()
+  return { data, error }
+}
+
 export async function deleteLogbook(id) {
   const { error } = await supabase.from('logbooks').delete().eq('id', id)
   return { error }
+}
+
+/**
+ * Reduce one-or-more extraction logbook drafts (a book scanned across batches)
+ * into a single time span: earliest start, latest end (date + tach). Pure.
+ */
+export function spanFromDrafts(drafts) {
+  let sd = null, st = null, ed = null, et = null
+  for (const d of drafts ?? []) {
+    const ds = cleanDraftValue(d?.start_date)
+    const de = cleanDraftValue(d?.end_date)
+    // cleanDraftValue maps blank/0 → null; guard so num(null) (=0) doesn't revive it.
+    const tsRaw = cleanDraftValue(d?.start_tach)
+    const teRaw = cleanDraftValue(d?.end_tach)
+    const ts = tsRaw == null ? null : num(tsRaw)
+    const te = teRaw == null ? null : num(teRaw)
+    if (ds && (!sd || ds < sd)) sd = ds
+    if (de && (!ed || de > ed)) ed = de
+    if (ts != null && (st == null || ts < st)) st = ts
+    if (te != null && (et == null || te > et)) et = te
+  }
+  return { start_date: sd, start_tach: st, end_date: ed, end_tach: et }
+}
+
+/** Combine two spans into the widest envelope (earliest start, latest end). Pure. */
+export function mergeSpan(a, b) {
+  const minDate = (x, y) => (!x ? y : !y ? x : x < y ? x : y)
+  const maxDate = (x, y) => (!x ? y : !y ? x : x > y ? x : y)
+  const minNum = (x, y) => (x == null ? y : y == null ? x : Math.min(x, y))
+  const maxNum = (x, y) => (x == null ? y : y == null ? x : Math.max(x, y))
+  return {
+    start_date: minDate(a?.start_date ?? null, b?.start_date ?? null),
+    start_tach: minNum(num(a?.start_tach), num(b?.start_tach)),
+    end_date: maxDate(a?.end_date ?? null, b?.end_date ?? null),
+    end_tach: maxNum(num(a?.end_tach), num(b?.end_tach)),
+  }
 }
 
 export async function listEvents(inspectionId) {
@@ -175,6 +225,7 @@ export async function addEvent(inspection, draft) {
   const row = {
     inspection_id: inspection.id,
     org_id: inspection.org_id,
+    logbook_id: draft.logbookId || draft.logbook_id || null,
     category: EVENT_CATEGORIES.includes(draft.category) ? draft.category : 'other',
     title: t,
     position: Number.isFinite(p) && p > 0 ? p : null,

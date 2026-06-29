@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan } from './logbooks.js'
 
 const groupBy = (groups, key) => groups.find((g) => g.key === key)
 
@@ -128,5 +128,35 @@ describe('mergeExtractDrafts', () => {
   it('tolerates missing/null arrays and nullish input', () => {
     expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [] })
     expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [] })
+  })
+})
+
+describe('spanFromDrafts', () => {
+  it('takes earliest start and latest end across batch drafts', () => {
+    const span = spanFromDrafts([
+      { start_date: '2015-03-01', start_tach: 1200, end_date: '2018-01-01', end_tach: 1900 },
+      { start_date: '2012-06-01', start_tach: 800, end_date: '2016-09-01', end_tach: 1600 },
+    ])
+    expect(span).toEqual({ start_date: '2012-06-01', start_tach: 800, end_date: '2018-01-01', end_tach: 1900 })
+  })
+  it('treats 0 tach and blanks as missing (via cleanDraftValue)', () => {
+    const span = spanFromDrafts([{ start_date: '', start_tach: 0, end_date: '2020-01-01', end_tach: 2400 }])
+    expect(span).toEqual({ start_date: null, start_tach: null, end_date: '2020-01-01', end_tach: 2400 })
+  })
+  it('handles nullish', () => {
+    expect(spanFromDrafts(null)).toEqual({ start_date: null, start_tach: null, end_date: null, end_tach: null })
+  })
+})
+
+describe('mergeSpan', () => {
+  it('widens to the earliest start / latest end', () => {
+    const merged = mergeSpan(
+      { start_date: '2015-01-01', start_tach: 1000, end_date: '2019-01-01', end_tach: 2000 },
+      { start_date: '2013-01-01', start_tach: 1200, end_date: '2020-06-01', end_tach: 1800 },
+    )
+    expect(merged).toEqual({ start_date: '2013-01-01', start_tach: 1000, end_date: '2020-06-01', end_tach: 2000 })
+  })
+  it('fills from whichever side has a value', () => {
+    expect(mergeSpan({ start_tach: 500 }, { end_tach: 900 })).toEqual({ start_date: null, start_tach: 500, end_date: null, end_tach: 900 })
   })
 })

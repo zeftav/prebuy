@@ -3,6 +3,30 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.35.0] — 2026-06-29
+
+### Changed
+- **Logbook audit is now scan-driven, per-logbook.** Decluttered the interface: manual "add a logbook"
+  by hand is gone (data comes from the scan, still editable). New flow: **"Scan a logbook"** → pick
+  type/position (airframe, engine #1/left, prop #2, …) → snap pages sequentially → on finish it
+  **compiles that logbook's PDF and auto-reads** the time span + notable events off the pages. Each
+  logbook is its own scan with its own PDF; **"Add pages"** appends + re-compiles + reads the new pages,
+  and a per-card **"Manage pages"** does rotate / reorder / delete + re-compile.
+- **Delete confirmations everywhere** (pages, PDFs, whole logbooks, events) — a two-step `ConfirmButton`,
+  since the phone interface made accidental deletes too easy.
+- Replaces the combined single-PDF page manager (v0.34.0) with per-logbook PDFs.
+
+### Added
+- Migration `023_media_logbook_link.sql` — `media.logbook_id` (FK → `logbooks`, cascade) so pages and
+  the compiled PDF belong to a specific logbook.
+- `lib/logbooks.js`: `updateLogbook`, `logbook_id` on events, pure tested `spanFromDrafts` /
+  `mergeSpan` (reduce batch extraction drafts to a book's time span). `lib/media.js`:
+  `listMediaByLogbook`, `logbookId` on `uploadMedia`.
+
+### Deploy
+- ⚠️ **Run migration `023_media_logbook_link.sql`.** No new edge-fn change — the already-pending `report`
+  redeploy (v0.34.0, JWT OFF) covers the per-logbook PDFs on the report (multiple `logbook_pdf` rows).
+
 ## [0.34.0] — 2026-06-28
 
 ### Added

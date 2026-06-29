@@ -37,16 +37,16 @@ const FAQ = [
     a: 'Open an inspection from your dashboard. We build a checklist matched to the aircraft and order it by financial risk, so the biggest-dollar items come first. Mark each item OK, Monitor, Discrepancy, or N/A, and add notes — your progress saves automatically. Dictation and photos are coming next.',
   },
   {
-    q: 'Can I make a PDF copy of the logbook?',
-    a: 'Yes. In the Logbook audit, the “Logbook pages & PDF” section shows the page photos you scanned. Rotate a sideways page, reorder them, or remove a bad shot, then tap “Compile PDF” to build a single PDF copy of the book. It’s stored with the inspection; flip “Show on report” to include it as a download link for the buyer, and re-compile any time after you change the pages. Large logbooks (80–100 pages) are fine — pages are shrunk and added one at a time so it compiles on your phone.',
-  },
-  {
     q: 'How does the logbook audit work?',
-    a: 'Open an inspection and tap “Logbook audit”. Add each physical logbook (airframe, engine, propeller) with its date and tach range — we reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). You can also record notable events like ADs, Form 337s, overhauls, prop strikes, and damage.',
+    a: 'Open an inspection and tap “Logbook audit”, then “Scan a logbook.” Pick what it is — airframe, engine, propeller (and which engine/prop on a twin) — and snap the pages in order. When you’re done we compile a PDF copy of that book and read the dates, times and notable events (ADs, 337s, overhauls, prop strikes, damage) right off the pages. Each logbook is its own scan, so you build them up one at a time. We then reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). Because logs are handwritten, always double-check the read-back — every time and event stays editable, and you can add an event by hand.',
   },
   {
-    q: 'Can I scan logbooks instead of typing them?',
-    a: 'Yes (beta). In the Logbook audit’s “Scan & import,” use “Upload pages” to select many pages at once from your camera roll — you can do the whole logbook in one go (80–100 pages is fine; we upload and read them in batches, with a progress bar). The camera button captures one page at a time, so for a full book photograph the pages first, then upload them all. We read them and propose logbooks and notable events for you to review — tick the ones to keep and import. Because logs are often handwritten, always confirm before importing; you can edit or remove anything afterward.',
+    q: 'Can I make a PDF copy of each logbook?',
+    a: 'Yes — it happens automatically when you scan. Each logbook gets its own PDF, compiled from the pages you snapped, stored with the inspection. Flip “Show on report” on a logbook to include its PDF as a download link for the buyer. On a logbook’s card you can “Add pages” to append more later (it re-compiles and reads the new pages), or “Manage pages” to rotate a sideways page, reorder, or remove one and re-compile. Large books (80–100 pages) are fine — pages are shrunk and added one at a time so it builds on your phone.',
+  },
+  {
+    q: 'How do I capture a whole logbook quickly?',
+    a: 'When scanning, use “Add pages” to select many pages at once from your camera roll, or “Take a page” to shoot them one at a time. For a full book it’s usually fastest to photograph all the pages first, then add them all at once. Deleting a page, a PDF, or a whole logbook always asks you to confirm first, so it’s hard to lose a scan by a mis-tap.',
   },
   {
     q: 'How do I send the report to my customer?',
