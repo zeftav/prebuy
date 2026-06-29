@@ -204,6 +204,64 @@ export function cleanDraftValue(v) {
   return v
 }
 
+// The edge fn caps images per request (vision token budget). A full logbook is
+// 80-100 pages, so the client scans in batches of this size and merges. Keep it
+// comfortably under the fn's MAX_IMAGES.
+export const SCAN_BATCH_SIZE = 12
+
+/** Split an array into chunks of `size` (>=1). Pure. */
+export function chunk(arr, size) {
+  const n = Math.max(1, Math.floor(size) || 1)
+  const list = Array.isArray(arr) ? arr : []
+  const out = []
+  for (let i = 0; i < list.length; i += n) out.push(list.slice(i, i + n))
+  return out
+}
+
+/**
+ * Merge several {logbooks, events} extraction drafts into one by concatenating.
+ * Duplicates/partials across batches are expected — the human review step curates
+ * them. Pure. Tolerates null/missing arrays.
+ */
+export function mergeExtractDrafts(drafts) {
+  const out = { logbooks: [], events: [] }
+  for (const d of drafts ?? []) {
+    if (Array.isArray(d?.logbooks)) out.logbooks.push(...d.logbooks)
+    if (Array.isArray(d?.events)) out.events.push(...d.events)
+  }
+  return out
+}
+
+/**
+ * Scan a whole logbook (many pages) in batches and merge the drafts. Sequential
+ * so we don't hammer the AI / hit rate limits. `onProgress({ done, total })` is
+ * called per batch. Returns { data, error, partial } — partial=true when some
+ * batches failed but others succeeded (we keep what we got). Errors only when
+ * EVERY batch failed.
+ */
+export async function extractLogbooksBatched(imageUrls, orgId, { onProgress } = {}) {
+  const urls = (imageUrls ?? []).filter(Boolean)
+  if (!urls.length) return { data: null, error: new Error('No images to read.'), partial: false }
+  const batches = chunk(urls, SCAN_BATCH_SIZE)
+  const drafts = []
+  let failures = 0
+  let lastError = null
+  for (let i = 0; i < batches.length; i++) {
+    const { data, error } = await extractLogbooks(batches[i], orgId)
+    if (error) {
+      failures += 1
+      lastError = error
+    } else if (data) {
+      drafts.push(data)
+    }
+    onProgress?.({ done: i + 1, total: batches.length })
+  }
+  if (drafts.length === 0) {
+    return { data: null, error: lastError || new Error('Couldn’t read the pages.'), partial: false }
+  }
+  return { data: mergeExtractDrafts(drafts), error: null, partial: failures > 0 }
+}
+
 /** Extract draft logbooks + events from photographed pages (signed image URLs). */
 export async function extractLogbooks(imageUrls, orgId) {
   if (!imageUrls?.length) return { data: null, error: new Error('No images to read.') }

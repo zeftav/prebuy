@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts } from './logbooks.js'
 
 const groupBy = (groups, key) => groups.find((g) => g.key === key)
 
@@ -97,5 +97,36 @@ describe('groupLabel', () => {
     expect(groupLabel('engine', null, 2)).toBe('Engine (unassigned)')
     expect(groupLabel('engine', 1, 1)).toBe('Engine') // single-engine
     expect(groupLabel('airframe', null, 2)).toBe('Airframe')
+  })
+})
+
+describe('chunk', () => {
+  it('splits into chunks of size', () => {
+    expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]])
+  })
+  it('exact multiple', () => {
+    expect(chunk([1, 2, 3, 4], 2)).toEqual([[1, 2], [3, 4]])
+  })
+  it('size >= length → single chunk', () => {
+    expect(chunk([1, 2], 10)).toEqual([[1, 2]])
+  })
+  it('coerces bad size to 1 and handles nullish', () => {
+    expect(chunk([1, 2], 0)).toEqual([[1], [2]])
+    expect(chunk(null, 3)).toEqual([])
+  })
+})
+
+describe('mergeExtractDrafts', () => {
+  it('concatenates logbooks and events across batches', () => {
+    const merged = mergeExtractDrafts([
+      { logbooks: [{ kind: 'airframe' }], events: [{ title: 'A' }] },
+      { logbooks: [{ kind: 'engine' }], events: [{ title: 'B' }, { title: 'C' }] },
+    ])
+    expect(merged.logbooks).toHaveLength(2)
+    expect(merged.events.map((e) => e.title)).toEqual(['A', 'B', 'C'])
+  })
+  it('tolerates missing/null arrays and nullish input', () => {
+    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [] })
+    expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [] })
   })
 })

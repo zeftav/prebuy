@@ -12,7 +12,7 @@ import { getInspection } from '../lib/checklist.js'
 import {
   listLogbooks, addLogbook, deleteLogbook,
   listEvents, addEvent, deleteEvent,
-  reconcileLogbooks, kindLabel, categoryLabel, cleanDraftValue, extractLogbooks,
+  reconcileLogbooks, kindLabel, categoryLabel, cleanDraftValue, extractLogbooksBatched,
   LOGBOOK_KINDS, EVENT_CATEGORIES, POSITIONAL_KINDS,
 } from '../lib/logbooks.js'
 import { normalizeProfile, engineLabel, propLabel } from '../lib/profile.js'
@@ -208,6 +208,8 @@ export default function LogbookAudit() {
 function ScanImport({ inspection, onAddBook, onAddEvent }) {
   const [phase, setPhase] = useState('idle') // idle | working | review
   const [error, setError] = useState(null)
+  const [note, setNote] = useState(null) // non-fatal notice (e.g. partial read)
+  const [progress, setProgress] = useState(null) // { label, done, total }
   const [draft, setDraft] = useState({ logbooks: [], events: [] })
   const [pickLb, setPickLb] = useState(new Set())
   const [pickEv, setPickEv] = useState(new Set())
@@ -217,30 +219,53 @@ function ScanImport({ inspection, onAddBook, onAddEvent }) {
     const list = Array.from(files ?? [])
     if (!list.length) return
     setError(null)
+    setNote(null)
     setPhase('working')
-    // Upload pages to private storage, then sign for the vision model.
+
+    // 1. Upload all pages to private storage (limited concurrency so a whole
+    //    100-page logbook uploads reliably without flooding the network).
+    setProgress({ label: 'Uploading pages', done: 0, total: list.length })
     const paths = []
-    for (const f of list) {
-      const { data, error } = await uploadMedia({
-        orgId: inspection.org_id,
-        inspectionId: inspection.id,
-        purpose: 'logbook',
-        file: f,
-      })
-      if (!error && data) paths.push(data.storage_path)
+    let uploaded = 0
+    const CONCURRENCY = 4
+    let cursor = 0
+    async function worker() {
+      while (cursor < list.length) {
+        const f = list[cursor++]
+        const { data, error } = await uploadMedia({
+          orgId: inspection.org_id,
+          inspectionId: inspection.id,
+          purpose: 'logbook',
+          file: f,
+        })
+        if (!error && data) paths.push(data.storage_path)
+        uploaded += 1
+        setProgress({ label: 'Uploading pages', done: uploaded, total: list.length })
+      }
     }
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCY, list.length) }, worker))
+
     const urls = await signedUrlsFor(paths)
     if (!urls.length) {
       setError('Couldn’t upload the photos. Try again.')
+      setProgress(null)
       setPhase('idle')
       return
     }
-    const { data, error } = await extractLogbooks(urls, inspection.org_id)
+
+    // 2. Read the pages in batches (the vision model caps images per request),
+    //    merging the drafts as we go.
+    setProgress({ label: 'Reading pages', done: 0, total: 1 })
+    const { data, error, partial } = await extractLogbooksBatched(urls, inspection.org_id, {
+      onProgress: ({ done, total }) => setProgress({ label: 'Reading pages', done, total }),
+    })
+    setProgress(null)
     if (error) {
       setError(error.message)
       setPhase('idle')
       return
     }
+    if (partial) setNote('Some pages couldn’t be read and were skipped — review what came through, and re-scan any you’re missing.')
     setDraft(data)
     setPickLb(new Set(data.logbooks.map((_, i) => i)))
     setPickEv(new Set(data.events.map((_, i) => i)))
@@ -292,13 +317,16 @@ function ScanImport({ inspection, onAddBook, onAddEvent }) {
         <>
           <p className="auth__hint">
             Photograph the logbook pages — we’ll read them and propose logbooks + notable events for you
-            to review. Handwriting varies, so always confirm before importing.
+            to review. You can do the <strong>whole logbook at once</strong> (80–100 pages is fine — we
+            read them in batches). Tip: use <strong>“Upload files”</strong> to select many pages at once
+            from your camera roll; the camera button captures one page at a time. Handwriting varies, so
+            always confirm before importing.
           </p>
           <PhotoPicker
             onPick={onPick}
             multiple
-            takeLabel="Scan logbook pages"
-            uploadLabel="Upload files"
+            takeLabel="Scan one page"
+            uploadLabel="Upload pages"
             takeIcon={ScanLine}
             className="auth__btn auth__btn--ghost insp__walkthrough"
           />
@@ -306,10 +334,24 @@ function ScanImport({ inspection, onAddBook, onAddEvent }) {
         </>
       )}
 
-      {phase === 'working' && <p className="auth__hint">Reading the pages…</p>}
+      {phase === 'working' && (
+        <div className="auth__hint" aria-busy="true">
+          {progress ? (
+            <>
+              {progress.label} {progress.done}{progress.total ? ` of ${progress.total}` : ''}…
+              <div className="lb__progressbar">
+                <span style={{ width: `${progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%` }} />
+              </div>
+            </>
+          ) : (
+            'Working…'
+          )}
+        </div>
+      )}
 
       {phase === 'review' && (
         <div className="lb__review">
+          {note && <div className="auth__notice" role="status">{note}</div>}
           {draft.logbooks.length === 0 && draft.events.length === 0 && (
             <p className="auth__hint">Nothing legible found. Try clearer, well-lit photos.</p>
           )}

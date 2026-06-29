@@ -3,6 +3,21 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.33.0] — 2026-06-28
+
+### Added
+- **Bulk logbook scanning — whole logbook in one pass.** The OCR import previously processed only a
+  single batch (the edge fn caps images per request); a full 80–100-page logbook didn't fit. Now the
+  client uploads all selected pages (limited concurrency, with a progress bar) and reads them in
+  **batches**, merging the drafts.
+  - `lib/logbooks.js`: pure `chunk` + `mergeExtractDrafts` (+tests) and `extractLogbooksBatched`
+    (sequential batches, per-batch `onProgress`, `partial` flag when some batches fail but others
+    succeed — keeps what came through rather than failing the whole scan). `SCAN_BATCH_SIZE = 12`.
+  - `LogbookAudit` "Scan & import": bulk upload with progress, batched read with progress, a
+    partial-read notice, and clearer copy (use **"Upload pages"** to multi-select the whole book; the
+    camera captures one page at a time).
+  - Client-only — calls the existing `structure-logbook` edge fn multiple times. **No migration, no deploy.**
+
 ## [0.32.3] — 2026-06-28
 
 ### Changed

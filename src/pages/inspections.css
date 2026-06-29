@@ -1226,3 +1226,19 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+/* Logbook scan progress bar (bulk multi-page OCR) */
+.lb__progressbar {
+  margin-top: 8px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent-border, rgba(0,0,0,0.1));
+  overflow: hidden;
+}
+.lb__progressbar span {
+  display: block;
+  height: 100%;
+  background: var(--accent, #6b46c1);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}

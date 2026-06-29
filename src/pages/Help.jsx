@@ -42,7 +42,7 @@ const FAQ = [
   },
   {
     q: 'Can I scan logbooks instead of typing them?',
-    a: 'Yes (beta). In the Logbook audit, tap “Scan logbook pages” and photograph the pages. We read them and propose logbooks and notable events for you to review — tick the ones to keep and import. Because logs are often handwritten, always confirm before importing; you can edit or remove anything afterward.',
+    a: 'Yes (beta). In the Logbook audit’s “Scan & import,” use “Upload pages” to select many pages at once from your camera roll — you can do the whole logbook in one go (80–100 pages is fine; we upload and read them in batches, with a progress bar). The camera button captures one page at a time, so for a full book photograph the pages first, then upload them all. We read them and propose logbooks and notable events for you to review — tick the ones to keep and import. Because logs are often handwritten, always confirm before importing; you can edit or remove anything afterward.',
   },
   {
     q: 'How do I send the report to my customer?',

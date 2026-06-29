@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.33.0',
+    date: '2026-06-28',
+    title: 'Scan a whole logbook at once',
+    items: [
+      'Logbook scanning now handles the whole book in one go — photograph all the pages and tap “Upload pages” to select them together. We upload and read them in batches (80–100 pages is fine), with a progress bar so you can see it working.',
+      'If a few pages won’t read, we keep everything that did and tell you, so you can re-scan just the ones you’re missing.',
+      'Tip: the camera button still captures one page at a time, so for a full logbook photograph the pages first, then upload them all at once.',
+    ],
+  },
+  {
     version: '0.32.3',
     date: '2026-06-28',
     title: 'Faster photo walkthrough',
