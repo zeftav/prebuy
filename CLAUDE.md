@@ -434,6 +434,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   the native capture input — tap to shoot page after page; falls back to camera-roll upload (PhotoPicker
   `uploadOnly`). LogbookCard "Change type" fixes a mis-categorized scan (`reassignLogbookEvents` + relabel
   PDF caption). Uses existing cols (`logbook_events.position`, `media.logbook_id`/023). Tests 179.
+- Session 3 cont. — **AD/337 scans + context-aware reads + reorder fix** (v0.36.0). Migration `024`
+  extends `logbooks.kind` with `ad`+`form_337` (scan AD reports & 337s as own records w/ PDFs);
+  `lib/logbooks.js` `TIME_KINDS` so reconcile skips them. **Context-aware extraction:** scan flow passes
+  `{kind,position}` → `structure-logbook` (`extractLogbooks(.,.,context)`); engine/prop books report
+  THAT component's time-since-new/OH (fixes prop TSN reading airframe tach); AD/337 read as dated events.
+  **Reorder fix:** InspectionDetail display order ranked once on load + held stable (was re-sorting live →
+  item jumped on "Clean up with AI"). ⚠️ **Run migration 024 + redeploy `structure-logbook` (JWT ON)**;
+  reorder fix is frontend-only. Backlog: **logbook time-tracking audit** (per-entry continuity; deferred).
   **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
   Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 

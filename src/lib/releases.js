@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.36.0',
+    date: '2026-06-29',
+    title: 'AD/337 scans + sharper logbook reads',
+    items: [
+      'You can now scan AD compliance reports and Form 337s as their own records (each gets its own PDF), right alongside the airframe/engine/prop books.',
+      'Logbook reads are more accurate: because the scan knows which book it is, an engine or prop log now reports that component’s own time (since new / overhaul) instead of the airframe tach, and AD/337 scans pull each item out as a dated event.',
+      'Fixed: cleaning up a note with AI no longer makes that item jump around the list — the order now holds steady while you work, so you don’t lose your place.',
+    ],
+  },
+  {
     version: '0.35.1',
     date: '2026-06-29',
     title: 'Faster logbook scanning + fix a mis-typed logbook',

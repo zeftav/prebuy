@@ -6,14 +6,17 @@
 import { supabase } from './supabase.js'
 import { engineLabel, propLabel } from './profile.js'
 
-export const LOGBOOK_KINDS = ['airframe', 'engine', 'propeller', 'other']
+export const LOGBOOK_KINDS = ['airframe', 'engine', 'propeller', 'ad', 'form_337', 'other']
 // Kinds that are tracked per engine/prop position on a multi-engine aircraft.
 export const POSITIONAL_KINDS = ['engine', 'propeller']
+// Kinds that carry a tach time-span and so take part in reconciliation. AD reports
+// and 337s are scanned records without a continuous time span.
+export const TIME_KINDS = ['airframe', 'engine', 'propeller', 'other']
 export const EVENT_CATEGORIES = ['ad', '337', 'overhaul', 'prop_strike', 'damage', 'other']
 const TOL = 0.1 // tach-hour tolerance for "continuous"
 
 export function kindLabel(k) {
-  return { airframe: 'Airframe', engine: 'Engine', propeller: 'Propeller', other: 'Other' }[k] || k
+  return { airframe: 'Airframe', engine: 'Engine', propeller: 'Propeller', ad: 'AD compliance', form_337: 'Form 337s', other: 'Other' }[k] || k
 }
 export function categoryLabel(c) {
   return {
@@ -96,7 +99,7 @@ export function reconcileLogbooks(logbooks, { engineCount = 1, layout = 'convent
     }
   }
 
-  for (const k of LOGBOOK_KINDS) {
+  for (const k of TIME_KINDS) {
     const books = (logbooks ?? []).filter((b) => b.kind === k)
     if (!books.length) continue
     if (POSITIONAL_KINDS.includes(k) && engineCount > 1) {
@@ -300,7 +303,7 @@ export function mergeExtractDrafts(drafts) {
  * batches failed but others succeeded (we keep what we got). Errors only when
  * EVERY batch failed.
  */
-export async function extractLogbooksBatched(imageUrls, orgId, { onProgress } = {}) {
+export async function extractLogbooksBatched(imageUrls, orgId, { onProgress, context } = {}) {
   const urls = (imageUrls ?? []).filter(Boolean)
   if (!urls.length) return { data: null, error: new Error('No images to read.'), partial: false }
   const batches = chunk(urls, SCAN_BATCH_SIZE)
@@ -308,7 +311,7 @@ export async function extractLogbooksBatched(imageUrls, orgId, { onProgress } = 
   let failures = 0
   let lastError = null
   for (let i = 0; i < batches.length; i++) {
-    const { data, error } = await extractLogbooks(batches[i], orgId)
+    const { data, error } = await extractLogbooks(batches[i], orgId, context)
     if (error) {
       failures += 1
       lastError = error
@@ -323,8 +326,13 @@ export async function extractLogbooksBatched(imageUrls, orgId, { onProgress } = 
   return { data: mergeExtractDrafts(drafts), error: null, partial: failures > 0 }
 }
 
-/** Extract draft logbooks + events from photographed pages (signed image URLs). */
-export async function extractLogbooks(imageUrls, orgId) {
+/**
+ * Extract draft logbooks + events from photographed pages (signed image URLs).
+ * Optional `context` ({ kind, position }) tells the model which logbook these
+ * pages are, so it reports that component's own time (TSN/TSO) and tailors
+ * extraction for AD reports / 337s.
+ */
+export async function extractLogbooks(imageUrls, orgId, context = null) {
   if (!imageUrls?.length) return { data: null, error: new Error('No images to read.') }
   const { data: sessionData } = await supabase.auth.getSession()
   const token = sessionData.session?.access_token
@@ -335,7 +343,7 @@ export async function extractLogbooks(imageUrls, orgId) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ images: imageUrls, org_id: orgId || null }),
+      body: JSON.stringify({ images: imageUrls, org_id: orgId || null, context: context || null }),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }

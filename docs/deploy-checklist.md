@@ -50,6 +50,8 @@ Run in order. All are idempotent (safe to re-run).
       purpose (logbook page manager + compiled PDF). Idempotent. (v0.34.0, 2026-06-28)
 - [ ] ⬜ `023_media_logbook_link.sql` — `media.logbook_id` (per-logbook scans/PDFs). Idempotent.
       (v0.35.0, 2026-06-29)
+- [ ] ⬜ `024_logbook_record_kinds.sql` — extend `logbooks.kind` with `ad` + `form_337` (scan AD reports
+      & 337s as their own records). Idempotent. (v0.36.0, 2026-06-29)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
@@ -62,6 +64,8 @@ Run in order. All are idempotent (safe to re-run).
         migration (profile lives in the existing `inspections.attributes` JSONB).
 - [x] ✅ `structure-logbook` — Verify JWT **ON**. Logbook OCR import (Claude vision). (2026-06-27)
   - [x] ✅ Redeployed `structure-logbook` for v0.14.0 (scan-to-pre-fill specs/currency/equipment). (2026-06-27)
+  - [ ] 🔁 **REDEPLOY `structure-logbook` (JWT ON) for v0.36.0** — context-aware reads (engine/prop report
+        their own time; AD/337 read as events). Needs migration 024. Reuses `ANTHROPIC_API_KEY`.
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile

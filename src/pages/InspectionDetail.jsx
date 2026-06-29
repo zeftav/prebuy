@@ -92,7 +92,23 @@ export default function InspectionDetail() {
     }
   }, [inspection?.org_id])
 
-  const ordered = useMemo(() => orderByFinancialRisk(items), [items])
+  // Stable display order: risk-ranked ONCE when items load, then held steady so an
+  // item doesn't jump as you edit it (e.g. "Clean up with AI" changes status +
+  // severity). New items append in risk order; removed ones drop. Re-ranks on reload.
+  const [order, setOrder] = useState([])
+  useEffect(() => {
+    setOrder((prev) => {
+      const present = new Set(items.map((i) => i.id))
+      const kept = prev.filter((id) => present.has(id))
+      const keptSet = new Set(kept)
+      const fresh = orderByFinancialRisk(items.filter((i) => !keptSet.has(i.id))).map((i) => i.id)
+      return [...kept, ...fresh]
+    })
+  }, [items])
+  const ordered = useMemo(() => {
+    const byId = new Map(items.map((i) => [i.id, i]))
+    return order.map((id) => byId.get(id)).filter(Boolean)
+  }, [order, items])
   const reviewed = items.filter((i) => i.status && i.status !== 'pending').length
 
   // Optimistic patch with revert-on-failure.

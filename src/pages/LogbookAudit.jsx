@@ -44,6 +44,8 @@ function kindOptions(engineCount, layout) {
     opts.push({ kind: 'engine', position: 0, label: 'Engine' })
     opts.push({ kind: 'propeller', position: 0, label: 'Propeller' })
   }
+  opts.push({ kind: 'ad', position: 0, label: 'AD compliance report' })
+  opts.push({ kind: 'form_337', position: 0, label: 'Form 337s' })
   opts.push({ kind: 'other', position: 0, label: 'Other' })
   return opts
 }
@@ -373,6 +375,7 @@ function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCa
       setProgress({ label: 'Reading pages', done: 0, total: 1 })
       const { data: draft } = await extractLogbooksBatched(urls, inspection.org_id, {
         onProgress: (pr) => setProgress({ label: 'Reading pages', ...pr }),
+        context: { kind: book.kind, position: book.position },
       })
       if (draft) {
         const span = spanFromDrafts(draft.logbooks)

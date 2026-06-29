@@ -3,6 +3,31 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.36.0] — 2026-06-29
+
+### Added
+- **AD-report and Form-337 scan types.** Migration `024_logbook_record_kinds.sql` extends
+  `logbooks.kind` with `ad` + `form_337`. They appear in the "Scan a logbook" picker and store as their
+  own scanned record (pages + compiled PDF). `lib/logbooks.js`: `TIME_KINDS` (airframe/engine/propeller/
+  other) — reconciliation now iterates these so AD/337 records (no tach span) don't clutter it.
+
+### Changed
+- **Context-aware logbook reads.** The scan flow now passes the logbook's `kind`/`position` to
+  `structure-logbook`. An engine/prop book reports **that component's own time** (since new / overhaul)
+  for the span instead of the airframe tach (fixes a prop log reading the wrong "time since new"); AD and
+  337 scans are read as dated events (category `ad` / `337`). `extractLogbooks(urls, orgId, context)` +
+  `extractLogbooksBatched(.,.,{ context })`.
+
+### Fixed
+- **AI cleanup no longer reorders the list.** InspectionDetail held the item list in live financial-risk
+  order, so "Clean up with AI" (which sets status + severity) made the item jump and you'd lose your
+  place. The display order is now ranked once on load and held stable while you work (new items append in
+  risk order; re-ranks on reload).
+
+### Deploy
+- ⚠️ **Run migration `024_logbook_record_kinds.sql`** and **redeploy `structure-logbook` (Verify JWT ON)**
+  (context-aware reads + AD/337). The reorder fix is frontend-only.
+
 ## [0.35.1] — 2026-06-29
 
 ### Added

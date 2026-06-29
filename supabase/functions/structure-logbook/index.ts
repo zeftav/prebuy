@@ -166,7 +166,7 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) return json({ error: 'AI is not configured.' }, 500)
 
-  let payload: { images?: unknown; org_id?: unknown }
+  let payload: { images?: unknown; org_id?: unknown; context?: unknown }
   try {
     payload = await req.json()
   } catch {
@@ -178,6 +178,41 @@ Deno.serve(async (req: Request) => {
     ? payload.images.filter((u) => typeof u === 'string').slice(0, MAX_IMAGES)
     : []
   if (!images.length) return json({ error: 'No images to read.' }, 400)
+
+  // Optional: the scan flow tells us which logbook these pages are. When set, we
+  // tell the model to report THIS component's own accumulated time (time since
+  // new / since overhaul) for the span — not the airframe tach — which is the
+  // figure that matters for an engine or propeller book.
+  const ctx = (payload.context && typeof payload.context === 'object' ? payload.context : {}) as { kind?: string; position?: number; label?: string }
+  const ctxKind = ['airframe', 'engine', 'propeller', 'other', 'ad', 'form_337'].includes(String(ctx.kind)) ? String(ctx.kind) : ''
+  let contextLine = ''
+  if (ctxKind === 'ad') {
+    contextLine =
+      '\n\nIMPORTANT CONTEXT: these pages are an AD (Airworthiness Directive) compliance report. ' +
+      'Focus on the events list: extract EACH AD as an event with category="ad", the AD number in the ' +
+      'title (e.g. "AD 2015-19-07"), the compliance date in event_date, and the method + whether it’s ' +
+      'recurring (and next-due) in description. A logbook time span is not needed here.'
+  } else if (ctxKind === 'form_337') {
+    contextLine =
+      '\n\nIMPORTANT CONTEXT: these pages are FAA Form 337s (major repair & alteration). Focus on the ' +
+      'events list: extract EACH 337 as an event with category="337", a short description of the repair/ ' +
+      'alteration in the title, and the date in event_date. A logbook time span is not needed here.'
+  } else if (ctxKind) {
+    const where = ctx.position ? ` (position #${ctx.position})` : ''
+    const timeWord =
+      ctxKind === 'propeller'
+        ? 'the PROPELLER’s own time — its time since new, or since the last propeller overhaul'
+        : ctxKind === 'engine'
+          ? 'the ENGINE’s own time — its time since major overhaul (SMOH), or since new'
+          : ctxKind === 'airframe'
+            ? 'the AIRFRAME total time (tach/Hobbs)'
+            : 'this component’s own accumulated time'
+    contextLine =
+      `\n\nIMPORTANT CONTEXT: these pages are the ${ctxKind} logbook${where}. ` +
+      `Return exactly ONE logbook entry, with kind="${ctxKind}". For start_tach and end_tach, use ${timeWord} ` +
+      `as recorded in THIS book — NOT the airframe tach if it differs. If the book tracks this component’s ` +
+      `running total separately from the aircraft tach, use the component’s running total.`
+  }
 
   const anthropic = new Anthropic({ apiKey })
   const content: unknown[] = [
@@ -193,7 +228,8 @@ Deno.serve(async (req: Request) => {
         '(4) currency due-dates (annual, IFR pitot/static 91.411, transponder 91.413, ELT battery, O2 hydro); ' +
         '(5) installed equipment, split into avionics vs additional, with short condition notes. ' +
         'Only report what is legible — do not guess. Use empty strings / 0 for anything you cannot ' +
-        'read. This is a draft a human will review.',
+        'read. This is a draft a human will review.' +
+        contextLine,
     },
     ...images.map((url) => ({ type: 'image', source: { type: 'url', url } })),
   ]

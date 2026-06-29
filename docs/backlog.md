@@ -778,3 +778,22 @@ Status: **spec only.** Build when support load justifies it; the read-only view 
 ## Other near-term (tracked in CLAUDE.md TODO)
 Auth + shop signup · Tooltip component + `/help` FAQ · FAA N-number lookup · capture flow
 (dictation + media) · report view + PDF · seed first global checklist · Jira setup.
+
+## Logbook time-tracking audit — per-entry continuity (Brett, 2026-06-29)
+
+Today's reconciliation only checks BETWEEN books (gaps/overlaps from each book's start/end tach). Brett
+wants a deeper, entry-level audit: as we read a logbook, verify the running times/timers/component times
+**carry forward correctly between consecutive entries** — catch transcription/math errors, a total that
+jumps or goes backwards, a tach that doesn't reconcile with Hobbs/airframe time, a component time (engine
+SMOH, prop TSN) that's inconsistent with the airframe total at the same date, etc.
+
+Likely its own audit pass (probably AI-assisted off the scanned entries + some pure cross-checks). Big
+think — flagged for later. Sketch of what to flag:
+- Running total decreases or skips between consecutive entries (beyond rounding).
+- Date out of order vs the running time.
+- Component time (engine/prop) exceeds airframe total at the same point, or advances faster than airframe.
+- Entry time delta inconsistent with the stated flight/work time.
+- Carried-forward "brought forward" total ≠ previous entry's ending total.
+Surface as advisory findings the inspector reviews (not hard errors — OCR + handwriting are imperfect).
+Depends on capturing per-entry times (today we only keep each book's span), so it likely needs an
+entry-level extraction + store step first.
