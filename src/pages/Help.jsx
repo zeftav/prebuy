@@ -106,7 +106,11 @@ const FAQ = [
   },
   {
     q: 'Does my shop do aircraft or boats?',
-    a: 'Each shop inspects one type, chosen when you create the shop — so the whole app (identifiers, checklists, reports) is tailored to it. If you inspect more than one type, create a separate shop for each; they all share your login and you can switch between them on the dashboard.',
+    a: 'Each shop covers one type, chosen when you create the shop — so the whole app (identifiers, checklists, reports) is tailored to it. If you work more than one type, create a separate shop for each; they all share your login and you can switch between them on the dashboard.',
+  },
+  {
+    q: 'I’m a broker/seller, not an inspector — can I use PreBuy?',
+    a: 'Yes. When you create a shop, pick the account type: “Inspection shop,” “Broker / seller,” or “Both.” A broker account gives you a simpler, listing-only experience — build the asset’s profile, photos and records, write it up, and publish a shareable listing — without the inspection checklist. You can also hand a listing to an inspecting shop, who picks it up as a full pre-purchase inspection. Choose “Both” if you do listings and inspections; you’ll pick which for each job. (Existing shops are set to “Inspection shop” and can keep working exactly as before.)',
   },
   {
     q: 'Who can see my data?',

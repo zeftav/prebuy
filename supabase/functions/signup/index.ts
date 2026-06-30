@@ -20,6 +20,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const SHOP_NAME_MIN = 2
 const SHOP_NAME_MAX = 60
 const VERTICALS = ['aviation', 'marine', 'home', 'automotive']
+const ORG_TYPES = ['inspector', 'broker', 'both']
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -66,7 +67,7 @@ Deno.serve(async (req: Request) => {
   const user = userData.user
 
   // --- validate input ---
-  let payload: { name?: unknown; vertical?: unknown }
+  let payload: { name?: unknown; vertical?: unknown; org_type?: unknown }
   try {
     payload = await req.json()
   } catch {
@@ -78,6 +79,8 @@ Deno.serve(async (req: Request) => {
   }
   // A shop does one vertical; defaults to aviation if unspecified.
   const vertical = VERTICALS.includes(String(payload.vertical)) ? String(payload.vertical) : 'aviation'
+  // Account type: inspector (default) / broker / both.
+  const orgType = ORG_TYPES.includes(String(payload.org_type)) ? String(payload.org_type) : 'inspector'
 
   // --- create org (retry slug on collision) ---
   const base = slugify(name) || 'shop'
@@ -86,8 +89,8 @@ Deno.serve(async (req: Request) => {
     const slug = attempt === 0 ? base : `${base}-${randomSuffix()}`
     const { data, error } = await admin
       .from('orgs')
-      .insert({ name, slug, vertical })
-      .select('id, name, slug, vertical')
+      .insert({ name, slug, vertical, org_type: orgType })
+      .select('id, name, slug, vertical, org_type')
       .single()
     if (!error) {
       org = data

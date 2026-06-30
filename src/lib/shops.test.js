@@ -1,5 +1,34 @@
 import { describe, it, expect } from 'vitest'
-import { validateShopName, slugifyShopName, pickActiveOrg } from './shops.js'
+import { validateShopName, slugifyShopName, pickActiveOrg, normalizeOrgType, accountTypeLabel, isBrokerOnly, showsModePicker, defaultMode } from './shops.js'
+
+describe('account type helpers', () => {
+  it('normalizeOrgType keeps valid, defaults the rest to inspector', () => {
+    expect(normalizeOrgType('broker')).toBe('broker')
+    expect(normalizeOrgType('both')).toBe('both')
+    expect(normalizeOrgType('inspector')).toBe('inspector')
+    expect(normalizeOrgType('nonsense')).toBe('inspector')
+    expect(normalizeOrgType(undefined)).toBe('inspector')
+  })
+  it('accountTypeLabel maps known + falls back', () => {
+    expect(accountTypeLabel('broker')).toBe('Broker / seller')
+    expect(accountTypeLabel('bogus')).toBe('Inspection shop')
+  })
+  it('isBrokerOnly only for broker', () => {
+    expect(isBrokerOnly('broker')).toBe(true)
+    expect(isBrokerOnly('both')).toBe(false)
+    expect(isBrokerOnly('inspector')).toBe(false)
+  })
+  it('showsModePicker only for both', () => {
+    expect(showsModePicker('both')).toBe(true)
+    expect(showsModePicker('broker')).toBe(false)
+    expect(showsModePicker('inspector')).toBe(false)
+  })
+  it('defaultMode: broker → listing, else inspection', () => {
+    expect(defaultMode('broker')).toBe('listing')
+    expect(defaultMode('both')).toBe('inspection')
+    expect(defaultMode('inspector')).toBe('inspection')
+  })
+})
 
 describe('validateShopName', () => {
   it('trims and collapses internal whitespace', () => {

@@ -452,6 +452,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   advisory + "Mark reviewed". Full-res page PDF kept as source of truth. `extractLogbooks`/
   `mergeExtractDrafts` carry `unclear` (+test). ⚠️ **Run migration 025 + redeploy `structure-logbook`
   (JWT ON).** Backlog still open: per-entry time-tracking audit.
+- Session 3 cont. — **Account type at signup: inspector / broker / both** (v0.38.0). Migration `026`
+  (`orgs.org_type`, default `inspector`). `signup` edge fn persists it. CreateShop account-type picker;
+  brokers get a **listing-only** experience (jobs default to `mode='listing'` → checklist/walk-around/
+  follow-ups already hidden for listings); Dashboard/NewInspection terminology → "Listings"/"New listing".
+  "Both" keeps the per-job mode picker; inspectors unchanged. `lib/shops.js` `ACCOUNT_TYPES` + pure
+  `normalizeOrgType`/`accountTypeLabel`/`isBrokerOnly`/`showsModePicker`/`defaultMode` (+tests);
+  `fetchMemberships`/`createShop` carry `org_type`. No RLS/data-model change (listing = inspection w/
+  `mode='listing'`, 016). ⚠️ **Run migration 026 + redeploy `signup` (JWT OFF).**
   **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
   Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 

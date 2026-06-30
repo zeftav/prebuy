@@ -122,6 +122,7 @@ export default function Dashboard() {
 
       <InspectionList
         orgId={activeMembership.org_id}
+        orgType={activeMembership.orgs?.org_type || 'inspector'}
         canManage={activeMembership.role === 'owner' || activeMembership.role === 'admin'}
       />
 
@@ -132,9 +133,12 @@ export default function Dashboard() {
   )
 }
 
-function InspectionList({ orgId, canManage }) {
+function InspectionList({ orgId, orgType = 'inspector', canManage }) {
   const [state, setState] = useState({ status: 'loading', rows: [] })
   const [followCounts, setFollowCounts] = useState({})
+  const broker = orgType === 'broker'
+  const noun = broker ? 'listing' : 'inspection'
+  const heading = broker ? 'Listings' : 'Inspections'
 
   useEffect(() => {
     let active = true
@@ -160,9 +164,9 @@ function InspectionList({ orgId, canManage }) {
   return (
     <section className="insp__section">
       <div className="insp__sectionhead">
-        <h2>Inspections</h2>
+        <h2>{heading}</h2>
         <Link to={`/app/inspections/new?org=${orgId}`} className="auth__btn insp__new">
-          <Plus size={15} aria-hidden="true" /> New inspection
+          <Plus size={15} aria-hidden="true" /> New {noun}
         </Link>
       </div>
 
@@ -176,9 +180,9 @@ function InspectionList({ orgId, canManage }) {
 
       {state.status === 'ready' && state.rows.length === 0 && (
         <div className="insp__empty">
-          <p>No inspections yet.</p>
+          <p>No {noun}s yet.</p>
           <p className="auth__hint">
-            Start your first — pick aircraft or boat, enter its identifier, and you’re off.
+            Start your first — enter the identifier and you’re off.
           </p>
         </div>
       )}

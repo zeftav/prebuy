@@ -1465,3 +1465,30 @@
   gap: 2px;
   min-width: 0;
 }
+
+/* Account-type picker (CreateShop: inspector / broker / both) */
+.insp__accounttypes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.insp__accountbtn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid var(--line, #d7dce3);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.insp__accountbtn.is-active {
+  border-color: var(--accent, #6b46c1);
+  background: var(--accent-bg, #f7f5ff);
+  box-shadow: inset 0 0 0 1px var(--accent, #6b46c1);
+}
+.insp__accountlabel { font-weight: 700; }
+.insp__accountblurb { font-size: 13px; color: var(--muted, #6b7280); line-height: 1.35; }

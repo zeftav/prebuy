@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Plane, Ship, Search, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
-import { fetchMemberships, pickActiveOrg } from '../lib/shops.js'
+import { fetchMemberships, pickActiveOrg, showsModePicker, defaultMode } from '../lib/shops.js'
 import { createInspection } from '../lib/inspections.js'
 import { getVertical, validateIdentifier } from '../lib/verticals.js'
 import { lookupAircraft } from '../lib/aircraft.js'
@@ -48,7 +48,13 @@ export default function NewInspection() {
     fetchMemberships().then(({ data }) => {
       if (!active) return
       const m = (wantedOrg && data.find((x) => x.org_id === wantedOrg)) || pickActiveOrg(data)
-      setShop(m ? { org_id: m.org_id, vertical: m.orgs?.vertical || 'aviation', name: m.orgs?.name } : null)
+      if (m) {
+        const orgType = m.orgs?.org_type || 'inspector'
+        setShop({ org_id: m.org_id, vertical: m.orgs?.vertical || 'aviation', name: m.orgs?.name, org_type: orgType })
+        setMode(defaultMode(orgType))
+      } else {
+        setShop(null)
+      }
       setShopReady(true)
     })
     return () => {
@@ -141,7 +147,7 @@ export default function NewInspection() {
       </span>
 
       <div className="auth__heading">
-        <h1>New {cfg.noun} inspection</h1>
+        <h1>New {cfg.noun} {mode === 'listing' ? 'listing' : 'inspection'}</h1>
         <p>
           {shop?.name ? `${shop.name} · ` : ''}
           {canLookup
@@ -157,34 +163,36 @@ export default function NewInspection() {
       )}
 
       <form className="auth__form" onSubmit={onSubmit}>
-        <div className="auth__field">
-          <label>What are you creating?</label>
-          <div className="insp__verticals" role="radiogroup" aria-label="Job type">
-            <button
-              type="button"
-              role="radio"
-              aria-checked={mode === 'inspection'}
-              className={`insp__verticalbtn ${mode === 'inspection' ? 'is-active' : ''}`}
-              onClick={() => setMode('inspection')}
-            >
-              Pre-purchase inspection
-            </button>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={mode === 'listing'}
-              className={`insp__verticalbtn ${mode === 'listing' ? 'is-active' : ''}`}
-              onClick={() => setMode('listing')}
-            >
-              Broker listing
-            </button>
+        {showsModePicker(shop?.org_type) && (
+          <div className="auth__field">
+            <label>What are you creating?</label>
+            <div className="insp__verticals" role="radiogroup" aria-label="Job type">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mode === 'inspection'}
+                className={`insp__verticalbtn ${mode === 'inspection' ? 'is-active' : ''}`}
+                onClick={() => setMode('inspection')}
+              >
+                Pre-purchase inspection
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={mode === 'listing'}
+                className={`insp__verticalbtn ${mode === 'listing' ? 'is-active' : ''}`}
+                onClick={() => setMode('listing')}
+              >
+                Broker listing
+              </button>
+            </div>
+            <span className="auth__hint">
+              {mode === 'listing'
+                ? 'Capture-only: profile, photos, logbooks and an AI write-up — no inspection checklist.'
+                : 'The full guided inspection with the risk-ordered checklist.'}
+            </span>
           </div>
-          <span className="auth__hint">
-            {mode === 'listing'
-              ? 'Capture-only: profile, photos, logbooks and an AI write-up — no inspection checklist.'
-              : 'The full guided inspection with the risk-ordered checklist.'}
-          </span>
-        </div>
+        )}
 
         <div className="auth__field">
           <label htmlFor="identifier">
@@ -297,12 +305,12 @@ export default function NewInspection() {
         </div>
 
         <button type="submit" className="auth__btn" disabled={busy || (Boolean(identifier) && !idCheck.valid)}>
-          {busy ? 'Creating…' : 'Create inspection'}
+          {busy ? 'Creating…' : `Create ${mode === 'listing' ? 'listing' : 'inspection'}`}
         </button>
       </form>
 
       <Link to="/app" className="auth__toggle">
-        ← Back to inspections
+        ← Back
       </Link>
     </main>
   )

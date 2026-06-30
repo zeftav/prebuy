@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plane, Ship } from 'lucide-react'
 import { useAuth } from '../lib/auth.jsx'
-import { createShop, validateShopName, slugifyShopName } from '../lib/shops.js'
+import { createShop, validateShopName, slugifyShopName, ACCOUNT_TYPES } from '../lib/shops.js'
 import { VERTICAL_OPTIONS } from '../lib/verticals.js'
 import Tooltip, { InfoDot } from '../components/Tooltip.jsx'
 import './auth.css'
@@ -16,6 +16,7 @@ export default function CreateShop() {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [vertical, setVertical] = useState('aviation')
+  const [accountType, setAccountType] = useState('inspector')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
 
@@ -30,7 +31,7 @@ export default function CreateShop() {
       return
     }
     setBusy(true)
-    const { error } = await createShop(name, vertical)
+    const { error } = await createShop(name, vertical, accountType)
     setBusy(false)
     if (error) {
       setError(error.message)
@@ -63,7 +64,31 @@ export default function CreateShop() {
       <form className="auth__form" onSubmit={onSubmit}>
         <div className="auth__field">
           <span className="insp__fieldlabel">
-            What does this shop inspect?
+            What kind of account is this?
+            <Tooltip text="Inspection shops run the full guided inspection. Brokers/sellers get a simpler listing-only interface (profile, photos, records) and can hand a listing to a shop. Pick “Both” if you do each.">
+              <InfoDot label="Shop vs broker?" />
+            </Tooltip>
+          </span>
+          <div className="insp__accounttypes" role="radiogroup" aria-label="Account type">
+            {ACCOUNT_TYPES.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="radio"
+                aria-checked={accountType === t.key}
+                className={`insp__accountbtn ${accountType === t.key ? 'is-active' : ''}`}
+                onClick={() => setAccountType(t.key)}
+              >
+                <span className="insp__accountlabel">{t.label}</span>
+                <span className="insp__accountblurb">{t.blurb}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="auth__field">
+          <span className="insp__fieldlabel">
+            {accountType === 'broker' ? 'What do you list?' : 'What does this shop inspect?'}
             <Tooltip text="A shop inspects one type of asset. If you do more than one (say aircraft and boats), create a separate shop for each — they share your login.">
               <InfoDot label="Why one type per shop?" />
             </Tooltip>

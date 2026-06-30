@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.38.0',
+    date: '2026-06-29',
+    title: 'Tell us if you’re a shop or a broker',
+    items: [
+      'When you create a shop you now pick an account type — Inspection shop, Broker/seller, or Both.',
+      'Brokers get a simpler, listing-only experience: build the profile, photos and records, publish, and hand off to an inspecting shop — no inspection checklist to wade through. Your dashboard and buttons say “Listings” instead of “Inspections.”',
+      'Inspection shops are unchanged; “Both” shops choose inspection-or-listing per job. (Existing shops stay set to Inspection shop.)',
+    ],
+  },
+  {
     version: '0.37.0',
     date: '2026-06-29',
     title: 'Logbook scans flag what they couldn’t read',

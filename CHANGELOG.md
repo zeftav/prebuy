@@ -3,6 +3,22 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.38.0] — 2026-06-29
+
+### Added
+- **Account type at signup: inspector / broker / both.** Migration `026_org_type.sql` adds
+  `orgs.org_type` (default `inspector`). `signup` edge fn accepts + persists it. CreateShop has an
+  account-type picker; brokers get a **listing-only** experience (their jobs default to `mode='listing'`,
+  which already hides the checklist/walk-around/follow-ups), and the Dashboard/CreateShop/NewInspection
+  terminology switches to "Listings"/"New listing". "Both" shops keep the per-job inspection-vs-listing
+  picker; inspectors are unchanged. `lib/shops.js`: `ACCOUNT_TYPES` + pure tested helpers
+  (`normalizeOrgType`, `accountTypeLabel`, `isBrokerOnly`, `showsModePicker`, `defaultMode`);
+  `fetchMemberships`/`createShop` carry `org_type`. No RLS/data-model change — a listing is still an
+  inspection with `mode='listing'` (016); this only drives the UI.
+
+### Deploy
+- ⚠️ **Run migration `026_org_type.sql`** and **redeploy `signup` (Verify JWT OFF)**.
+
 ## [0.37.0] — 2026-06-29
 
 ### Added
