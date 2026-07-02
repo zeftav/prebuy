@@ -54,14 +54,13 @@ Run in order. All are idempotent (safe to re-run).
       & 337s as their own records). Idempotent. (v0.36.0, 2026-06-29)
 - [x] ✅ `025_logbook_review_note.sql` — `logbooks.review_note` (flag what a scan couldn't read).
       Idempotent. (v0.37.0, 2026-06-29)
-- [ ] ⬜ `026_org_type.sql` — `orgs.org_type` (inspector/broker/both; default inspector). Idempotent.
+- [x] ✅ `026_org_type.sql` — `orgs.org_type` (inspector/broker/both; default inspector). Idempotent.
       (v0.38.0, 2026-06-29)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
 - [x] ✅ `signup` — Verify JWT **OFF**. (Deployed; redeployed for `vertical`.)
-  - [ ] 🔁 **REDEPLOY `signup` (JWT OFF) for v0.38.0** — persists `org_type` (inspector/broker/both).
-        Needs migration 026.
+  - [x] ✅ **REDEPLOYED `signup` (JWT OFF) for v0.38.0** (2026-06-29) — persists `org_type` (inspector/broker/both).
 - [x] ✅ `structure-finding` — Verify JWT **ON**. Powers "Clean up with AI". (2026-06-27)
 - [x] ✅ `report` — Verify JWT **OFF**. Serves the public report at `/r/<token>`. (2026-06-27)
   - [x] ✅ Redeployed `report` for v0.12.0 (inspector/location/inspection-date). (2026-06-27)
