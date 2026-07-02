@@ -42,8 +42,9 @@ Run in order. All are idempotent (safe to re-run).
       builder from MIC). Seeds TEST fixtures only. No edge fn. (run 2026-06-28)
 - [x] ✅ `019_super_admin.sql` — `super_admins` table + `is_super_admin()` RPC + `ai_usage` log table
       (powers the **platform-owner dashboard**). RLS on, no client policies. (run 2026-06-28)
-- [ ] ⬜ `020_marine_mic_seed.sql` — seeds **HUN → Hunter Marine** (verified) so the boat HIN lookup
-      names a real builder before the full USCG list is loaded. Idempotent. No edge fn. (2026-06-28)
+- [x] ✅ `020_marine_mic_seed.sql` — Hunter Marine seed. **Superseded** by the full USCG MIC load
+      (GitHub Action "Load USCG MIC list" ran 2026-06-28; ~16k builders; auto-refresh quarterly), so
+      running 020 is unnecessary.
 - [x] ✅ `021_inspection_followups.sql` — `inspection_followups` table + org-scoped RLS (per-inspection
       "to-investigate" list). Idempotent. (v0.32.0, 2026-06-28)
 - [x] ✅ `022_media_logbook_pdf.sql` — `media.sort_order` / `rotation` / `show_on_report` + `logbook_pdf`
