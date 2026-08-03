@@ -76,21 +76,26 @@ export async function listInspectionItems(inspectionId) {
 }
 
 /**
- * Find the best global template for an inspection: a model-specific one if it
- * exists, otherwise the vertical's generic fallback (model IS NULL, e.g. the
- * "General Aircraft" survey). Returns { data, error, generic }.
+ * Resolve the template to instantiate for an inspection.
+ *
+ * A shop's OWN uploaded template (e.g. their Savvy Beechcraft prebuy) is only used
+ * when it's *explicitly selected* — the inspection carries its id in
+ * `attributes.template_id`. Otherwise we fall back to the standard global library:
+ * a model-specific template if one exists, else the vertical's generic survey.
+ * Returns { data, error, generic, shopOwned }.
  */
-export async function findTemplateFor({ vertical, make, model, org_id }) {
-  // 0. The shop's OWN uploaded template wins (e.g. their Savvy Beechcraft prebuy).
-  if (org_id) {
-    const { data: mine } = await supabase
+export async function findTemplateFor({ vertical, make, model, template_id }) {
+  // 0. Explicitly-chosen template (shop-owned or a specific global one). RLS scopes
+  //    it to templates this shop may read (its own + globals).
+  if (template_id) {
+    const { data, error } = await supabase
       .from('checklist_templates')
-      .select('id, make, model, name')
-      .eq('org_id', org_id)
-      .eq('is_global', false)
-      .eq('vertical', vertical)
-    const best = pickTemplate(mine ?? [], { make, model })
-    if (best) return { data: best, error: null, generic: false, shopOwned: true }
+      .select('id, make, model, name, is_global')
+      .eq('id', template_id)
+      .maybeSingle()
+    if (error) return { data: null, error, generic: false }
+    if (data) return { data, error: null, generic: false, shopOwned: !data.is_global }
+    // Selected template vanished (deleted) — fall through to the standard library.
   }
 
   // 1. Model-specific global match (e.g. Beech A36).
@@ -125,15 +130,32 @@ export async function findTemplateFor({ vertical, make, model, org_id }) {
  * { data: items, error, templateMatched }.
  */
 export async function ensureInspectionItems(inspection) {
-  // Listings are capture-only — no checklist to instantiate.
-  if (inspection.mode === 'listing') return { data: [], error: null, templateMatched: null, generic: false }
+  // Listings and records-onboarding are capture-only — no checklist to instantiate.
+  if (inspection.mode === 'listing' || inspection.mode === 'records')
+    return { data: [], error: null, templateMatched: null, generic: false }
   const existing = await listInspectionItems(inspection.id)
   if (existing.error) return { data: [], error: existing.error, templateMatched: null, generic: false }
   if (existing.data.length > 0) return { data: existing.data, error: null, templateMatched: null, generic: false }
+  return instantiateTemplate(inspection)
+}
 
-  const { data: template, error: tErr, generic } = await findTemplateFor(inspection)
+/**
+ * Copy the resolved template's items into `inspection_items` (with multi-engine
+ * fan-out), then return the full item list. Assumes template-derived items don't
+ * already exist. Returns { data: items, error, templateMatched, generic }.
+ */
+async function instantiateTemplate(inspection) {
+  const { data: template, error: tErr, generic } = await findTemplateFor({
+    vertical: inspection.vertical,
+    make: inspection.make,
+    model: inspection.model,
+    template_id: inspection.attributes?.template_id,
+  })
   if (tErr) return { data: [], error: tErr, templateMatched: null, generic: false }
-  if (!template) return { data: [], error: null, templateMatched: false, generic: false }
+  if (!template) {
+    const reload = await listInspectionItems(inspection.id)
+    return { data: reload.data, error: reload.error, templateMatched: false, generic: false }
+  }
 
   const { data: tItems, error: tiErr } = await supabase
     .from('template_items')
@@ -149,10 +171,10 @@ export async function ensureInspectionItems(inspection) {
     ...r,
     status: 'pending',
   }))
-  if (rows.length === 0) return { data: [], error: null, templateMatched: true, generic }
-
-  const { error: insErr } = await supabase.from('inspection_items').insert(rows)
-  if (insErr) return { data: [], error: insErr, templateMatched: true, generic }
+  if (rows.length > 0) {
+    const { error: insErr } = await supabase.from('inspection_items').insert(rows)
+    if (insErr) return { data: [], error: insErr, templateMatched: true, generic }
+  }
 
   const reload = await listInspectionItems(inspection.id)
   return { data: reload.data, error: reload.error, templateMatched: true, generic }
@@ -195,4 +217,36 @@ export async function addCustomItem(inspection, { category, title, description, 
 export async function deleteInspectionItem(id) {
   const { error } = await supabase.from('inspection_items').delete().eq('id', id)
   return { error }
+}
+
+/**
+ * Switch which checklist an inspection uses. `templateId` = a shop template's id, or
+ * null to go back to the standard library. Only allowed before any item has been
+ * worked (all still 'pending'), since it re-instantiates from scratch: it clears the
+ * existing template-derived items, records the choice on `attributes.template_id`,
+ * and rebuilds. Custom (owner-added) items are preserved. Returns { data: items,
+ * error, generic }.
+ */
+export async function setInspectionChecklist(inspection, templateId) {
+  const existing = await listInspectionItems(inspection.id)
+  if (existing.error) return { data: [], error: existing.error }
+  const worked = existing.data.filter((i) => i.template_item_id).some((i) => i.status && i.status !== 'pending')
+  if (worked) {
+    return { data: existing.data, error: new Error('This inspection already has worked items — clear them before switching checklists.') }
+  }
+
+  // Persist the choice (null removes the key → standard library).
+  const attributes = { ...(inspection.attributes ?? {}) }
+  if (templateId) attributes.template_id = templateId
+  else delete attributes.template_id
+  const { error: uErr } = await supabase.from('inspections').update({ attributes }).eq('id', inspection.id)
+  if (uErr) return { data: existing.data, error: uErr }
+
+  // Drop only template-derived items (keep custom ones); then re-instantiate.
+  const toDrop = existing.data.filter((i) => i.template_item_id).map((i) => i.id)
+  if (toDrop.length) {
+    const { error: dErr } = await supabase.from('inspection_items').delete().in('id', toDrop)
+    if (dErr) return { data: existing.data, error: dErr }
+  }
+  return instantiateTemplate({ ...inspection, attributes })
 }

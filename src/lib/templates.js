@@ -1,7 +1,8 @@
 // Shop checklist templates: upload a checklist PDF → AI-parse into phase-tagged
 // items (parse-checklist edge fn) → review → save as a reusable, org-owned
-// template (RLS lets a shop own its own templates). Instantiation into an
-// inspection is the existing checklist.js path, which now prefers a shop template.
+// template (RLS lets a shop own its own templates). A saved template is opt-in per
+// inspection — it's applied only when explicitly selected (checklist.js resolves
+// `attributes.template_id`); otherwise the standard global library is used.
 
 import { supabase } from './supabase.js'
 

@@ -12,6 +12,7 @@ import { createInspection } from '../lib/inspections.js'
 import { getVertical, validateIdentifier } from '../lib/verticals.js'
 import { lookupAircraft } from '../lib/aircraft.js'
 import { lookupHIN } from '../lib/marine.js'
+import { listShopTemplates } from '../lib/templates.js'
 import Tooltip, { InfoDot } from '../components/Tooltip.jsx'
 import './auth.css'
 import './inspections.css'
@@ -33,6 +34,8 @@ export default function NewInspection() {
   const [serial, setSerial] = useState('')
   const [engineCount, setEngineCount] = useState(null) // seeded from FAA lookup (num_eng)
   const [mode, setMode] = useState('inspection') // 'inspection' (full) | 'listing' (broker, capture-only)
+  const [shopTemplates, setShopTemplates] = useState([]) // the shop's own uploaded checklists
+  const [templateId, setTemplateId] = useState('') // '' = standard library; else a shop template id
   const [customerName, setCustomerName] = useState('')
   const [customerEmail, setCustomerEmail] = useState('')
   const [inspectorName, setInspectorName] = useState('')
@@ -62,6 +65,19 @@ export default function NewInspection() {
       active = false
     }
   }, [wantedOrg, wantedMode])
+
+  // Load the shop's own uploaded checklists (opt-in per inspection). The standard
+  // library is always the default; a shop template applies only when picked here.
+  useEffect(() => {
+    if (!shop?.org_id) return
+    let active = true
+    listShopTemplates(shop.org_id).then(({ data }) => {
+      if (active) setShopTemplates(data ?? [])
+    })
+    return () => {
+      active = false
+    }
+  }, [shop?.org_id])
 
   const cfg = getVertical(shop?.vertical) ?? getVertical('aviation')
   const idCheck = useMemo(
@@ -117,7 +133,7 @@ export default function NewInspection() {
     setBusy(true)
     const { error } = await createInspection(
       shop.org_id,
-      { vertical: shop.vertical, mode, identifier, make, model, year, serial, engineCount, customerName, customerEmail, inspectorName, location, inspectionDate },
+      { vertical: shop.vertical, mode, identifier, make, model, year, serial, engineCount, customerName, customerEmail, inspectorName, location, inspectionDate, templateId: mode === 'inspection' ? templateId : '' },
       user?.id,
     )
     setBusy(false)
@@ -191,6 +207,29 @@ export default function NewInspection() {
               {mode === 'listing'
                 ? 'Capture-only: profile, photos, logbooks and an AI write-up — no inspection checklist.'
                 : 'The full guided inspection with the risk-ordered checklist.'}
+            </span>
+          </div>
+        )}
+
+        {mode === 'inspection' && shopTemplates.length > 0 && (
+          <div className="auth__field">
+            <label htmlFor="checklist">
+              Checklist
+              <Tooltip text="The standard library picks a checklist by make/model automatically. Choose one of your uploaded checklists to use it for this inspection instead.">
+                <InfoDot label="Which checklist?" />
+              </Tooltip>
+            </label>
+            <select id="checklist" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+              <option value="">Standard checklist (auto by make/model)</option>
+              {shopTemplates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                  {t.item_count ? ` (${t.item_count} items)` : ''}
+                </option>
+              ))}
+            </select>
+            <span className="auth__hint">
+              Your uploaded checklists only apply when picked here — the standard library is the default.
             </span>
           </div>
         )}

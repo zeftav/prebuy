@@ -494,6 +494,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   Dashboard "Onboard records" + Records row tag. ⚠️ **Run migration 028 + redeploy `structure-logbook`
   (JWT ON)**. Backlog stays: aircraft-as-first-class-entity + shop-wide records library (deferred; chose
   records-mode reuse for now).
+- Session 4 cont. — **Checklists opt-in per inspection** (v0.41.0, frontend/client-lib only — no
+  migration/redeploy). Two fixes from real use: (1) a records-mode job was grabbing the shop's uploaded
+  Savvy checklist → `ensureInspectionItems` now skips instantiation for `mode==='records'` too (was
+  `'listing'` only). (2) An uploaded shop checklist silently took over every matching inspection →
+  `findTemplateFor` no longer auto-prefers shop-owned templates; it resolves an **explicitly chosen**
+  template via `inspection.attributes.template_id`, else the standard global library (model→generic).
+  Selection: **NewInspection** Checklist picker (shown when the shop has templates) stored on
+  `attributes.template_id` at create (`createInspection` threads `templateId`); **InspectionDetail**
+  `ChecklistPicker` to switch standard↔shop template, only before any template item is worked
+  (`setInspectionChecklist` persists choice, drops template items but keeps custom, re-instantiates via
+  extracted `instantiateTemplate`). Lint + 211 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

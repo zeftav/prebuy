@@ -3,6 +3,30 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.41.0] — 2026-08-03
+
+### Changed
+- **Shop-uploaded checklists are now opt-in per inspection** (fixes: an uploaded Savvy checklist silently
+  took over every matching inspection). `checklist.js` `findTemplateFor` no longer auto-prefers a
+  shop-owned template — it resolves an explicitly-chosen template via `inspection.attributes.template_id`,
+  else falls back to the standard global library (model-specific → generic). Selection points:
+  - **NewInspection** — a **Checklist** picker (shown when the shop has uploaded checklists, inspection
+    mode only): "Standard checklist (auto by make/model)" default, or one of the shop's templates →
+    stored on `attributes.template_id` at create (`createInspection` threads `templateId`).
+  - **InspectionDetail** — a **ChecklistPicker** to switch between the standard library and a shop
+    template, allowed only before any template item is worked. New `setInspectionChecklist(inspection,
+    templateId)` persists the choice, drops template-derived items (custom items preserved), and
+    re-instantiates via the extracted `instantiateTemplate` helper.
+
+### Fixed
+- **Records-mode jobs no longer instantiate a checklist.** `ensureInspectionItems` now skips
+  instantiation for `mode === 'records'` as well as `'listing'` — a records-onboarding job stays a clean
+  scan-and-search records resource (previously it grabbed the shop's checklist and looked like a full
+  pre-purchase).
+
+### Deploy
+- Frontend + client-lib only — **no migration, no edge-function redeploy.** Ships on push to `main`.
+
 ## [0.40.0] — 2026-06-30
 
 ### Added

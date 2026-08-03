@@ -15,7 +15,9 @@ import {
   updateInspectionItem,
   addCustomItem,
   deleteInspectionItem,
+  setInspectionChecklist,
 } from '../lib/checklist.js'
+import { listShopTemplates } from '../lib/templates.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import { getVertical, profileSchema } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
@@ -147,6 +149,22 @@ export default function InspectionDetail() {
     setItems((prev) => prev.filter((i) => i.id !== item.id))
     const { error } = await deleteInspectionItem(item.id)
     if (error) setItems((prev) => [...prev, item])
+  }
+
+  // Switch which checklist this inspection uses (standard library ↔ a shop template).
+  // Only allowed before any template item is worked. Returns an error message or null.
+  async function changeChecklist(templateId) {
+    const { data, error } = await setInspectionChecklist(inspection, templateId || null)
+    if (error) return error.message
+    setInspection((p) => {
+      const attributes = { ...(p.attributes ?? {}) }
+      if (templateId) attributes.template_id = templateId
+      else delete attributes.template_id
+      return { ...p, attributes }
+    })
+    setItems(data)
+    if (data.length) setNote(null)
+    return null
   }
 
   // ── Follow-ups ("to-investigate" list) ────────────────────────────────────
@@ -299,6 +317,14 @@ export default function InspectionDetail() {
       )}
 
       <InspectionMeta inspection={inspection} onSave={saveMeta} />
+
+      {!captureOnly && (
+        <ChecklistPicker
+          inspection={inspection}
+          items={items}
+          onChange={changeChecklist}
+        />
+      )}
 
       <div className="insp__tools">
         {isRecords && (
@@ -730,6 +756,62 @@ function InspectionMeta({ inspection, onSave }) {
         <button type="button" className="auth__btn" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>
         <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setEditing(false)}>Cancel</button>
       </div>
+    </div>
+  )
+}
+
+// Choose which checklist this inspection runs on: the standard library (auto by
+// make/model) or one of the shop's own uploaded checklists (e.g. a Savvy prebuy).
+// Shop templates are opt-in — never applied unless picked. Switching re-instantiates
+// the checklist, so it's only offered before any item has been worked.
+function ChecklistPicker({ inspection, items, onChange }) {
+  const [templates, setTemplates] = useState([])
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const selected = inspection.attributes?.template_id ?? ''
+
+  useEffect(() => {
+    let active = true
+    listShopTemplates(inspection.org_id).then(({ data }) => {
+      if (active) setTemplates(data ?? [])
+    })
+    return () => {
+      active = false
+    }
+  }, [inspection.org_id])
+
+  if (templates.length === 0) return null // nothing to switch to
+
+  const worked = items.filter((i) => i.template_item_id).some((i) => i.status && i.status !== 'pending')
+
+  async function pick(e) {
+    const value = e.target.value
+    if (value === selected) return
+    setError(null)
+    setBusy(true)
+    const err = await onChange(value)
+    setBusy(false)
+    if (err) setError(err)
+  }
+
+  return (
+    <div className="insp__checklistpick">
+      <label htmlFor="insp-checklist">Checklist</label>
+      <select id="insp-checklist" value={selected} onChange={pick} disabled={busy || worked}>
+        <option value="">Standard checklist (auto by make/model)</option>
+        {templates.map((t) => (
+          <option key={t.id} value={t.id}>
+            {t.name}
+            {t.item_count ? ` (${t.item_count} items)` : ''}
+          </option>
+        ))}
+      </select>
+      {worked ? (
+        <span className="auth__hint">You’ve started working items — clear them to switch checklists.</span>
+      ) : (
+        <span className="auth__hint">Switching rebuilds the checklist. Your uploaded checklists apply only when picked here.</span>
+      )}
+      {error && <span className="auth__hint" role="alert">{error}</span>}
     </div>
   )
 }

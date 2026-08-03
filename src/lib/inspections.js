@@ -72,6 +72,8 @@ export async function createInspection(orgId, draft, userId) {
   const attributes = {}
   if (serial) attributes.serial = serial
   if (engine_count) attributes.engine_count = engine_count
+  // A chosen shop checklist (else the standard library is used at first open).
+  if (draft.templateId) attributes.template_id = draft.templateId
   const row = { org_id: orgId, status: 'draft', attributes, ...cols }
   if (userId) row.created_by = userId
 

@@ -420,6 +420,23 @@
   padding: 14px;
 }
 
+.insp__checklistpick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.insp__checklistpick > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.insp__checklistpick > select {
+  width: 100%;
+}
+
 /* Logbook audit */
 .lb__recon {
   display: flex;

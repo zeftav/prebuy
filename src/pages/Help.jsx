@@ -106,7 +106,11 @@ const FAQ = [
   },
   {
     q: 'Can I upload my own inspection checklist?',
-    a: 'Yes. Go to Dashboard → Checklists and upload your checklist as a PDF (for example Savvy’s Beechcraft prebuy). We read every line item, tag which phase it belongs to, group it by section, and save it as a reusable template for your shop. Set which make/model it applies to (leave the model blank to use it for any model of that make). From then on, when you start an inspection whose aircraft matches, your template is used automatically — you don’t have to pick it. You can review and trim the items before saving, and delete a template anytime.',
+    a: 'Yes. Go to Dashboard → Checklists and upload your checklist as a PDF (for example Savvy’s Beechcraft prebuy). We read every line item, tag which phase it belongs to, group it by section, and save it as a reusable template for your shop. You can review and trim the items before saving, and delete a template anytime.',
+  },
+  {
+    q: 'How do I use one of my uploaded checklists on an inspection?',
+    a: 'Your uploaded checklists are opt-in — they never take over automatically. Every inspection starts on the standard checklist for its make/model. To use one of yours, pick it from the “Checklist” dropdown when you create the inspection, or switch it on the inspection page (you can switch until you’ve started marking items). Records-onboarding jobs never use a checklist.',
   },
   {
     q: 'What is a two-phase inspection?',
