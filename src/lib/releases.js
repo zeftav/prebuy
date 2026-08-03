@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.42.1',
+    date: '2026-08-03',
+    title: 'Logbooks show in the right order automatically',
+    items: [
+      'Scanned logbooks now display in sequence automatically — sorted by type, then chronologically by time — so if you scan or label them out of order, they still line up correctly. (The audit already flagged out-of-order/missing books; now the list matches.)',
+    ],
+  },
+  {
     version: '0.42.0',
     date: '2026-08-03',
     title: 'Scan logbooks back-to-back — processing runs in the background',

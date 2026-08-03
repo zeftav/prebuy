@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords, orderLogbooks } from './logbooks.js'
 
 const groupBy = (groups, key) => groups.find((g) => g.key === key)
 
@@ -16,6 +16,38 @@ describe('cleanDraftValue', () => {
 })
 
 const book = (start, end, extra = {}) => ({ kind: 'airframe', start_tach: start, end_tach: end, ...extra })
+
+describe('orderLogbooks', () => {
+  it('orders airframe books chronologically regardless of scan order', () => {
+    const books = [
+      { id: 'd', kind: 'airframe', start_tach: 3000 },
+      { id: 'a', kind: 'airframe', start_tach: 5 },
+      { id: 'c', kind: 'airframe', start_tach: 2000 },
+      { id: 'b', kind: 'airframe', start_tach: 1000 },
+    ]
+    expect(orderLogbooks(books).map((b) => b.id)).toEqual(['a', 'b', 'c', 'd'])
+  })
+  it('groups by kind first (airframe before engine before AD)', () => {
+    const books = [
+      { id: 'ad', kind: 'ad', start_tach: null },
+      { id: 'eng', kind: 'engine', start_tach: 10 },
+      { id: 'af', kind: 'airframe', start_tach: 500 },
+    ]
+    expect(orderLogbooks(books).map((b) => b.id)).toEqual(['af', 'eng', 'ad'])
+  })
+  it('sinks untimed books to the end of their group', () => {
+    const books = [
+      { id: 'untimed', kind: 'airframe', start_tach: null },
+      { id: 'first', kind: 'airframe', start_tach: 100 },
+    ]
+    expect(orderLogbooks(books).map((b) => b.id)).toEqual(['first', 'untimed'])
+  })
+  it('is a pure copy (does not mutate input)', () => {
+    const books = [{ id: 'b', kind: 'airframe', start_tach: 2 }, { id: 'a', kind: 'airframe', start_tach: 1 }]
+    orderLogbooks(books)
+    expect(books.map((b) => b.id)).toEqual(['b', 'a'])
+  })
+})
 
 describe('summarizeKind', () => {
   it('sorts by start tach and tracks total hours when continuous', () => {

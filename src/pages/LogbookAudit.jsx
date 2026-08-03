@@ -17,8 +17,8 @@ import {
   listEvents, addEvent, deleteEvent,
   reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
   extractLogbooksBatched, spanFromDrafts, mergeSpan, reassignLogbookEvents,
-  listParts, addParts, deletePart, searchRecords,
-  LOGBOOK_KINDS, EVENT_CATEGORIES,
+  listParts, addParts, deletePart, searchRecords, orderLogbooks,
+  EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { normalizeProfile, engineLabel } from '../lib/profile.js'
 import { uploadMedia, listMediaByLogbook, updateMedia, deleteMedia } from '../lib/media.js'
@@ -287,8 +287,7 @@ export default function LogbookAudit() {
         <section className="insp__section">
           <div className="insp__sectionhead"><h2>Logbooks</h2></div>
           <div className="lb__cards">
-            {[...logbooks]
-              .sort((a, b) => LOGBOOK_KINDS.indexOf(a.kind) - LOGBOOK_KINDS.indexOf(b.kind) || (a.position || 0) - (b.position || 0))
+            {orderLogbooks(logbooks)
               .map((b) => (
                 <LogbookCard
                   key={`${b.id}:${rev[b.id] || 0}`}

@@ -81,6 +81,30 @@ export function summarizeKind(books) {
   return { sorted, gaps, overlaps, firstStart, lastEnd, tracked, count: sorted.length, untimed }
 }
 
+/**
+ * Order logbooks for display: by kind (airframe→engine→prop→AD→337→other), then
+ * position, then chronologically by start tach (untimed books sink to the end of
+ * their group), then start date, then scan order. So scans entered out of order
+ * (or mislabeled and then corrected) present in the right sequence automatically.
+ * Pure + tested.
+ */
+export function orderLogbooks(logbooks) {
+  const kindRank = (k) => {
+    const i = LOGBOOK_KINDS.indexOf(k)
+    return i === -1 ? LOGBOOK_KINDS.length : i
+  }
+  // Untimed (null/blank/0 per hasTach) sinks to the end of its group.
+  const startKey = (b) => (hasTach(b.start_tach) ? Number(b.start_tach) : Infinity)
+  return [...(logbooks ?? [])].sort(
+    (a, b) =>
+      kindRank(a.kind) - kindRank(b.kind) ||
+      (a.position || 0) - (b.position || 0) ||
+      startKey(a) - startKey(b) ||
+      String(a.start_date ?? '').localeCompare(String(b.start_date ?? '')) ||
+      (a.sort_order || 0) - (b.sort_order || 0),
+  )
+}
+
 // Earliest airframe entry above this (hrs) suggests records may not reach back to
 // the aircraft's first flight. A few hours of test/ferry time is normal.
 const START_COVERAGE_TOL = 5

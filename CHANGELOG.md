@@ -3,6 +3,15 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.42.1] — 2026-08-03
+
+### Added
+- **Auto-sequential logbook ordering.** New pure `orderLogbooks(logbooks)` (+tests) sorts by kind →
+  position → start tach (untimed sinks to end, per the `hasTach` 0=unread convention) → start date → scan
+  order. `LogbookAudit` uses it for the card list, so books scanned/labeled out of order still present in
+  the right sequence. (Reconciliation already flagged gaps/overlaps/out-of-order; the display now matches.)
+- Frontend only — no migration/redeploy.
+
 ## [0.42.0] — 2026-08-03
 
 ### Changed
