@@ -783,15 +783,23 @@ function ChecklistPicker({ inspection, items, onChange }) {
   if (templates.length === 0) return null // nothing to switch to
 
   const worked = items.filter((i) => i.template_item_id).some((i) => i.status && i.status !== 'pending')
+  // Stale: standard is selected but the items carry phases — only shop templates
+  // (e.g. Savvy) have those, so these are leftover items from before checklists
+  // became opt-in. Offer a forced rebuild since a same-value <select> can't fire.
+  const stale = selected === '' && hasPhases(items)
 
-  async function pick(e) {
-    const value = e.target.value
-    if (value === selected) return
+  async function apply(value) {
     setError(null)
     setBusy(true)
     const err = await onChange(value)
     setBusy(false)
     if (err) setError(err)
+  }
+
+  function pick(e) {
+    const value = e.target.value
+    if (value === selected) return
+    apply(value)
   }
 
   return (
@@ -806,10 +814,21 @@ function ChecklistPicker({ inspection, items, onChange }) {
           </option>
         ))}
       </select>
+      {stale && !worked && (
+        <div className="insp__checkliststale">
+          <span className="auth__hint">
+            This inspection is running an uploaded checklist from before checklists became opt-in. Reset it to
+            rebuild on the standard checklist.
+          </span>
+          <button type="button" className="auth__btn auth__btn--ghost" disabled={busy} onClick={() => apply('')}>
+            {busy ? 'Rebuilding…' : 'Reset to standard checklist'}
+          </button>
+        </div>
+      )}
       {worked ? (
         <span className="auth__hint">You’ve started working items — clear them to switch checklists.</span>
       ) : (
-        <span className="auth__hint">Switching rebuilds the checklist. Your uploaded checklists apply only when picked here.</span>
+        !stale && <span className="auth__hint">Switching rebuilds the checklist. Your uploaded checklists apply only when picked here.</span>
       )}
       {error && <span className="auth__hint" role="alert">{error}</span>}
     </div>

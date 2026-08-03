@@ -6,12 +6,13 @@
 
 export const releases = [
   {
-    version: '0.41.0',
+    version: '0.41.1',
     date: '2026-08-03',
     title: 'Your uploaded checklists are now opt-in per inspection',
     items: [
       'Your own uploaded checklists no longer take over automatically. Every inspection starts on the standard checklist for its make/model unless you pick one of your checklists — choose it when you create the inspection, or switch it on the inspection page (before you’ve started marking items).',
       'Records onboarding no longer pulls in a checklist — it stays a clean scan-and-search records job, the way it’s meant to.',
+      'Inspections you created earlier that got an uploaded checklist by mistake now show a “Reset to standard checklist” button so you can rebuild them without starting over.',
     ],
   },
   {

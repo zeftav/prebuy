@@ -3,6 +3,19 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.41.1] — 2026-08-03
+
+### Added
+- **"Reset to standard checklist"** on `InspectionDetail`'s `ChecklistPicker`. Inspections created before
+  v0.41.0 carry auto-applied shop-template items but no `attributes.template_id`, so the dropdown reads
+  as "Standard" and a same-value `<select>` change can't fire to rebuild them. When the standard option
+  is selected but the items carry phases (only shop templates like Savvy have those), we now detect the
+  stale state and show a button that force-rebuilds on the standard library via `setInspectionChecklist(_,
+  null)`. Only offered before any item is worked.
+
+### Deploy
+- Frontend only — no migration/redeploy. Ships on push to `main`.
+
 ## [0.41.0] — 2026-08-03
 
 ### Changed
