@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords, orderLogbooks } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords, orderLogbooks, duplicateEvents } from './logbooks.js'
 
 const groupBy = (groups, key) => groups.find((g) => g.key === key)
 
@@ -46,6 +46,29 @@ describe('orderLogbooks', () => {
     const books = [{ id: 'b', kind: 'airframe', start_tach: 2 }, { id: 'a', kind: 'airframe', start_tach: 1 }]
     orderLogbooks(books)
     expect(books.map((b) => b.id)).toEqual(['b', 'a'])
+  })
+})
+
+describe('duplicateEvents', () => {
+  it('groups identical entries (same category/title/date/tach) as duplicates', () => {
+    const events = [
+      { id: '1', category: 'ad', title: 'AD 2015-19-07', event_date: '2020-01-01', tach: 1000 },
+      { id: '2', category: 'ad', title: 'ad 2015-19-07', event_date: '2020-01-01', tach: 1000 }, // dup (case-insensitive)
+      { id: '3', category: 'overhaul', title: 'Engine OH', event_date: '2019-01-01', tach: 800 },
+    ]
+    const dups = duplicateEvents(events)
+    expect(dups).toHaveLength(1)
+    expect(dups[0].map((e) => e.id).sort()).toEqual(['1', '2'])
+  })
+  it('returns nothing when all events are distinct', () => {
+    const events = [
+      { id: '1', category: 'ad', title: 'A', event_date: '2020-01-01', tach: 1 },
+      { id: '2', category: 'ad', title: 'B', event_date: '2020-01-01', tach: 2 },
+    ]
+    expect(duplicateEvents(events)).toEqual([])
+  })
+  it('tolerates empty/null', () => {
+    expect(duplicateEvents(null)).toEqual([])
   })
 })
 

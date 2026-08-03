@@ -1695,6 +1695,28 @@
 .comp__pill--ok { background: rgba(26,127,55,0.12); color: #1a7f37; }
 .comp__pill--unknown { background: rgba(100,110,130,0.12); color: #667; }
 
+/* AD compliance chips / tags */
+.lb__adsources { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.lb__adchip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(100,110,130,0.12);
+  color: #556;
+  white-space: nowrap;
+}
+.lb__adchip--report { background: rgba(26,127,55,0.12); color: #1a7f37; }
+.lb__adchip--warn { background: rgba(200,30,74,0.12); color: #c81e4a; }
+.lb__adtag {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.lb__adtag--recurring { background: rgba(214,138,0,0.14); color: #a9690a; }
+
 /* Logbook records search */
 .lb__searchbar {
   display: flex;

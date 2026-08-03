@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.44.0',
+    date: '2026-08-03',
+    title: 'AD compliance resource + duplicate-scan flag',
+    items: [
+      'New “AD compliance” section on the Logbook audit: every AD read off your scans, de-duplicated by AD number, with the latest compliance date/time and whether it recurs.',
+      'Scan an AD compliance report (pick “AD compliance report” when you scan) and we cross-check it against the logbooks — flagging any AD on the report we couldn’t find a logbook entry for (unverified), and any AD in the logbooks that isn’t on the report.',
+      'Duplicate-scan guard: if the same event shows up twice (a page scanned twice), the audit now flags it so you can remove the repeat.',
+    ],
+  },
+  {
     version: '0.43.0',
     date: '2026-08-03',
     title: 'Timed items & compliance summary',

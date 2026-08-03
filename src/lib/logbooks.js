@@ -381,6 +381,27 @@ export function mergeExtractDrafts(drafts) {
 }
 
 /**
+ * Detect likely-duplicate events — the same entry read twice (e.g. a page scanned
+ * twice). Groups by category + normalized title + date + tach; returns the groups
+ * with more than one member. Pure + tested. (Duplicate-page handling at the
+ * analysis level, per the product call.)
+ */
+export function duplicateEvents(events) {
+  const groups = new Map()
+  for (const e of events ?? []) {
+    const key = [
+      e.category ?? '',
+      String(e.title ?? '').trim().toLowerCase(),
+      e.event_date ?? '',
+      e.tach ?? '',
+    ].join('|')
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key).push(e)
+  }
+  return [...groups.values()].filter((g) => g.length > 1)
+}
+
+/**
  * Filter an aircraft's records (events + parts) by a free-text query, across
  * title/description/category and part number/description. Pure + tested.
  */

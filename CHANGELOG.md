@@ -3,6 +3,27 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.44.0] — 2026-08-03
+
+### Added
+- **AD compliance resource + comparison.** New `lib/ad.js` (pure + tested): `parseAdNumbers` (modern +
+  legacy AD-number formats), `compileAdCompliance(events, logbooks)` de-dupes AD-category events by AD
+  number and attributes each to a source by the source logbook's kind — `kind='ad'` → the scanned AD
+  compliance report, anything else → the logbooks — then diffs the two: ADs on the report but not in the
+  logbooks (**unverified**) and ADs in the logbooks but not on the report. `LogbookAudit` renders an **AD
+  compliance** section (compiled list with recurring flag, latest date/tach, source chips + the
+  cross-check advisories). No new AI — reuses the AD events already read off scans.
+- **Duplicate-scan flag** (analysis level, per the product call). `lib/logbooks.js` `duplicateEvents`
+  (+tests) groups identical entries (category/title/date/tach); the audit surfaces "N possible duplicate
+  entries — a page may have been scanned twice."
+
+### Deploy
+- Frontend only — no migration/redeploy.
+
+### Next
+- **MM life-limited scan** (photograph the Maintenance Manual limits pages → auto-add timed items) is the
+  remaining increment; it needs a vision-extraction path (edge fn).
+
 ## [0.43.0] — 2026-08-03
 
 ### Added

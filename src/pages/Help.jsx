@@ -45,6 +45,10 @@ const FAQ = [
     a: 'Open an inspection and tap “Logbook audit”, then “Scan a logbook.” Pick what it is — airframe, engine, propeller (and which engine/prop on a twin) — and snap the pages in order. When you tap “Save & read,” compiling the PDF and reading the pages happens in the background — so you can start scanning the next logbook right away instead of waiting. A progress strip at the top (and a badge on each logbook card) shows what’s still processing on phone and desktop. We read the dates, times and notable events (ADs, 337s, overhauls, prop strikes, damage) right off the pages, then reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). Because logs are handwritten, always double-check the read-back — every time and event stays editable, and you can add an event by hand.',
   },
   {
+    q: 'How does AD compliance tracking work?',
+    a: 'As we read your scans, every AD (Airworthiness Directive) we find is compiled into an “AD compliance” list on the Logbook audit — de-duplicated by AD number, with the latest compliance date/time and whether it recurs. If you also scan a standalone AD compliance report (pick “AD compliance report” when you scan a logbook), we cross-check it against the logbooks: any AD on the report we can’t find a logbook entry for is flagged “unverified,” and any AD in the logbooks that isn’t on the report is flagged too. It’s a starting cross-check, not a legal sign-off — always confirm against the actual records.',
+  },
+  {
     q: 'Can I search an aircraft’s logbook records?',
     a: 'Yes. Once a logbook is scanned and read, a search box appears at the top of the Logbook audit page. It searches that aircraft’s records — notable events and extracted part numbers/components — so you can quickly answer “have we seen this AD?”, “when was the prop overhauled?”, or “do we have a record of this part?” Search is per-aircraft (scoped to that inspection/records job).',
   },

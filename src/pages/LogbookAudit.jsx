@@ -17,9 +17,10 @@ import {
   listEvents, addEvent, deleteEvent,
   reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
   extractLogbooksBatched, spanFromDrafts, mergeSpan, reassignLogbookEvents,
-  listParts, addParts, deletePart, searchRecords, orderLogbooks,
+  listParts, addParts, deletePart, searchRecords, orderLogbooks, duplicateEvents,
   EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
+import { compileAdCompliance, adStats } from '../lib/ad.js'
 import { normalizeProfile, engineLabel } from '../lib/profile.js'
 import { uploadMedia, listMediaByLogbook, updateMedia, deleteMedia } from '../lib/media.js'
 import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
@@ -183,6 +184,8 @@ export default function LogbookAudit() {
   }, [inspection])
 
   const recon = useMemo(() => reconcileLogbooks(logbooks, { engineCount, layout }), [logbooks, engineCount, layout])
+  const dups = useMemo(() => duplicateEvents(events), [events])
+  const adc = useMemo(() => compileAdCompliance(events, logbooks), [events, logbooks])
 
   async function closeScan() {
     setScan(null)
@@ -313,16 +316,24 @@ export default function LogbookAudit() {
             })}
           </div>
         )}
-        {recon.issues.length > 0 && (
+        {(recon.issues.length > 0 || dups.length > 0) && (
           <ul className="lb__issues">
             {recon.issues.map((iss, i) => (
               <li key={i} className={`lb__issue lb__issue--${iss.type}`}>
                 <AlertTriangle size={14} aria-hidden="true" /> {iss.message}
               </li>
             ))}
+            {dups.length > 0 && (
+              <li className="lb__issue lb__issue--overlap">
+                <AlertTriangle size={14} aria-hidden="true" /> {dups.length} possible duplicate entr{dups.length === 1 ? 'y' : 'ies'} — the same event appears more than once (a page may have been scanned twice). Check the events below and delete any repeats.
+              </li>
+            )}
           </ul>
         )}
       </section>
+
+      {/* AD compliance — compiled from the scans, compared vs the AD compliance report. */}
+      {adc.ads.length > 0 && <AdCompliance adc={adc} />}
 
       {/* Records search — bar sits directly above its results (events + parts). */}
       {(events.length > 0 || parts.length > 0) && (
@@ -392,6 +403,61 @@ export default function LogbookAudit() {
         </section>
       )}
     </main>
+  )
+}
+
+// AD compliance resource: the ADs read off every scan, de-duplicated by number,
+// with which source references each (logbooks vs the scanned AD compliance report)
+// and a cross-check that flags ADs on the report but not in the logbooks (and the
+// reverse). Scan an "AD compliance report" (a kind='ad' logbook) to enable the diff.
+function AdCompliance({ adc }) {
+  const stats = adStats(adc.ads)
+  return (
+    <section className="insp__section">
+      <div className="insp__sectionhead">
+        <h2>AD compliance <span className="auth__hint">· {stats.total} AD{stats.total === 1 ? '' : 's'}{stats.recurring ? `, ${stats.recurring} recurring` : ''}</span></h2>
+      </div>
+      {adc.hasReport ? (
+        adc.issues.length > 0 ? (
+          <ul className="lb__issues">
+            {adc.issues.map((iss) => (
+              <li key={iss.key} className={`lb__issue lb__issue--${iss.type === 'unverified' ? 'gap' : 'coverage'}`}>
+                <AlertTriangle size={14} aria-hidden="true" /> {iss.message}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="auth__hint"><Check size={13} aria-hidden="true" /> Every AD on the compliance report was also found in the logbooks.</p>
+        )
+      ) : (
+        <p className="auth__hint">Scan an <strong>AD compliance report</strong> (pick “AD compliance report” when you scan a logbook) to cross-check it against what the logbooks record.</p>
+      )}
+      <ul className="insp__list">
+        {adc.ads.map((ad) => (
+          <li key={ad.key} className="insp__row">
+            <span className="insp__main">
+              <span className="insp__id">
+                {ad.ad_number || ad.title || 'AD'}
+                {ad.recurring && <span className="lb__adtag lb__adtag--recurring">recurring</span>}
+              </span>
+              <span className="insp__sub">
+                {[
+                  ad.ad_number ? ad.title : null,
+                  ad.latest_date ? `latest ${ad.latest_date}` : null,
+                  ad.latest_tach != null ? `tach ${fmtTach(ad.latest_tach)}` : null,
+                ].filter(Boolean).join(' · ')}
+              </span>
+            </span>
+            <span className="lb__adsources">
+              {ad.sources.logbook && <span className="lb__adchip">Logbook</span>}
+              {ad.sources.report && <span className="lb__adchip lb__adchip--report">Report</span>}
+              {adc.hasReport && ad.sources.report && !ad.sources.logbook && <span className="lb__adchip lb__adchip--warn">unverified</span>}
+              {adc.hasReport && ad.sources.logbook && !ad.sources.report && <span className="lb__adchip lb__adchip--warn">not on report</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

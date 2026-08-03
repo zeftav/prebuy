@@ -532,6 +532,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   prints recorded items (worst-first) as a Part-1 table. ⚠️ **REDEPLOY `report` (JWT OFF)** — no migration.
   Chosen (Brett): standard-set + MM-scan (MM life-limited scan = next increment), own tool + report table,
   duplicate-page handling at the analysis level (next). Lint + 236 tests + build green.
+- Session 4 cont. — **AD compliance resource + duplicate-scan flag** (v0.44.0, frontend only — no deploy).
+  `lib/ad.js` (pure+tested): `parseAdNumbers` (modern+legacy formats), `compileAdCompliance(events,
+  logbooks)` de-dupes AD-category events by number + attributes source by source-logbook kind (`ad`-kind =
+  scanned AD compliance report, else logbooks) + diffs (report-only=unverified / logbook-only=not-on-report).
+  `LogbookAudit` **AD compliance** section (compiled list, recurring flag, source chips, cross-check
+  advisories). `lib/logbooks.js` `duplicateEvents` (+tests) → audit flags likely double-scanned entries.
+  No new AI (reuses AD events already read). Lint + 249 tests + build green. **Still pending: MM
+  life-limited scan** (needs a vision edge fn) — the remaining piece of the timed-items ask.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
