@@ -3,6 +3,13 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.42.2] — 2026-08-03
+
+### Fixed
+- **Logbook records search results now sit directly under the search bar.** The `lb__searchbar` moved from
+  the top of the page to head the Notable events + Parts sections, so matches show right below the box
+  instead of at the bottom of the page. Frontend only.
+
 ## [0.42.1] — 2026-08-03
 
 ### Added

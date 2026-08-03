@@ -268,20 +268,6 @@ export default function LogbookAudit() {
 
       <ProcessingBanner jobs={jobs} onRetry={retryJob} onDismiss={dismissJob} />
 
-      {(events.length > 0 || parts.length > 0) && (
-        <div className="lb__searchbar">
-          <Search size={15} aria-hidden="true" />
-          <input
-            type="search"
-            placeholder="Search this aircraft’s records — events, part numbers…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search records"
-          />
-          {query && <button type="button" className="auth__toggle" onClick={() => setQuery('')}>Clear</button>}
-        </div>
-      )}
-
       {/* Logbooks (scanned) */}
       {logbooks.length > 0 && (
         <section className="insp__section">
@@ -337,6 +323,21 @@ export default function LogbookAudit() {
           </ul>
         )}
       </section>
+
+      {/* Records search — bar sits directly above its results (events + parts). */}
+      {(events.length > 0 || parts.length > 0) && (
+        <div className="lb__searchbar">
+          <Search size={15} aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Search this aircraft’s records — events, part numbers…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search records"
+          />
+          {query && <button type="button" className="auth__toggle" onClick={() => setQuery('')}>Clear</button>}
+        </div>
+      )}
 
       {/* Notable events */}
       <section className="insp__section">
