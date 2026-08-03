@@ -61,7 +61,7 @@ Run in order. All are idempotent (safe to re-run).
       inspections). Idempotent. (v0.39.0, 2026-06-30)
 - [x] ✅ `028_records_onboarding.sql` — `inspections.mode` += 'records' + `logbook_parts` table
       (searchable part numbers). Idempotent. (v0.40.0, 2026-06-30)
-- [ ] ⬜ `029_logbook_source_page.sql` — `source_page` on `logbook_events` + `logbook_parts` (hotlink
+- [x] ✅ `029_logbook_source_page.sql` — `source_page` on `logbook_events` + `logbook_parts` (hotlink
       each record to its logbook PDF page). Idempotent. (v0.46.0, 2026-08-03)
 
 ## 2. Edge functions (Supabase → Edge Functions)
@@ -81,10 +81,10 @@ Run in order. All are idempotent (safe to re-run).
         (flags illegible reads → logbook "verify against PDF" advisory).
   - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.40.0** (2026-06-30) — also returns `parts`
         (searchable part numbers). Needs migration 028.
-  - [ ] 🔁 **REDEPLOY `structure-logbook` (JWT ON) for v0.45.0 + v0.46.0** — returns `compliance` (recurring
-        inspection dates → auto-fills the Timed-items tool) + `limits` (MM life-limited scan) [v0.45.0], and
-        a `page` per event/part for the PDF-page hotlinks [v0.46.0]. One redeploy covers both. Needs
-        migration 029 for the page links. Reuses `ANTHROPIC_API_KEY`. (2026-08-03)
+  - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.45.0 + v0.46.0** (2026-08-03) — returns
+        `compliance` (recurring inspection dates → auto-fills the Timed-items tool) + `limits` (MM
+        life-limited scan) [v0.45.0], and a `page` per event/part for the PDF-page hotlinks [v0.46.0].
+        Migration 029 also run. Reuses `ANTHROPIC_API_KEY`.
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile
