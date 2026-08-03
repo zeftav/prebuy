@@ -59,7 +59,7 @@ Run in order. All are idempotent (safe to re-run).
       (v0.38.0, 2026-06-29)
 - [x] ✅ `027_checklist_phase.sql` — `phase` on `template_items` + `inspection_items` (two-phase
       inspections). Idempotent. (v0.39.0, 2026-06-30)
-- [ ] ⬜ `028_records_onboarding.sql` — `inspections.mode` += 'records' + `logbook_parts` table
+- [x] ✅ `028_records_onboarding.sql` — `inspections.mode` += 'records' + `logbook_parts` table
       (searchable part numbers). Idempotent. (v0.40.0, 2026-06-30)
 
 ## 2. Edge functions (Supabase → Edge Functions)
@@ -77,8 +77,8 @@ Run in order. All are idempotent (safe to re-run).
         (engine/prop report their own time; AD/337 read as events).
   - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.37.0** (2026-06-29) — returns `unclear`
         (flags illegible reads → logbook "verify against PDF" advisory).
-  - [ ] 🔁 **REDEPLOY `structure-logbook` (JWT ON) for v0.40.0** — also returns `parts` (searchable part
-        numbers). Needs migration 028.
+  - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.40.0** (2026-06-30) — also returns `parts`
+        (searchable part numbers). Needs migration 028.
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile
