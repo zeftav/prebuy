@@ -13,6 +13,7 @@ import Walkaround from './pages/Walkaround.jsx'
 import AircraftProfile from './pages/AircraftProfile.jsx'
 import LogbookAudit from './pages/LogbookAudit.jsx'
 import GearRigging from './pages/GearRigging.jsx'
+import Compliance from './pages/Compliance.jsx'
 import Checklists from './pages/Checklists.jsx'
 import ClaimListing from './pages/ClaimListing.jsx'
 import ReportView from './pages/ReportView.jsx'
@@ -114,6 +115,14 @@ function App() {
         element={
           <ProtectedRoute>
             <LogbookAudit />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/inspections/:id/compliance"
+        element={
+          <ProtectedRoute>
+            <Compliance />
           </ProtectedRoute>
         }
       />

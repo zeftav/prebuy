@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.43.0',
+    date: '2026-08-03',
+    title: 'Timed items & compliance summary',
+    items: [
+      'New “Timed items” tool on every aircraft (from the inspection tools): the recurring inspections and life-limited items for the airframe — IFR pitot-static / transponder / altimeter (91.411/413), ELT and its battery, the annual, plus make-specific ones like the Beech wing-bolt check and on-condition items like the vacuum/air pump.',
+      'Enter the last-complied date and/or tach for each and we compute the next-due and flag it Overdue, Due soon, or Current. Add your own items (with a months and/or hours interval) for anything specific to the aircraft.',
+      'The recorded items print as a compliance table on the customer report.',
+    ],
+  },
+  {
     version: '0.42.1',
     date: '2026-08-03',
     title: 'Logbooks show in the right order automatically',

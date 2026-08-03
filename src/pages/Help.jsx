@@ -121,6 +121,10 @@ const FAQ = [
     a: 'Some checklists (like Savvy’s) are done in two passes: Phase 1 first — records plus a targeted look for deal-breakers — which you report before continuing to Phase 2, the detailed inspection. When your checklist has phases, the inspection shows Phase 1 / Phase 2 tabs, each with its own progress. Work Phase 1, report, then move to Phase 2. Items you add by hand are tagged to whichever phase you’re on.',
   },
   {
+    q: 'How do I track recurring / timed items (IFR checks, ELT, annual, wing bolts)?',
+    a: 'Open an aircraft and tap “Timed items.” We list the recurring inspections and life-limited items for the airframe — the IFR pitot-static / transponder / altimeter checks (91.411/413), the ELT and its battery, the annual, plus make-specific ones (e.g. the Beech wing-bolt check) and on-condition components like the vacuum/air pump. Enter the last-complied date and/or tach for each and we compute the next-due and flag it Overdue, Due soon, or Current. Set the current airframe time up top for the hours-based items. Add your own item (with a months and/or hours interval) for anything specific to the aircraft, or mark one Not applicable. What you record prints as a compliance table on the customer report.',
+  },
+  {
     q: 'How do I record Beech landing-gear rigging?',
     a: 'On any Beechcraft inspection, open the inspection and tap “Gear rigging.” It’s a structured data record: for each rigging parameter the spec/tolerance is shown, and you enter the measured value, mark Pass or Fail, and add remarks — plus the header (model, serial, voltage) and technician/inspector sign-off. It saves with the inspection and prints as a table on the customer report.',
   },

@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check, Wrench } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check, Wrench, CalendarClock } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import {
@@ -346,6 +346,11 @@ export default function InspectionDetail() {
         <Link to={`/app/inspections/${inspection.id}/logbooks`} className="auth__btn auth__btn--ghost insp__walkthrough">
           <BookOpen size={15} aria-hidden="true" /> Logbook audit
         </Link>
+        {cfg.key === 'aviation' && (
+          <Link to={`/app/inspections/${inspection.id}/compliance`} className="auth__btn auth__btn--ghost insp__walkthrough">
+            <CalendarClock size={15} aria-hidden="true" /> Timed items
+          </Link>
+        )}
         {!captureOnly && isBeech(inspection.make) && (
           <Link to={`/app/inspections/${inspection.id}/gear-rigging`} className="auth__btn auth__btn--ghost insp__walkthrough">
             <Wrench size={15} aria-hidden="true" /> Gear rigging

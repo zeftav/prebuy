@@ -13,6 +13,7 @@ import { Plane, Ship, Printer, AlertTriangle, Eye, Check, ShieldCheck, Wrench, P
 import { fetchReport, reportSummary } from '../lib/report.js'
 import { reasonLabel } from '../lib/followups.js'
 import { normalizeGearRig, isGearRigEmpty, gearRigStats, GEAR_RIG_GROUPS } from '../lib/gearrig.js'
+import { normalizeCompliance, complianceRows, statusLabel } from '../lib/compliance.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
   normalizeProfile,
@@ -336,6 +337,8 @@ export default function ReportView() {
         </section>
       )}
 
+      {inspection.compliance && <ComplianceSection inspection={inspection} />}
+
       {!isGearRigEmpty(inspection.gear_rigging) && (
         <GearRigSection data={inspection.gear_rigging} />
       )}
@@ -348,6 +351,40 @@ export default function ReportView() {
         {published && <span>{published}</span>}
       </footer>
     </main>
+  )
+}
+
+function ComplianceSection({ inspection }) {
+  const norm = normalizeCompliance({ compliance: inspection.compliance }, { vertical: inspection.vertical, make: inspection.make })
+  const asOfDate = new Date().toISOString().slice(0, 10)
+  // Only show items the shop actually recorded (skip 'unknown' = no data), worst-first.
+  const rows = complianceRows(norm.items, { asOfDate, currentTach: norm.current_tach }).filter((r) => r.due.status !== 'unknown')
+  if (!rows.length) return null
+  const dueText = (r) => [r.due.dueDate, r.due.dueTach != null ? `${r.due.dueTach.toFixed(1)} hrs` : null].filter(Boolean).join(' · ') || '—'
+  const lastText = (r) => [r.last_date, r.last_tach != null ? `${r.last_tach} hrs` : null].filter(Boolean).join(' · ') || '—'
+  return (
+    <section className="report__section">
+      <h2>Timed items &amp; compliance</h2>
+      <p className="report__sectionnote">Recurring inspections and life-limited items, status as of {asOfDate}.</p>
+      <div className="report__tablewrap" style={{ overflowX: 'auto' }}>
+        <table className="report__grtable">
+          <thead>
+            <tr><th>Item</th><th>Basis</th><th>Last complied</th><th>Next due</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.key}>
+                <td>{r.label}</td>
+                <td>{r.basis || '—'}</td>
+                <td>{lastText(r)}</td>
+                <td>{dueText(r)}</td>
+                <td><span className={`report__compstatus report__compstatus--${r.due.status}`}>{statusLabel(r.due.status)}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   )
 }
 

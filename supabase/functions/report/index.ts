@@ -128,6 +128,8 @@ Deno.serve(async (req: Request) => {
       profile: insp.attributes?.profile ?? null,
       // Beech landing-gear rigging data record (if captured).
       gear_rigging: insp.attributes?.gear_rigging ?? null,
+      // Recurring / life-limited compliance items (timed-items summary), if captured.
+      compliance: insp.attributes?.compliance ?? null,
     },
     items: (items ?? []).map((i) => ({
       id: i.id,

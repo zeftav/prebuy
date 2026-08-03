@@ -3,6 +3,30 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.43.0] — 2026-08-03
+
+### Added
+- **Timed items & compliance tool** (`/app/inspections/:id/compliance`, linked from the inspection tools
+  for aviation). Tracks recurring inspections + life-limited items for the airframe. `lib/compliance.js`
+  (pure + tested, 21 cases): a baked-in standard aviation set (`annual` 12mo, `pitot_static`/`altimeter`
+  91.411 24mo, `transponder` 91.413 24mo, `elt` 91.207 12mo, `elt_battery` by-date, `vacuum_pump` ~500hr)
+  plus make-specific (`wing_bolts` for Beech); `normalizeCompliance` merges stored last-complied onto the
+  defaults + custom items; `dueStatus` computes next-due by calendar months and/or hours (worst-of governs)
+  → overdue / due-soon / current / unknown; `complianceRows`/`complianceStats`/`saveCompliance`. Stored on
+  `inspections.attributes.compliance` (JSONB — **no migration**). The page: current-airframe-time field
+  (prefilled from the profile), per-item last-complied date/tach + note + not-applicable, add-custom-item,
+  status badges, worst-first order.
+- **Report compliance table.** `report` edge fn now returns `inspection.compliance`; `ReportView` renders
+  a "Timed items & compliance" table in Part 1 (recorded items only, worst-first, colored status).
+
+### Deploy
+- **REDEPLOY `report` (Verify JWT OFF)** so the report returns `inspection.compliance`. No migration, no
+  new secret. (Frontend/tool works without it; only the report table needs the redeploy.)
+
+### Next
+- MM life-limited-items **scan** (photograph the Maintenance Manual limits pages → auto-add items) is the
+  follow-up increment. Duplicate-page handling to be addressed at the analysis level.
+
 ## [0.42.2] — 2026-08-03
 
 ### Fixed

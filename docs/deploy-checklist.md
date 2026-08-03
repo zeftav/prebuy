@@ -101,6 +101,8 @@ Run in order. All are idempotent (safe to re-run).
       items (Claude document input). Reuses `ANTHROPIC_API_KEY`. Needs migration 027. (2026-06-30)
 - [x] ✅ **REDEPLOYED `report` (JWT OFF) for v0.39.0** (2026-06-30) — also returns `inspection.gear_rigging` (Beech
       gear-rigging table on the report). No migration (lives in `attributes`). (2026-06-30)
+- [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.43.0** — also returns `inspection.compliance` (timed-items /
+      compliance table on the report). No migration (lives in `attributes`). (2026-08-03)
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 

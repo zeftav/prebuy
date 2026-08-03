@@ -518,6 +518,20 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   the card key so it re-fetches its compiled PDF/pages, then aggregates reload. Failed job → Retry/Dismiss
   in the banner (pages are saved). Search (events + part numbers, per-aircraft) already shipped in v0.40.0
   — the `lb__searchbar` on the Logbook audit page. Lint + 211 tests + build green.
+  - v0.42.1: pure `orderLogbooks` (+tests) — logbook cards display by kind→position→start-tach (untimed
+    last)→date→scan-order, so out-of-order/mislabeled scans present in sequence.
+  - v0.42.2: logbook records search bar moved to head its results (events+parts) instead of page bottom.
+- Session 4 cont. — **Timed items & compliance** (v0.43.0). New `lib/compliance.js` (pure+tested, 21):
+  baked-in standard aviation recurring set (annual/91.411 pitot-static+altimeter/91.413 transponder/91.207
+  ELT+battery/vacuum-pump ~500hr) + make-specific (Beech `wing_bolts`); `normalizeCompliance` (merge stored
+  last-complied onto defaults + custom/mm-scan items), `dueStatus` (calendar-months and/or hours, worst-of →
+  overdue/due-soon/ok/unknown), `complianceRows`/`Stats`/`saveCompliance`. Stored on
+  `inspections.attributes.compliance` (**no migration**). `Compliance.jsx` (`/app/inspections/:id/compliance`,
+  aviation tool link) — current-airframe-time (prefilled from profile), per-item date/tach+note+N/A, add
+  custom, status badges. `report` fn returns `inspection.compliance`; `ReportView` `ComplianceSection`
+  prints recorded items (worst-first) as a Part-1 table. ⚠️ **REDEPLOY `report` (JWT OFF)** — no migration.
+  Chosen (Brett): standard-set + MM-scan (MM life-limited scan = next increment), own tool + report table,
+  duplicate-page handling at the analysis level (next). Lint + 236 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
