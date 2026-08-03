@@ -481,6 +481,20 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   Zefting's own (in code). Env hiccup mid-session wiped `.env` + node_modules — restored (`.env`
   placeholders, `npm ci`).
 
+- Session 4 cont. — **Records onboarding + searchable logbooks** (v0.40.0). Brett: use the logbook audit
+  on first-time aircraft as an onboarding thing (scan→PDF→parse), searchable, with part numbers. Chosen:
+  **records-mode job** (reuse inspection container), **per-aircraft** search, **part numbers as a
+  searchable list**. Migration `028` (`inspections.mode` += 'records' + `logbook_parts` table + RLS).
+  `structure-logbook` also returns `parts[]` (installed/replaced components + P/N); scan stores them.
+  `lib/logbooks.js`: `listParts`/`addParts`/`deletePart` + pure `searchRecords` (+tests, 211 total);
+  `extractLogbooks`/`mergeExtractDrafts` carry `parts`. `LogbookAudit` gains a **search box** (events +
+  parts) + **Parts & components** section. `InspectionDetail` `captureOnly = isListing || isRecords` →
+  records layout (logbook up front, no checklist/walk-around/gear-rig/follow-ups/handoff, "Start
+  inspection from these records" promote). NewInspection `?mode=records` (no customer fields);
+  Dashboard "Onboard records" + Records row tag. ⚠️ **Run migration 028 + redeploy `structure-logbook`
+  (JWT ON)**. Backlog stays: aircraft-as-first-class-entity + shop-wide records library (deferred; chose
+  records-mode reuse for now).
+
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
   (added as a repo deploy key with write). No `gh` CLI installed yet.

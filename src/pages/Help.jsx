@@ -37,6 +37,10 @@ const FAQ = [
     a: 'Open an inspection from your dashboard. We build a checklist matched to the aircraft and order it by financial risk, so the biggest-dollar items come first. Mark each item OK, Monitor, Discrepancy, or N/A, and add notes — your progress saves automatically. Dictation and photos are coming next.',
   },
   {
+    q: 'Can I onboard an aircraft’s records without doing a pre-purchase inspection?',
+    a: 'Yes — on the dashboard tap “Onboard records.” It runs the same logbook workflow (scan each book → PDF copies → read times and events) but with no pre-purchase checklist — an internal records job for an aircraft you’re seeing for the first time. The scan also pulls out notable part numbers, and the Logbook audit has a search box so you can look up an aircraft’s events and parts (“did we work this before / do we have records of this part?”). You can later promote a records job into a full pre-purchase inspection with “Start inspection from these records.”',
+  },
+  {
     q: 'How does the logbook audit work?',
     a: 'Open an inspection and tap “Logbook audit”, then “Scan a logbook.” Pick what it is — airframe, engine, propeller (and which engine/prop on a twin) — and snap the pages in order. When you’re done we compile a PDF copy of that book and read the dates, times and notable events (ADs, 337s, overhauls, prop strikes, damage) right off the pages. Each logbook is its own scan, so you build them up one at a time. We then reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). Because logs are handwritten, always double-check the read-back — every time and event stays editable, and you can add an event by hand.',
   },

@@ -10,13 +10,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check } from 'lucide-react'
+import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check, Search, Package } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
   listLogbooks, addLogbook, deleteLogbook, updateLogbook,
   listEvents, addEvent, deleteEvent,
   reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
   extractLogbooksBatched, spanFromDrafts, mergeSpan, reassignLogbookEvents,
+  listParts, addParts, deletePart, searchRecords,
   LOGBOOK_KINDS, EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { normalizeProfile, engineLabel } from '../lib/profile.js'
@@ -55,13 +56,16 @@ export default function LogbookAudit() {
   const [inspection, setInspection] = useState(null)
   const [logbooks, setLogbooks] = useState([])
   const [events, setEvents] = useState([])
+  const [parts, setParts] = useState([])
+  const [query, setQuery] = useState('')
   const [state, setState] = useState('loading')
   const [scan, setScan] = useState(null) // { mode:'new'|'amend', book? } | null
 
   async function reload(inspId) {
-    const [{ data: lb }, { data: ev }] = await Promise.all([listLogbooks(inspId), listEvents(inspId)])
+    const [{ data: lb }, { data: ev }, { data: pt }] = await Promise.all([listLogbooks(inspId), listEvents(inspId), listParts(inspId)])
     setLogbooks(lb)
     setEvents(ev)
+    setParts(pt)
   }
 
   useEffect(() => {
@@ -120,6 +124,10 @@ export default function LogbookAudit() {
     const { error } = await deleteEvent(ev.id)
     if (error) setEvents((p) => [...p, ev])
   }
+  async function onDeletePart(pt) {
+    setParts((p) => p.filter((x) => x.id !== pt.id))
+    await deletePart(pt.id)
+  }
 
   if (state === 'loading') {
     return <main className="auth-pending" aria-busy="true"><p>Loading…</p></main>
@@ -134,6 +142,7 @@ export default function LogbookAudit() {
   }
 
   const posLabel = (kind, position) => groupLabel(kind, position, engineCount, layout)
+  const filtered = searchRecords({ events, parts }, query)
 
   return (
     <main className="insp">
@@ -161,6 +170,20 @@ export default function LogbookAudit() {
         <button type="button" className="auth__btn lb__scanbtn" onClick={() => setScan({ mode: 'new' })}>
           <ScanLine size={16} aria-hidden="true" /> Scan a logbook
         </button>
+      )}
+
+      {(events.length > 0 || parts.length > 0) && (
+        <div className="lb__searchbar">
+          <Search size={15} aria-hidden="true" />
+          <input
+            type="search"
+            placeholder="Search this aircraft’s records — events, part numbers…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search records"
+          />
+          {query && <button type="button" className="auth__toggle" onClick={() => setQuery('')}>Clear</button>}
+        </div>
       )}
 
       {/* Logbooks (scanned) */}
@@ -221,10 +244,10 @@ export default function LogbookAudit() {
 
       {/* Notable events */}
       <section className="insp__section">
-        <div className="insp__sectionhead"><h2>Notable events</h2></div>
-        {events.length > 0 && (
+        <div className="insp__sectionhead"><h2>Notable events {query && <span className="auth__hint">· {filtered.events.length} match</span>}</h2></div>
+        {filtered.events.length > 0 ? (
           <ul className="insp__list">
-            {events.map((e) => (
+            {filtered.events.map((e) => (
               <li key={e.id} className="insp__row">
                 <span className="insp__main">
                   <span className="insp__id">
@@ -242,9 +265,35 @@ export default function LogbookAudit() {
               </li>
             ))}
           </ul>
-        )}
+        ) : query ? (
+          <p className="auth__hint">No matching events.</p>
+        ) : null}
         <AddEvent onAdd={onAddEvent} engineCount={engineCount} layout={layout} />
       </section>
+
+      {/* Parts / components (searchable) */}
+      {parts.length > 0 && (
+        <section className="insp__section">
+          <div className="insp__sectionhead"><h2><Package size={18} aria-hidden="true" /> Parts &amp; components {query && <span className="auth__hint">· {filtered.parts.length} match</span>}</h2></div>
+          {filtered.parts.length > 0 ? (
+            <ul className="insp__list">
+              {filtered.parts.map((p) => (
+                <li key={p.id} className="insp__row">
+                  <span className="insp__main">
+                    <span className="insp__id">{p.part_number || p.description || 'Part'}</span>
+                    <span className="insp__sub">{[p.part_number ? p.description : null, p.event_date, p.tach != null ? `tach ${fmtTach(p.tach)}` : null].filter(Boolean).join(' · ')}</span>
+                  </span>
+                  <ConfirmButton title="Delete part" onConfirm={() => onDeletePart(p)}>
+                    <Trash2 size={15} aria-hidden="true" />
+                  </ConfirmButton>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="auth__hint">No matching parts.</p>
+          )}
+        </section>
+      )}
     </main>
   )
 }
@@ -398,6 +447,8 @@ function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCa
             description: cleanDraftValue(ev.description) || '',
           })
         }
+        // Notable part numbers → searchable parts list.
+        if (Array.isArray(draft.parts) && draft.parts.length) await addParts(inspection, book.id, draft.parts)
       }
     }
     setProgress(null)

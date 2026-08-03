@@ -21,6 +21,7 @@ export default function NewInspection() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const wantedOrg = params.get('org')
+  const wantedMode = params.get('mode')
 
   const [shop, setShop] = useState(null) // { org_id, vertical, name }
   const [shopReady, setShopReady] = useState(false)
@@ -51,7 +52,7 @@ export default function NewInspection() {
       if (m) {
         const orgType = m.orgs?.org_type || 'inspector'
         setShop({ org_id: m.org_id, vertical: m.orgs?.vertical || 'aviation', name: m.orgs?.name, org_type: orgType })
-        setMode(defaultMode(orgType))
+        setMode(wantedMode === 'records' ? 'records' : defaultMode(orgType))
       } else {
         setShop(null)
       }
@@ -60,7 +61,7 @@ export default function NewInspection() {
     return () => {
       active = false
     }
-  }, [wantedOrg])
+  }, [wantedOrg, wantedMode])
 
   const cfg = getVertical(shop?.vertical) ?? getVertical('aviation')
   const idCheck = useMemo(
@@ -147,7 +148,7 @@ export default function NewInspection() {
       </span>
 
       <div className="auth__heading">
-        <h1>New {cfg.noun} {mode === 'listing' ? 'listing' : 'inspection'}</h1>
+        <h1>New {cfg.noun} {mode === 'listing' ? 'listing' : mode === 'records' ? 'records' : 'inspection'}</h1>
         <p>
           {shop?.name ? `${shop.name} · ` : ''}
           {canLookup
@@ -163,7 +164,7 @@ export default function NewInspection() {
       )}
 
       <form className="auth__form" onSubmit={onSubmit}>
-        {showsModePicker(shop?.org_type) && (
+        {showsModePicker(shop?.org_type) && mode !== 'records' && (
           <div className="auth__field">
             <label>What are you creating?</label>
             <div className="insp__verticals" role="radiogroup" aria-label="Job type">
@@ -280,14 +281,18 @@ export default function NewInspection() {
           </div>
         )}
 
-        <div className="auth__field">
-          <label htmlFor="customerName">Customer name</label>
-          <input id="customerName" type="text" autoComplete="name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
-        </div>
-        <div className="auth__field">
-          <label htmlFor="customerEmail">Customer email</label>
-          <input id="customerEmail" type="email" autoComplete="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
-        </div>
+        {mode !== 'records' && (
+          <>
+            <div className="auth__field">
+              <label htmlFor="customerName">Customer name</label>
+              <input id="customerName" type="text" autoComplete="name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+            </div>
+            <div className="auth__field">
+              <label htmlFor="customerEmail">Customer email</label>
+              <input id="customerEmail" type="email" autoComplete="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
+            </div>
+          </>
+        )}
 
         <div className="insp__row2">
           <div className="auth__field">
@@ -305,7 +310,7 @@ export default function NewInspection() {
         </div>
 
         <button type="submit" className="auth__btn" disabled={busy || (Boolean(identifier) && !idCheck.valid)}>
-          {busy ? 'Creating…' : `Create ${mode === 'listing' ? 'listing' : 'inspection'}`}
+          {busy ? 'Creating…' : `Create ${mode === 'listing' ? 'listing' : mode === 'records' ? 'records' : 'inspection'}`}
         </button>
       </form>
 

@@ -160,8 +160,27 @@ const SCHEMA = {
         'was legible. Do NOT include things simply absent from the pages — only things present but not readable.',
       items: { type: 'string' },
     },
+    parts: {
+      type: 'array',
+      description:
+        'Notable part numbers / components INSTALLED or REPLACED as recorded in the entries — e.g. a ' +
+        'replaced magneto, alternator, cylinder, avionics unit, pump, actuator, tire. For each, the ' +
+        'part number as written and a short description (what it is). Include the entry date and tach if ' +
+        'shown. Only real part numbers or clearly-identified components; skip generic mentions.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          part_number: { type: 'string', description: 'The part number as written, or "" if only a component name is given.' },
+          description: { type: 'string', description: 'What the part is, e.g. "Left magneto Slick 4371", "#3 cylinder".' },
+          event_date: { type: 'string', description: 'YYYY-MM-DD or "".' },
+          tach: { type: 'number', description: 'Tach/total time at install, or 0.' },
+        },
+        required: ['part_number', 'description', 'event_date', 'tach'],
+      },
+    },
   },
-  required: ['logbooks', 'events', 'specs', 'currency', 'equipment', 'unclear'],
+  required: ['logbooks', 'events', 'specs', 'currency', 'equipment', 'unclear', 'parts'],
 }
 
 const EMPTY_SPECS = { total_time: 0, engine_smoh: 0, engine_notes: '', prop_since: 0, prop_notes: '', mgtow: 0, empty_weight: 0, useful_load: 0, fuel_capacity: 0 }
@@ -237,7 +256,9 @@ Deno.serve(async (req: Request) => {
         '(4) currency due-dates (annual, IFR pitot/static 91.411, transponder 91.413, ELT battery, O2 hydro); ' +
         '(5) installed equipment, split into avionics vs additional, with short condition notes; ' +
         '(6) "unclear" — short notes on anything PRESENT on the pages you could not confidently read ' +
-        '(smudged/faded figures, illegible handwriting), so a human knows to verify it. ' +
+        '(smudged/faded figures, illegible handwriting), so a human knows to verify it; ' +
+        '(7) "parts" — notable part numbers / components installed or replaced (mag, alternator, cylinder, ' +
+        'avionics, pump, tire) with their part number + a short description. ' +
         'Only report what is legible — do not guess. Use empty strings / 0 for anything you cannot ' +
         'read, and add it to "unclear". This is a draft a human will review.' +
         contextLine,
@@ -271,6 +292,16 @@ Deno.serve(async (req: Request) => {
         additional: Array.isArray(eq.additional) ? eq.additional : [],
       },
       unclear: Array.isArray(result.unclear) ? result.unclear.filter((u: unknown) => typeof u === 'string' && u.trim()).map((u: string) => u.trim()) : [],
+      parts: Array.isArray(result.parts)
+        ? result.parts
+            .map((p: Record<string, unknown>) => ({
+              part_number: String(p.part_number ?? '').trim(),
+              description: String(p.description ?? '').trim(),
+              event_date: String(p.event_date ?? '').trim(),
+              tach: Number(p.tach) || 0,
+            }))
+            .filter((p: { part_number: string; description: string }) => p.part_number || p.description)
+        : [],
     })
   } catch (e) {
     const status = (e as { status?: number })?.status

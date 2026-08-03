@@ -3,6 +3,27 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.40.0] — 2026-06-30
+
+### Added
+- **Records onboarding** — run the logbook-audit workflow on a first-time aircraft as an internal records
+  job (no prepurchase checklist). Migration `028_records_onboarding.sql` extends `inspections.mode` with
+  `'records'`. `NewInspection` supports `?mode=records` (simplified: no customer fields, no mode picker);
+  Dashboard has an **"Onboard records"** action + a **Records** row tag. `InspectionDetail` renders a
+  capture-only records layout (`captureOnly = isListing || isRecords`) — logbook audit up front, no
+  checklist/walk-around/gear-rigging/follow-ups/handoff, and a **"Start inspection from these records"**
+  promote button (reuses `startInspectionFromListing`).
+- **Searchable part numbers.** `structure-logbook` also extracts notable installed/replaced part
+  numbers + components (`parts[]`); the scan stores them in a new `logbook_parts` table (migration 028,
+  org-scoped RLS). `lib/logbooks.js`: `listParts`/`addParts`/`deletePart` + pure tested `searchRecords`
+  (filters events + parts by text); `extractLogbooks`/`mergeExtractDrafts` carry `parts`.
+- **Search box** in the Logbook audit — search an aircraft's events + parts; a **Parts & components**
+  section lists the extracted parts (delete-confirmed).
+
+### Deploy
+- ⚠️ **Run migration `028_records_onboarding.sql`** and **redeploy `structure-logbook` (Verify JWT ON)**
+  (now returns `parts`). Reuses `ANTHROPIC_API_KEY`.
+
 ## [0.39.0] — 2026-06-30
 
 ### Added

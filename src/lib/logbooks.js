@@ -273,6 +273,40 @@ export async function deleteEvent(id) {
   return { error }
 }
 
+/** List the parts extracted for an aircraft (newest-ish first). */
+export async function listParts(inspectionId) {
+  const { data, error } = await supabase
+    .from('logbook_parts')
+    .select('id, logbook_id, part_number, description, event_date, tach')
+    .eq('inspection_id', inspectionId)
+    .order('event_date', { ascending: false, nullsFirst: false })
+  return { data: data ?? [], error }
+}
+
+/** Insert extracted parts for an aircraft. Ignores empties. */
+export async function addParts(inspection, logbookId, parts) {
+  const rows = (parts ?? [])
+    .map((p) => ({
+      inspection_id: inspection.id,
+      org_id: inspection.org_id,
+      logbook_id: logbookId || null,
+      part_number: cleanDraftValue(p.part_number) || null,
+      description: cleanDraftValue(p.description) || null,
+      event_date: cleanDraftValue(p.event_date) || null,
+      tach: num(cleanDraftValue(p.tach)),
+    }))
+    .filter((r) => r.part_number || r.description)
+  if (!rows.length) return { data: [], error: null }
+  const { data, error } = await supabase.from('logbook_parts').insert(rows).select('id, logbook_id, part_number, description, event_date, tach')
+  return { data: data ?? [], error }
+}
+
+/** Delete an extracted part. */
+export async function deletePart(id) {
+  const { error } = await supabase.from('logbook_parts').delete().eq('id', id)
+  return { error }
+}
+
 /** Realign a logbook's events to a new position (used when its type is corrected). */
 export async function reassignLogbookEvents(logbookId, position) {
   const p = Number(position)
@@ -312,13 +346,28 @@ export function chunk(arr, size) {
  * them. Pure. Tolerates null/missing arrays.
  */
 export function mergeExtractDrafts(drafts) {
-  const out = { logbooks: [], events: [], unclear: [] }
+  const out = { logbooks: [], events: [], unclear: [], parts: [] }
   for (const d of drafts ?? []) {
     if (Array.isArray(d?.logbooks)) out.logbooks.push(...d.logbooks)
     if (Array.isArray(d?.events)) out.events.push(...d.events)
     if (Array.isArray(d?.unclear)) out.unclear.push(...d.unclear)
+    if (Array.isArray(d?.parts)) out.parts.push(...d.parts)
   }
   return out
+}
+
+/**
+ * Filter an aircraft's records (events + parts) by a free-text query, across
+ * title/description/category and part number/description. Pure + tested.
+ */
+export function searchRecords({ events = [], parts = [] }, query) {
+  const q = String(query ?? '').trim().toLowerCase()
+  if (!q) return { events: events, parts: parts }
+  const hit = (...vals) => vals.some((v) => String(v ?? '').toLowerCase().includes(q))
+  return {
+    events: events.filter((e) => hit(e.title, e.description, e.category)),
+    parts: parts.filter((p) => hit(p.part_number, p.description)),
+  }
 }
 
 /**
@@ -372,7 +421,7 @@ export async function extractLogbooks(imageUrls, orgId, context = null) {
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }
-    return { data: { logbooks: body.logbooks ?? [], events: body.events ?? [], unclear: body.unclear ?? [] }, error: null }
+    return { data: { logbooks: body.logbooks ?? [], events: body.events ?? [], unclear: body.unclear ?? [], parts: body.parts ?? [] }, error: null }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e : new Error('Network error') }
   }

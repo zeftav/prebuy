@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords } from './logbooks.js'
 
 const groupBy = (groups, key) => groups.find((g) => g.key === key)
 
@@ -158,8 +158,8 @@ describe('mergeExtractDrafts', () => {
     expect(merged.unclear).toEqual(['SMOH smudged', 'last date unreadable'])
   })
   it('tolerates missing/null arrays and nullish input', () => {
-    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [], unclear: [] })
-    expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [], unclear: [] })
+    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [], unclear: [], parts: [] })
+    expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [], unclear: [], parts: [] })
   })
 })
 
@@ -190,5 +190,43 @@ describe('mergeSpan', () => {
   })
   it('fills from whichever side has a value', () => {
     expect(mergeSpan({ start_tach: 500 }, { end_tach: 900 })).toEqual({ start_date: null, start_tach: 500, end_date: null, end_tach: 900 })
+  })
+})
+
+describe('searchRecords', () => {
+  const data = {
+    events: [
+      { id: 'e1', title: 'Left magneto replaced', description: 'Slick 4371', category: 'other' },
+      { id: 'e2', title: 'Annual inspection', description: '', category: 'other' },
+    ],
+    parts: [
+      { id: 'p1', part_number: 'SL4371', description: 'Left magneto' },
+      { id: 'p2', part_number: '', description: 'Nose tire' },
+    ],
+  }
+  it('returns all when query is blank', () => {
+    const r = searchRecords(data, '')
+    expect(r.events).toHaveLength(2)
+    expect(r.parts).toHaveLength(2)
+  })
+  it('matches events + parts by text (case-insensitive)', () => {
+    const r = searchRecords(data, 'magneto')
+    expect(r.events.map((e) => e.id)).toEqual(['e1'])
+    expect(r.parts.map((p) => p.id)).toEqual(['p1'])
+  })
+  it('matches a part number', () => {
+    expect(searchRecords(data, 'sl4371').parts.map((p) => p.id)).toEqual(['p1'])
+  })
+  it('no matches → empty arrays', () => {
+    const r = searchRecords(data, 'zzz')
+    expect(r.events).toEqual([])
+    expect(r.parts).toEqual([])
+  })
+})
+
+describe('mergeExtractDrafts parts', () => {
+  it('concatenates parts across batches', () => {
+    const m = mergeExtractDrafts([{ parts: [{ part_number: 'A' }] }, { parts: [{ part_number: 'B' }] }])
+    expect(m.parts.map((p) => p.part_number)).toEqual(['A', 'B'])
   })
 })

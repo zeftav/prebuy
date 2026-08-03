@@ -168,9 +168,14 @@ function InspectionList({ orgId, orgType = 'inspector', canManage }) {
     <section className="insp__section">
       <div className="insp__sectionhead">
         <h2>{heading}</h2>
-        <Link to={`/app/inspections/new?org=${orgId}`} className="auth__btn insp__new">
-          <Plus size={15} aria-hidden="true" /> New {noun}
-        </Link>
+        <span className="dash__shopactions">
+          {!broker && (
+            <Link to={`/app/inspections/new?org=${orgId}&mode=records`} className="auth__toggle">Onboard records</Link>
+          )}
+          <Link to={`/app/inspections/new?org=${orgId}`} className="auth__btn insp__new">
+            <Plus size={15} aria-hidden="true" /> New {noun}
+          </Link>
+        </span>
       </div>
 
       {state.status === 'loading' && <p className="auth__hint">Loading inspections…</p>}
@@ -202,6 +207,7 @@ function InspectionList({ orgId, orgType = 'inspector', canManage }) {
                   <span className="insp__id">
                     {row.identifier}
                     {row.mode === 'listing' && <span className="insp__modetag">Listing</span>}
+                    {row.mode === 'records' && <span className="insp__modetag">Records</span>}
                   </span>
                   <span className="insp__sub">
                     {[getVertical(row.vertical)?.label, [row.make, row.model].filter(Boolean).join(' '), row.customer_name]

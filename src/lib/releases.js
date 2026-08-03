@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.40.0',
+    date: '2026-06-30',
+    title: 'Records onboarding + searchable logbooks',
+    items: [
+      'New “Onboard records” on the dashboard: for an aircraft you’re seeing for the first time, run the whole logbook workflow — scan each book, build PDF copies, and read the times and events — without a pre-purchase checklist. It’s an internal records job you can later promote to a full inspection.',
+      'Logbook scans now also pull out notable part numbers and components into a searchable list.',
+      'New search box in the Logbook audit: search an aircraft’s records — events and part numbers — to answer “did we work this before / do we have records of this part?”',
+    ],
+  },
+  {
     version: '0.39.0',
     date: '2026-06-30',
     title: 'Upload your own checklists + two-phase inspections + Beech gear rigging',

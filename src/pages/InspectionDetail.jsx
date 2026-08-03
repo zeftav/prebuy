@@ -236,6 +236,8 @@ export default function InspectionDetail() {
   const pSchema = profileSchema(inspection.vertical)
   const subtitle = [inspection.year, inspection.make, inspection.model].filter(Boolean).join(' ')
   const isListing = inspection.mode === 'listing'
+  const isRecords = inspection.mode === 'records'
+  const captureOnly = isListing || isRecords // no prepurchase checklist
 
   return (
     <main className="insp">
@@ -258,10 +260,12 @@ export default function InspectionDetail() {
         <span className={`insp__status insp__status--${inspection.status}`}>{inspection.status}</span>
       </div>
 
-      {isListing ? (
+      {captureOnly ? (
         <div className="insp__progress">
-          <span>Broker listing</span>
-          <span className="auth__hint">Capture-only — profile, photos & logbooks; no checklist.</span>
+          <span>{isRecords ? 'Aircraft records' : 'Broker listing'}</span>
+          <span className="auth__hint">
+            {isRecords ? 'Onboarding — scan logbooks, build PDFs, and a searchable records resource.' : 'Capture-only — profile, photos & logbooks; no checklist.'}
+          </span>
         </div>
       ) : (
         <div className="insp__progress">
@@ -270,7 +274,7 @@ export default function InspectionDetail() {
         </div>
       )}
 
-      {!isListing && usesPhases && (
+      {!captureOnly && usesPhases && (
         <>
           <div className="insp__phasetabs" role="tablist" aria-label="Inspection phase">
             {PHASES.map((p) => (
@@ -297,7 +301,12 @@ export default function InspectionDetail() {
       <InspectionMeta inspection={inspection} onSave={saveMeta} />
 
       <div className="insp__tools">
-        {!isListing && (
+        {isRecords && (
+          <Link to={`/app/inspections/${inspection.id}/logbooks`} className="auth__btn insp__walkthrough insp__walkcta">
+            <BookOpen size={15} aria-hidden="true" /> Scan logbooks
+          </Link>
+        )}
+        {!captureOnly && (
           <Link to={`/app/inspections/${inspection.id}/walkaround`} className="auth__btn insp__walkthrough insp__walkcta">
             <Mic size={15} aria-hidden="true" /> Dictate walk-around
           </Link>
@@ -311,7 +320,7 @@ export default function InspectionDetail() {
         <Link to={`/app/inspections/${inspection.id}/logbooks`} className="auth__btn auth__btn--ghost insp__walkthrough">
           <BookOpen size={15} aria-hidden="true" /> Logbook audit
         </Link>
-        {!isListing && isBeech(inspection.make) && (
+        {!captureOnly && isBeech(inspection.make) && (
           <Link to={`/app/inspections/${inspection.id}/gear-rigging`} className="auth__btn auth__btn--ghost insp__walkthrough">
             <Wrench size={15} aria-hidden="true" /> Gear rigging
           </Link>
@@ -320,18 +329,19 @@ export default function InspectionDetail() {
 
       <PublishBar inspection={inspection} onPublish={publish} onUnpublish={unpublish} openFollowups={openCount(followups)} />
 
-      {isListing ? (
+      {captureOnly ? (
         <>
           <div className="insp__listingactions">
             <p className="auth__hint">
-              Build the {pSchema.noun.toLowerCase()} profile, photos and logbooks above,
-              then publish the listing — or send it to a shop for a full pre-purchase inspection.
+              {isRecords
+                ? 'Scan the logbooks above to build PDF copies and a searchable record of times, events and part numbers — or promote this into a full pre-purchase inspection.'
+                : `Build the ${pSchema.noun.toLowerCase()} profile, photos and logbooks above, then publish the listing — or send it to a shop for a full pre-purchase inspection.`}
             </p>
             <button type="button" className="auth__btn auth__btn--ghost insp__walkthrough" onClick={startInspection} disabled={handoffBusy}>
-              <ClipboardCheck size={15} aria-hidden="true" /> {handoffBusy ? 'Starting…' : 'Start inspection in this shop'}
+              <ClipboardCheck size={15} aria-hidden="true" /> {handoffBusy ? 'Starting…' : isRecords ? 'Start inspection from these records' : 'Start inspection in this shop'}
             </button>
           </div>
-          <HandoffPanel inspection={inspection} userId={user?.id} />
+          {isListing && <HandoffPanel inspection={inspection} userId={user?.id} />}
         </>
       ) : (
         <>
@@ -376,18 +386,17 @@ export default function InspectionDetail() {
       )}
 
       {(role === 'owner' || role === 'admin') && (
-        <DangerZone inspection={inspection} isListing={isListing} onDelete={removeInspection} />
+        <DangerZone inspection={inspection} noun={isRecords ? 'records' : isListing ? 'listing' : 'inspection'} onDelete={removeInspection} />
       )}
     </main>
   )
 }
 
-function DangerZone({ inspection, isListing, onDelete }) {
+function DangerZone({ inspection, noun = 'inspection', onDelete }) {
   const [open, setOpen] = useState(false)
   const [confirm, setConfirm] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
-  const noun = isListing ? 'listing' : 'inspection'
   const match = (inspection.identifier || '').trim()
   const ready = confirm.trim().toUpperCase() === match.toUpperCase() && match.length > 0
 
