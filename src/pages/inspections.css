@@ -1695,6 +1695,22 @@
 .comp__pill--ok { background: rgba(26,127,55,0.12); color: #1a7f37; }
 .comp__pill--unknown { background: rgba(100,110,130,0.12); color: #667; }
 
+/* Hotlink to a page of a logbook PDF */
+.lb__pagelink {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-border, rgba(107,70,193,0.3));
+  color: var(--accent, #6b46c1);
+  text-decoration: none;
+}
+.lb__pagelink:hover { background: var(--accent-soft, rgba(107,70,193,0.08)); }
+
 /* AD compliance chips / tags */
 .lb__adsources { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .lb__adchip {

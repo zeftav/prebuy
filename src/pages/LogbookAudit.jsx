@@ -23,7 +23,7 @@ import {
 import { compileAdCompliance, adStats } from '../lib/ad.js'
 import { normalizeCompliance, mergeScanCompliance, saveCompliance } from '../lib/compliance.js'
 import { normalizeProfile, engineLabel } from '../lib/profile.js'
-import { uploadMedia, listMediaByLogbook, updateMedia, deleteMedia } from '../lib/media.js'
+import { uploadMedia, listMediaByLogbook, listMediaByPurpose, updateMedia, deleteMedia } from '../lib/media.js'
 import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import CameraCapture from '../components/CameraCapture.jsx'
@@ -59,6 +59,7 @@ export default function LogbookAudit() {
   const [logbooks, setLogbooks] = useState([])
   const [events, setEvents] = useState([])
   const [parts, setParts] = useState([])
+  const [pdfByLogbook, setPdfByLogbook] = useState(new Map()) // logbook_id → signed PDF url (for page hotlinks)
   const [query, setQuery] = useState('')
   const [state, setState] = useState('loading')
   const [scan, setScan] = useState(null) // { mode:'new'|'amend', book? } | null
@@ -71,10 +72,13 @@ export default function LogbookAudit() {
   const queueRef = useRef(Promise.resolve())
 
   async function reload(inspId) {
-    const [{ data: lb }, { data: ev }, { data: pt }] = await Promise.all([listLogbooks(inspId), listEvents(inspId), listParts(inspId)])
+    const [{ data: lb }, { data: ev }, { data: pt }, { data: pdfs }] = await Promise.all([
+      listLogbooks(inspId), listEvents(inspId), listParts(inspId), listMediaByPurpose(inspId, 'logbook_pdf'),
+    ])
     setLogbooks(lb)
     setEvents(ev)
     setParts(pt)
+    setPdfByLogbook(new Map((pdfs ?? []).filter((m) => m.logbook_id && m.url).map((m) => [m.logbook_id, m.url])))
   }
 
   // Queue a scanned book for background processing (one at a time — gentle on a
@@ -141,6 +145,11 @@ export default function LogbookAudit() {
             ? ([book.review_note, unclear].filter(Boolean).join('; ') || null)
             : (unclear || null)
           await updateLogbook(book.id, { ...next, review_note: reviewNote })
+          // The extraction pages are relative to the pages we READ this pass. On an
+          // amend those are appended after the existing pages, so shift by that many
+          // to get the page number in the (re-compiled) PDF.
+          const pageBase = mode === 'amend' ? pages.length - toRead.length : 0
+          const srcPage = (p) => (Number(p) > 0 ? pageBase + Number(p) : null)
           for (const ev of draft.events ?? []) {
             await addEvent(inspection, {
               logbookId: book.id, position: book.position, category: ev.category,
@@ -148,9 +157,12 @@ export default function LogbookAudit() {
               event_date: cleanDraftValue(ev.event_date) || '',
               tach: cleanDraftValue(ev.tach) ?? '',
               description: cleanDraftValue(ev.description) || '',
+              source_page: srcPage(ev.page),
             })
           }
-          if (Array.isArray(draft.parts) && draft.parts.length) await addParts(inspection, book.id, draft.parts)
+          if (Array.isArray(draft.parts) && draft.parts.length) {
+            await addParts(inspection, book.id, draft.parts.map((p) => ({ ...p, source_page: srcPage(p.page) })))
+          }
           // Auto-populate the Timed-items / compliance tool from what the scan read
           // (annual, IFR checks, ELT, vacuum pump, wing bolts). Only fills newer
           // dates; the inspector still reviews on the Compliance page.
@@ -345,7 +357,7 @@ export default function LogbookAudit() {
       </section>
 
       {/* AD compliance — compiled from the scans, compared vs the AD compliance report. */}
-      {adc.ads.length > 0 && <AdCompliance adc={adc} />}
+      {adc.ads.length > 0 && <AdCompliance adc={adc} pdfByLogbook={pdfByLogbook} />}
 
       {/* Records search — bar sits directly above its results (events + parts). */}
       {(events.length > 0 || parts.length > 0) && (
@@ -379,6 +391,7 @@ export default function LogbookAudit() {
                       .join(' · ')}
                   </span>
                 </span>
+                <PageLink url={pdfByLogbook.get(e.logbook_id)} page={e.source_page} />
                 <ConfirmButton title="Delete event" onConfirm={() => onDeleteEvent(e)}>
                   <Trash2 size={15} aria-hidden="true" />
                 </ConfirmButton>
@@ -403,6 +416,7 @@ export default function LogbookAudit() {
                     <span className="insp__id">{p.part_number || p.description || 'Part'}</span>
                     <span className="insp__sub">{[p.part_number ? p.description : null, p.event_date, p.tach != null ? `tach ${fmtTach(p.tach)}` : null].filter(Boolean).join(' · ')}</span>
                   </span>
+                  <PageLink url={pdfByLogbook.get(p.logbook_id)} page={p.source_page} />
                   <ConfirmButton title="Delete part" onConfirm={() => onDeletePart(p)}>
                     <Trash2 size={15} aria-hidden="true" />
                   </ConfirmButton>
@@ -422,7 +436,7 @@ export default function LogbookAudit() {
 // with which source references each (logbooks vs the scanned AD compliance report)
 // and a cross-check that flags ADs on the report but not in the logbooks (and the
 // reverse). Scan an "AD compliance report" (a kind='ad' logbook) to enable the diff.
-function AdCompliance({ adc }) {
+function AdCompliance({ adc, pdfByLogbook }) {
   const stats = adStats(adc.ads)
   return (
     <section className="insp__section">
@@ -461,6 +475,7 @@ function AdCompliance({ adc }) {
               </span>
             </span>
             <span className="lb__adsources">
+              {ad.ref && <PageLink url={pdfByLogbook?.get(ad.ref.logbook_id)} page={ad.ref.page} />}
               {ad.sources.logbook && <span className="lb__adchip">Logbook</span>}
               {ad.sources.report && <span className="lb__adchip lb__adchip--report">Report</span>}
               {adc.hasReport && ad.sources.report && !ad.sources.logbook && <span className="lb__adchip lb__adchip--warn">unverified</span>}
@@ -470,6 +485,17 @@ function AdCompliance({ adc }) {
         ))}
       </ul>
     </section>
+  )
+}
+
+// Hotlink to the page of the logbook's compiled PDF an item was read from. Native
+// PDF viewers honor the #page=N fragment, so this jumps straight to that page.
+function PageLink({ url, page }) {
+  if (!url || !page) return null
+  return (
+    <a className="lb__pagelink" href={`${url}#page=${page}`} target="_blank" rel="noreferrer" title={`Open the logbook PDF at page ${page}`}>
+      <FileText size={12} aria-hidden="true" /> p.{page}
+    </a>
   )
 }
 

@@ -3,6 +3,22 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.46.0] — 2026-08-03
+
+### Added
+- **Hotlink each record to its scanned PDF page.** `structure-logbook` now returns a 1-based `page` on
+  each event + part (which page image it was read from). `lib/logbooks.js` `offsetDraftPages` (+tests)
+  turns per-batch page numbers into positions across the whole read set; `processBook` shifts by the
+  existing page count on an amend and stores `source_page` on events/parts (migration `029` adds the
+  columns). The Logbook audit renders a **"p.N"** `PageLink` on each event, part and AD (via a
+  `logbook_id → signed PDF url` map + the `#page=N` fragment) that opens the logbook's compiled PDF at
+  that page. `lib/ad.js` `compileAdCompliance` carries a `ref` (logbook + page) to the most-recent
+  scanned occurrence for the AD link. Page links are internal-only (not on the customer report).
+
+### Deploy
+- **Run migration `029_logbook_source_page.sql`** and **REDEPLOY `structure-logbook` (Verify JWT ON)**
+  (the redeploy also covers v0.45.0's `compliance` + `limits`). No new secret.
+
 ## [0.45.0] — 2026-08-03
 
 ### Added

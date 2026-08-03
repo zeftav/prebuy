@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords, orderLogbooks, duplicateEvents } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords, orderLogbooks, duplicateEvents, offsetDraftPages } from './logbooks.js'
 
 const groupBy = (groups, key) => groups.find((g) => g.key === key)
 
@@ -46,6 +46,25 @@ describe('orderLogbooks', () => {
     const books = [{ id: 'b', kind: 'airframe', start_tach: 2 }, { id: 'a', kind: 'airframe', start_tach: 1 }]
     orderLogbooks(books)
     expect(books.map((b) => b.id)).toEqual(['b', 'a'])
+  })
+})
+
+describe('offsetDraftPages', () => {
+  it('shifts positive page numbers on events and parts', () => {
+    const draft = {
+      events: [{ title: 'A', page: 1 }, { title: 'B', page: 3 }],
+      parts: [{ part_number: 'X', page: 2 }],
+    }
+    const out = offsetDraftPages(draft, 12)
+    expect(out.events.map((e) => e.page)).toEqual([13, 15])
+    expect(out.parts[0].page).toBe(14)
+  })
+  it('leaves 0 / missing page as 0', () => {
+    const out = offsetDraftPages({ events: [{ title: 'A', page: 0 }, { title: 'B' }], parts: [] }, 12)
+    expect(out.events.map((e) => e.page)).toEqual([0, 0])
+  })
+  it('tolerates nullish drafts', () => {
+    expect(offsetDraftPages(null, 5)).toEqual({ events: [], parts: [] })
   })
 })
 

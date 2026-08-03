@@ -263,7 +263,7 @@ export function mergeSpan(a, b) {
 export async function listEvents(inspectionId) {
   const { data, error } = await supabase
     .from('logbook_events')
-    .select('id, logbook_id, position, event_date, tach, category, title, description')
+    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page')
     .eq('inspection_id', inspectionId)
     .order('event_date', { ascending: true })
   return { data: data ?? [], error }
@@ -273,6 +273,7 @@ export async function addEvent(inspection, draft) {
   const t = String(draft.title ?? '').trim()
   if (!t) return { data: null, error: new Error('Give the event a title.') }
   const p = Number(draft.position)
+  const sp = Number(draft.source_page)
   const row = {
     inspection_id: inspection.id,
     org_id: inspection.org_id,
@@ -283,11 +284,12 @@ export async function addEvent(inspection, draft) {
     event_date: draft.event_date || null,
     tach: num(draft.tach),
     description: draft.description?.trim() || null,
+    source_page: Number.isFinite(sp) && sp > 0 ? sp : null,
   }
   const { data, error } = await supabase
     .from('logbook_events')
     .insert(row)
-    .select('id, logbook_id, position, event_date, tach, category, title, description')
+    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page')
     .single()
   return { data, error }
 }
@@ -301,7 +303,7 @@ export async function deleteEvent(id) {
 export async function listParts(inspectionId) {
   const { data, error } = await supabase
     .from('logbook_parts')
-    .select('id, logbook_id, part_number, description, event_date, tach')
+    .select('id, logbook_id, part_number, description, event_date, tach, source_page')
     .eq('inspection_id', inspectionId)
     .order('event_date', { ascending: false, nullsFirst: false })
   return { data: data ?? [], error }
@@ -310,18 +312,22 @@ export async function listParts(inspectionId) {
 /** Insert extracted parts for an aircraft. Ignores empties. */
 export async function addParts(inspection, logbookId, parts) {
   const rows = (parts ?? [])
-    .map((p) => ({
-      inspection_id: inspection.id,
-      org_id: inspection.org_id,
-      logbook_id: logbookId || null,
-      part_number: cleanDraftValue(p.part_number) || null,
-      description: cleanDraftValue(p.description) || null,
-      event_date: cleanDraftValue(p.event_date) || null,
-      tach: num(cleanDraftValue(p.tach)),
-    }))
+    .map((p) => {
+      const sp = Number(p.source_page)
+      return {
+        inspection_id: inspection.id,
+        org_id: inspection.org_id,
+        logbook_id: logbookId || null,
+        part_number: cleanDraftValue(p.part_number) || null,
+        description: cleanDraftValue(p.description) || null,
+        event_date: cleanDraftValue(p.event_date) || null,
+        tach: num(cleanDraftValue(p.tach)),
+        source_page: Number.isFinite(sp) && sp > 0 ? sp : null,
+      }
+    })
     .filter((r) => r.part_number || r.description)
   if (!rows.length) return { data: [], error: null }
-  const { data, error } = await supabase.from('logbook_parts').insert(rows).select('id, logbook_id, part_number, description, event_date, tach')
+  const { data, error } = await supabase.from('logbook_parts').insert(rows).select('id, logbook_id, part_number, description, event_date, tach, source_page')
   return { data: data ?? [], error }
 }
 
@@ -362,6 +368,23 @@ export function chunk(arr, size) {
   const out = []
   for (let i = 0; i < list.length; i += n) out.push(list.slice(i, i + n))
   return out
+}
+
+/**
+ * Shift the 1-based `page` on a draft's events/parts by `offset` — used to turn a
+ * per-batch page number into a page number over the whole set of pages read (each
+ * batch starts at a later page). 0/absent page stays 0. Pure + tested.
+ */
+export function offsetDraftPages(draft, offset) {
+  const off = Number(offset) || 0
+  const bump = (arr) =>
+    Array.isArray(arr)
+      ? arr.map((x) => {
+          const p = Number(x?.page)
+          return { ...x, page: Number.isFinite(p) && p > 0 ? p + off : 0 }
+        })
+      : []
+  return { ...(draft ?? {}), events: bump(draft?.events), parts: bump(draft?.parts) }
 }
 
 /**
@@ -437,7 +460,8 @@ export async function extractLogbooksBatched(imageUrls, orgId, { onProgress, con
       failures += 1
       lastError = error
     } else if (data) {
-      drafts.push(data)
+      // Turn per-batch page numbers into positions across the whole read set.
+      drafts.push(offsetDraftPages(data, i * SCAN_BATCH_SIZE))
     }
     onProgress?.({ done: i + 1, total: batches.length })
   }

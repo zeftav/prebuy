@@ -48,7 +48,7 @@ export function compileAdCompliance(events, logbooks) {
     const text = `${e.title ?? ''} ${e.description ?? ''}`
     for (const k of keys) {
       if (!map.has(k)) {
-        map.set(k, { ad_number: nums.length ? k : null, title: e.title ?? '', dates: [], tachs: [], sources: { logbook: false, report: false }, recurring: false, count: 0 })
+        map.set(k, { ad_number: nums.length ? k : null, title: e.title ?? '', dates: [], tachs: [], sources: { logbook: false, report: false }, recurring: false, count: 0, ref: null, refDate: '' })
       }
       const rec = map.get(k)
       rec.count += 1
@@ -57,6 +57,11 @@ export function compileAdCompliance(events, logbooks) {
       if (e.tach != null && Number.isFinite(Number(e.tach))) rec.tachs.push(Number(e.tach))
       if (RECURRING_RE.test(text)) rec.recurring = true
       if (!rec.title && e.title) rec.title = e.title
+      // Link to the most recent occurrence that came off a scanned page.
+      if (e.logbook_id && (e.source_page ?? null) != null && (!rec.ref || String(e.event_date ?? '') >= rec.refDate)) {
+        rec.ref = { logbook_id: e.logbook_id, page: e.source_page }
+        rec.refDate = String(e.event_date ?? '')
+      }
     }
   }
 
@@ -71,6 +76,7 @@ export function compileAdCompliance(events, logbooks) {
       recurring: r.recurring || new Set(r.dates).size > 1,
       sources: r.sources,
       count: r.count,
+      ref: r.ref,
     }))
     .sort((a, b) => String(a.ad_number ?? a.title).localeCompare(String(b.ad_number ?? b.title), undefined, { numeric: true }))
 

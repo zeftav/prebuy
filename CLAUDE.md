@@ -550,6 +550,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   (JWT ON)** — no migration. Lint + 255 tests + build green.
   **Backlog (Brett asks, not built):** (1) edit/correct items flagged during processing inline;
   (2) **hotlink each item** (event/part/AD/compliance) to the section of the scanned PDF it came from.
+- Session 4 cont. — **Hotlink records to their scanned PDF page** (v0.46.0). Migration `029` adds
+  `source_page` to `logbook_events` + `logbook_parts`. `structure-logbook` returns a 1-based `page` per
+  event/part (which page image it read it from). `lib/logbooks.js` `offsetDraftPages` (+tests) makes
+  per-batch page numbers absolute over the read set; `processBook` shifts by existing page count on amend
+  and stores `source_page`; `addEvent`/`addParts`/`listEvents`/`listParts` carry it. `LogbookAudit`
+  builds a `logbook_id → signed PDF url` map (`listMediaByPurpose(_, 'logbook_pdf')`) and renders a
+  **`PageLink`** ("p.N", `#page=N` fragment) on each event, part and AD; `lib/ad.js` `compileAdCompliance`
+  carries a `ref` (logbook+page) to the latest scanned occurrence. Internal-only (not on the customer
+  report — logbook PDFs are private). ⚠️ **Run migration 029 + REDEPLOY `structure-logbook` (JWT ON)**
+  (that redeploy also covers v0.45.0). Lint + 258 tests + build green. Backlog item (2) now shipped;
+  (1) edit-flagged-items-inline still open. Reorder/delete of pages can drift a stored `source_page`
+  (accepted; rare).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

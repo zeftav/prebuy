@@ -89,8 +89,9 @@ const SCHEMA = {
           event_date: { type: 'string', description: 'YYYY-MM-DD or empty string.' },
           tach: { type: 'number', description: 'Tach at the event, or 0 if unknown.' },
           description: { type: 'string', description: 'One-line detail. Empty string if none.' },
+          page: { type: 'number', description: '1-based number of the page image (in the order given) where this entry appears. 0 if unsure.' },
         },
-        required: ['category', 'title', 'event_date', 'tach', 'description'],
+        required: ['category', 'title', 'event_date', 'tach', 'description', 'page'],
       },
     },
     specs: {
@@ -175,8 +176,9 @@ const SCHEMA = {
           description: { type: 'string', description: 'What the part is, e.g. "Left magneto Slick 4371", "#3 cylinder".' },
           event_date: { type: 'string', description: 'YYYY-MM-DD or "".' },
           tach: { type: 'number', description: 'Tach/total time at install, or 0.' },
+          page: { type: 'number', description: '1-based number of the page image (in the order given) where this part appears. 0 if unsure.' },
         },
-        required: ['part_number', 'description', 'event_date', 'tach'],
+        required: ['part_number', 'description', 'event_date', 'tach', 'page'],
       },
     },
     compliance: {
@@ -314,6 +316,8 @@ Deno.serve(async (req: Request) => {
         '(annual/100-hr, pitot-static 91.411, altimeter, transponder 91.413, ELT & ELT battery 91.207, ' +
         'vacuum/air pump replacement, Beech wing-bolt torque) with its date + tach; ' +
         '(9) "limits" — life-limited / hard-time items ONLY if these are Maintenance Manual limits pages. ' +
+        'For every event and part, set "page" to the 1-based number of the page image (in the order given) ' +
+        'where you read it, so a human can jump straight to that page. ' +
         'Only report what is legible — do not guess. Use empty strings / 0 for anything you cannot ' +
         'read, and add it to "unclear". This is a draft a human will review.' +
         contextLine,
@@ -354,6 +358,7 @@ Deno.serve(async (req: Request) => {
               description: String(p.description ?? '').trim(),
               event_date: String(p.event_date ?? '').trim(),
               tach: Number(p.tach) || 0,
+              page: Number(p.page) || 0,
             }))
             .filter((p: { part_number: string; description: string }) => p.part_number || p.description)
         : [],

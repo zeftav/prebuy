@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.46.0',
+    date: '2026-08-03',
+    title: 'Jump from any record to its logbook page',
+    items: [
+      'Every event, part and AD we read off a scan now shows a “p.N” link on the Logbook audit — tap it to open that logbook’s PDF at the exact page it came from, so you can verify the read against the original in one tap.',
+    ],
+  },
+  {
     version: '0.45.0',
     date: '2026-08-03',
     title: 'Timed items fill in from your scans + MM life-limited scan',
