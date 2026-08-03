@@ -463,6 +463,24 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   **NEXT (backlog):** VIN lookup (NHTSA vPIC) for automotive/RV; marine/home scan extraction;
   Port/Starboard marine engine labels; auto-email handoff invite; searchable shop directory.
 
+- Session 4 (2026-06-30) — **Upload-your-own checklists + two-phase inspections + Beech gear rigging**
+  (v0.39.0), for a real A36TC prebuy. Brett uploaded Savvy's Beechcraft prebuy PDF (two-phase, explicit
+  PHASE 1/2, hierarchical numbering) + Zefting's gear-rigging Form Z-32-LGR. **Checklists:** migration
+  `027` (`phase` on template/inspection items). **`parse-checklist`** edge fn (JWT ON, `claude-opus-4-8`,
+  **PDF document input** + structured output → phase/category/title/desc/risk items; source PDF parsed
+  from private storage then removed — licensed checklist stays the shop's). `lib/templates.js`
+  (upload/parse/save/list/delete + pure `groupByPhase`/`hasPhases`/`phaseLabel`). RLS already lets a shop
+  own templates (001). `checklist.js` `pickTemplate` (pure) + `findTemplateFor` prefers shop template
+  (exact→fuzzy→make-wide→catch-all); phase threads through fanOut/ensure/addCustom. `pages/Checklists.jsx`
+  (`/app/checklists`, Dashboard link, hidden for brokers). InspectionDetail **Phase 1/2 tabs** + per-phase
+  progress. **Gear rigging:** `lib/gearrig.js` (Form Z-32-LGR spec baked in; pure `isBeech`/`normalizeGearRig`/
+  `gearRigStats`/`isGearRigEmpty`); `pages/GearRigging.jsx` (`/app/inspections/:id/gear-rigging`, Beech-only
+  tool link); stored on `inspections.attributes.gear_rigging` (no migration); `report` fn + ReportView
+  print a gear-rigging table. Tests 206. ⚠️ **Run migration 027 + deploy `parse-checklist` (JWT ON) +
+  redeploy `report` (JWT OFF)**. Note: Savvy PDF content kept OUT of repo (copyright); gear-rig spec is
+  Zefting's own (in code). Env hiccup mid-session wiped `.env` + node_modules — restored (`.env`
+  placeholders, `npm ci`).
+
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
   (added as a repo deploy key with write). No `gh` CLI installed yet.

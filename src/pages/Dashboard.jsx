@@ -115,9 +115,12 @@ export default function Dashboard() {
         ) : (
           <h1 className="insp__shopname">{activeMembership.orgs?.name || 'Your shop'}</h1>
         )}
-        <Link to="/app/create-shop" className="auth__toggle">
-          + New shop
-        </Link>
+        <span className="dash__shopactions">
+          {activeMembership.orgs?.org_type !== 'broker' && (
+            <Link to="/app/checklists" className="auth__toggle">Checklists</Link>
+          )}
+          <Link to="/app/create-shop" className="auth__toggle">+ New shop</Link>
+        </span>
       </div>
 
       <InspectionList

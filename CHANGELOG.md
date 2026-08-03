@@ -3,6 +3,38 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.39.0] — 2026-06-30
+
+### Added
+- **Upload-your-own checklists + two-phase inspections.** A shop can upload an inspection checklist PDF
+  (e.g. Savvy's Beechcraft prebuy); Claude parses it into phase-tagged, section-grouped, risk-weighted
+  items to save as a reusable **shop-owned template**. Two-phase checklists are worked Phase 1 → Phase 2.
+  - Migration `027_checklist_phase.sql` — `phase` on `template_items` + `inspection_items`.
+  - **`parse-checklist`** edge fn (JWT ON, `claude-opus-4-8`, PDF document input + structured output).
+    Returns `{ name, two_phase, items[phase,category,title,description,risk_weight] }`; logs `ai_usage`.
+    The source PDF is uploaded to private storage only to parse, then removed — a shop's licensed
+    checklist stays the shop's; only the parsed template is kept.
+  - `lib/templates.js`: `uploadAndParseChecklist`, `saveShopTemplate`, `listShopTemplates`,
+    `deleteTemplate` + pure tested `groupByPhase`/`hasPhases`/`phaseLabel`. RLS already lets a shop own
+    its templates (001).
+  - `checklist.js`: `pickTemplate` (pure, tested) + `findTemplateFor` now prefers the shop's own template
+    (exact model → fuzzy → make-wide → catch-all) before the global library; `phase` threads through
+    `fanOutTemplateItems` / `ensureInspectionItems` / `addCustomItem`.
+  - `pages/Checklists.jsx` (`/app/checklists`, Dashboard link, hidden for brokers): upload → review →
+    save. `InspectionDetail`: **Phase 1 / Phase 2 tabs** with per-phase progress + a phase hint; new
+    items tag the current phase.
+- **Beech landing-gear rigging record.** `lib/gearrig.js` — Zefting Form Z-32-LGR baked in (header +
+  ~15 parameters grouped up/down-travel, clearance, electrical, warning, servicing, each with spec /
+  measured / Pass-Fail / remarks + sign-off). Pure tested helpers (`isBeech`, `normalizeGearRig`,
+  `gearRigStats`, `isGearRigEmpty`). `pages/GearRigging.jsx` (`/app/inspections/:id/gear-rigging`),
+  offered from the inspection tools for any Beechcraft. Stored on `inspections.attributes.gear_rigging`
+  (no migration). `report` edge fn returns it; `ReportView` prints a gear-rigging table.
+
+### Deploy
+- ⚠️ **Run migration `027_checklist_phase.sql`**, **deploy `parse-checklist` (Verify JWT ON)**, and
+  **redeploy `report` (Verify JWT OFF)** (gear-rigging on the report). `parse-checklist` reuses
+  `ANTHROPIC_API_KEY`.
+
 ## [0.38.0] — 2026-06-29
 
 ### Added

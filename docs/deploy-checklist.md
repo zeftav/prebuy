@@ -57,6 +57,8 @@ Run in order. All are idempotent (safe to re-run).
       Idempotent. (v0.37.0, 2026-06-29)
 - [x] ✅ `026_org_type.sql` — `orgs.org_type` (inspector/broker/both; default inspector). Idempotent.
       (v0.38.0, 2026-06-29)
+- [ ] ⬜ `027_checklist_phase.sql` — `phase` on `template_items` + `inspection_items` (two-phase
+      inspections). Idempotent. (v0.39.0, 2026-06-30)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
@@ -91,6 +93,10 @@ Run in order. All are idempotent (safe to re-run).
       roster + rename/delete + `org_detail` support view. (deployed 2026-06-28)
 - [x] ✅ **`admin-ai-cost`** (new, v0.27.0) — JWT **ON**. Aggregates `ai_usage` → estimated cost.
       (deployed 2026-06-28)
+- [ ] ⬜ **`parse-checklist`** (new, v0.39.0) — Verify JWT **ON**. Uploaded checklist PDF → phase-tagged
+      items (Claude document input). Reuses `ANTHROPIC_API_KEY`. Needs migration 027. (2026-06-30)
+- [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.39.0** — also returns `inspection.gear_rigging` (Beech
+      gear-rigging table on the report). No migration (lives in `attributes`). (2026-06-30)
 
 ## 3. Secrets (Supabase → Edge Functions → Secrets)
 

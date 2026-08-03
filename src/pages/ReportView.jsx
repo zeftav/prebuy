@@ -12,6 +12,7 @@ import { useParams } from 'react-router-dom'
 import { Plane, Ship, Printer, AlertTriangle, Eye, Check, ShieldCheck, Wrench, Paperclip, Search } from 'lucide-react'
 import { fetchReport, reportSummary } from '../lib/report.js'
 import { reasonLabel } from '../lib/followups.js'
+import { normalizeGearRig, isGearRigEmpty, gearRigStats, GEAR_RIG_GROUPS } from '../lib/gearrig.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
   normalizeProfile,
@@ -335,6 +336,10 @@ export default function ReportView() {
         </section>
       )}
 
+      {!isGearRigEmpty(inspection.gear_rigging) && (
+        <GearRigSection data={inspection.gear_rigging} />
+      )}
+
       </>
       )}
 
@@ -343,6 +348,43 @@ export default function ReportView() {
         {published && <span>{published}</span>}
       </footer>
     </main>
+  )
+}
+
+function GearRigSection({ data }) {
+  const rec = normalizeGearRig(data)
+  const stats = gearRigStats(data)
+  const specText = (spec) => (Array.isArray(spec) ? spec.join('; ') : '')
+  return (
+    <section className="report__section">
+      <h2>Landing gear rigging</h2>
+      <p className="report__sectionnote">
+        Gear rigging measured against factory/ABS tolerances.
+        {rec.header.voltage ? ` System: ${rec.header.voltage} VDC.` : ''} {stats.pass} pass · {stats.fail} fail.
+      </p>
+      <div className="report__tablewrap" style={{ overflowX: 'auto' }}>
+        <table className="report__grtable">
+          <thead>
+            <tr><th>Parameter</th><th>Spec</th><th>Measured</th><th>Result</th><th>Remarks</th></tr>
+          </thead>
+          <tbody>
+            {GEAR_RIG_GROUPS.flatMap((g) => g.rows).map((r) => {
+              const row = rec.rows[r.key]
+              if (!row.measured.trim() && !row.status && !row.remarks.trim()) return null
+              return (
+                <tr key={r.key}>
+                  <td>{r.label}</td>
+                  <td>{specText(r.spec)}</td>
+                  <td>{row.measured || '—'}</td>
+                  <td>{row.status === 'P' ? <span className="report__grpass">Pass</span> : row.status === 'F' ? <span className="report__grfail">Fail</span> : '—'}</td>
+                  <td>{row.remarks || ''}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   )
 }
 

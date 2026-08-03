@@ -30,10 +30,30 @@ export function fanOutTemplateItems(tItems, { vertical, engineCount = 1, layout 
         description: ti.description,
         sort_order: (Number(ti.sort_order) || 0) * 10 + i,
         risk_weight: ti.risk_weight,
+        phase: [1, 2].includes(Number(ti.phase)) ? Number(ti.phase) : null,
       })
     }
   }
   return rows
+}
+
+/**
+ * Pick the best-matching shop template for an aircraft from a shop's templates.
+ * Prefers an exact model match, then a fuzzy model match, then a make-wide
+ * template (no model), then a catch-all (no make/model). Pure + tested.
+ */
+export function pickTemplate(templates, { make, model } = {}) {
+  const norm = (s) => String(s ?? '').trim().toLowerCase()
+  const m = norm(model)
+  const mk = norm(make)
+  const list = templates ?? []
+  return (
+    (m && list.find((t) => t.model && norm(t.model) === m)) ||
+    (m && list.find((t) => t.model && (norm(t.model).includes(m) || m.includes(norm(t.model))))) ||
+    (mk && list.find((t) => !t.model && t.make && (norm(t.make).includes(mk) || mk.includes(norm(t.make))))) ||
+    list.find((t) => !t.model && !t.make) ||
+    null
+  )
 }
 
 /** Load one inspection by id (RLS scopes it to the user's orgs). */
@@ -50,7 +70,7 @@ export async function getInspection(id) {
 export async function listInspectionItems(inspectionId) {
   const { data, error } = await supabase
     .from('inspection_items')
-    .select('id, template_item_id, category, title, description, sort_order, risk_weight, owner_priority, status, severity, findings, transcript')
+    .select('id, template_item_id, category, title, description, sort_order, risk_weight, owner_priority, status, severity, findings, transcript, phase')
     .eq('inspection_id', inspectionId)
   return { data: data ?? [], error }
 }
@@ -60,8 +80,20 @@ export async function listInspectionItems(inspectionId) {
  * exists, otherwise the vertical's generic fallback (model IS NULL, e.g. the
  * "General Aircraft" survey). Returns { data, error, generic }.
  */
-export async function findTemplateFor({ vertical, make, model }) {
-  // 1. Model-specific match (e.g. Beech A36).
+export async function findTemplateFor({ vertical, make, model, org_id }) {
+  // 0. The shop's OWN uploaded template wins (e.g. their Savvy Beechcraft prebuy).
+  if (org_id) {
+    const { data: mine } = await supabase
+      .from('checklist_templates')
+      .select('id, make, model, name')
+      .eq('org_id', org_id)
+      .eq('is_global', false)
+      .eq('vertical', vertical)
+    const best = pickTemplate(mine ?? [], { make, model })
+    if (best) return { data: best, error: null, generic: false, shopOwned: true }
+  }
+
+  // 1. Model-specific global match (e.g. Beech A36).
   if (model) {
     let q = supabase
       .from('checklist_templates')
@@ -105,7 +137,7 @@ export async function ensureInspectionItems(inspection) {
 
   const { data: tItems, error: tiErr } = await supabase
     .from('template_items')
-    .select('id, category, title, description, sort_order, risk_weight, est_cost_low, est_cost_high, ata_chapter')
+    .select('id, category, title, description, sort_order, risk_weight, est_cost_low, est_cost_high, ata_chapter, phase')
     .eq('template_id', template.id)
   if (tiErr) return { data: [], error: tiErr, templateMatched: null, generic }
 
@@ -138,7 +170,7 @@ export async function updateInspectionItem(id, patch) {
 }
 
 /** Add a shop/owner-custom item to an inspection (not from a template). */
-export async function addCustomItem(inspection, { category, title, description, risk_weight, owner_priority = false }) {
+export async function addCustomItem(inspection, { category, title, description, risk_weight, owner_priority = false, phase = null }) {
   const t = String(title ?? '').trim()
   if (!t) return { data: null, error: new Error('Give the item a title.') }
   const { data, error } = await supabase
@@ -151,9 +183,10 @@ export async function addCustomItem(inspection, { category, title, description, 
       description: String(description ?? '').trim() || null,
       risk_weight: Number.isFinite(Number(risk_weight)) ? Number(risk_weight) : 50,
       owner_priority,
+      phase: [1, 2].includes(Number(phase)) ? Number(phase) : null,
       status: 'pending',
     })
-    .select('id, template_item_id, category, title, description, sort_order, risk_weight, owner_priority, status, severity, findings, transcript')
+    .select('id, template_item_id, category, title, description, sort_order, risk_weight, owner_priority, status, severity, findings, transcript, phase')
     .single()
   return { data, error }
 }

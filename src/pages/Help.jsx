@@ -101,6 +101,18 @@ const FAQ = [
     a: 'A finding is a conclusion about a checklist item (OK, monitor, or a discrepancy). A follow-up is an open question — something you noticed that needs more work before you can conclude: “needs research,” “look deeper,” “awaiting records,” or “second opinion.” Open an inspection and use the Follow-ups list to jot these as you go (or tap the magnifier on any checklist item to flag it). Work the list down before publishing — the publish bar reminds you when follow-ups are still open. You can mark any follow-up to appear on the customer report under “Recommended for further evaluation,” which buyers value as an honest list of areas to look into more closely.',
   },
   {
+    q: 'Can I upload my own inspection checklist?',
+    a: 'Yes. Go to Dashboard → Checklists and upload your checklist as a PDF (for example Savvy’s Beechcraft prebuy). We read every line item, tag which phase it belongs to, group it by section, and save it as a reusable template for your shop. Set which make/model it applies to (leave the model blank to use it for any model of that make). From then on, when you start an inspection whose aircraft matches, your template is used automatically — you don’t have to pick it. You can review and trim the items before saving, and delete a template anytime.',
+  },
+  {
+    q: 'What is a two-phase inspection?',
+    a: 'Some checklists (like Savvy’s) are done in two passes: Phase 1 first — records plus a targeted look for deal-breakers — which you report before continuing to Phase 2, the detailed inspection. When your checklist has phases, the inspection shows Phase 1 / Phase 2 tabs, each with its own progress. Work Phase 1, report, then move to Phase 2. Items you add by hand are tagged to whichever phase you’re on.',
+  },
+  {
+    q: 'How do I record Beech landing-gear rigging?',
+    a: 'On any Beechcraft inspection, open the inspection and tap “Gear rigging.” It’s a structured data record: for each rigging parameter the spec/tolerance is shown, and you enter the measured value, mark Pass or Fail, and add remarks — plus the header (model, serial, voltage) and technician/inspector sign-off. It saves with the inspection and prints as a table on the customer report.',
+  },
+  {
     q: 'Where does the checklist come from?',
     a: 'Each aircraft model has a starter pre-purchase checklist built into PreBuy, with items weighted by how much they typically cost to fix. The Beech A36 Bonanza is included to start; more models follow. You’ll soon be able to customize and re-prioritize items for your shop or a specific buyer.',
   },

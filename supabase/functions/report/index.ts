@@ -126,6 +126,8 @@ Deno.serve(async (req: Request) => {
       published_at: insp.published_at,
       // Spec-sheet ("Aircraft profile") block; null/legacy inspections degrade gracefully.
       profile: insp.attributes?.profile ?? null,
+      // Beech landing-gear rigging data record (if captured).
+      gear_rigging: insp.attributes?.gear_rigging ?? null,
     },
     items: (items ?? []).map((i) => ({
       id: i.id,

@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.39.0',
+    date: '2026-06-30',
+    title: 'Upload your own checklists + two-phase inspections + Beech gear rigging',
+    items: [
+      'New Checklist library (Dashboard → Checklists): upload your own inspection checklist as a PDF and we read every item, tag its phase, and save it as a reusable template for your shop. It’s used automatically when you start an inspection whose make/model matches.',
+      'Two-phase inspections: checklists split into Phase 1 / Phase 2 (like Savvy’s) now show phase tabs — work Phase 1 first (with its own progress), then Phase 2.',
+      'Beech landing-gear rigging: a structured gear-rigging data record (spec vs measured vs pass/fail) is now offered on any Beechcraft inspection, and it prints on the customer report.',
+    ],
+  },
+  {
     version: '0.38.0',
     date: '2026-06-29',
     title: 'Tell us if you’re a shop or a broker',

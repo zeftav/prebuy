@@ -1,5 +1,33 @@
 import { describe, it, expect } from 'vitest'
-import { fanOutTemplateItems } from './checklist.js'
+import { fanOutTemplateItems, pickTemplate } from './checklist.js'
+
+describe('pickTemplate', () => {
+  const T = [
+    { id: 'exact', make: 'Beechcraft', model: 'A36TC' },
+    { id: 'makewide', make: 'Beechcraft', model: null },
+    { id: 'catchall', make: null, model: null },
+  ]
+  it('prefers an exact model match', () => {
+    expect(pickTemplate(T, { make: 'Beechcraft', model: 'A36TC' })?.id).toBe('exact')
+  })
+  it('falls back to a fuzzy model match', () => {
+    expect(pickTemplate([{ id: 'a', model: 'A36' }], { model: 'A36TC' })?.id).toBe('a')
+  })
+  it('falls back to a make-wide template (no model)', () => {
+    expect(pickTemplate(T, { make: 'Beechcraft', model: 'V35B' })?.id).toBe('makewide')
+  })
+  it('falls back to a catch-all (no make/model)', () => {
+    expect(pickTemplate([{ id: 'catchall', make: null, model: null }], { make: 'Cessna', model: '172' })?.id).toBe('catchall')
+  })
+  it('returns null when nothing matches', () => {
+    expect(pickTemplate([{ id: 'x', make: 'Cessna', model: '172' }], { make: 'Piper', model: 'PA28' })).toBeNull()
+    expect(pickTemplate([], { make: 'Beech', model: 'A36' })).toBeNull()
+  })
+  it('carries phase through fanOutTemplateItems', () => {
+    const rows = fanOutTemplateItems([{ id: 't1', category: 'Records', title: 'Logs', phase: 1 }], { vertical: 'aviation' })
+    expect(rows[0].phase).toBe(1)
+  })
+})
 
 const T = [
   { id: 'e1', category: 'Engine', title: 'Compression check', sort_order: 70, risk_weight: 90 },

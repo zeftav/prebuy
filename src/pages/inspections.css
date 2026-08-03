@@ -1492,3 +1492,91 @@
 }
 .insp__accountlabel { font-weight: 700; }
 .insp__accountblurb { font-size: 13px; color: var(--muted, #6b7280); line-height: 1.35; }
+
+/* Two-phase inspection tabs */
+.insp__phasetabs {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0;
+}
+.insp__phasetab {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid var(--line, #d7dce3);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.insp__phasetab.is-active {
+  border-color: var(--accent, #6b46c1);
+  background: var(--accent-bg, #f7f5ff);
+  box-shadow: inset 0 0 0 1px var(--accent, #6b46c1);
+}
+.insp__phasecount {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted, #6b7280);
+  margin-left: 4px;
+}
+.insp__phasehint { margin-top: 2px; }
+
+/* Checklist library review */
+.ck__titleinput {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+  background: transparent;
+}
+.ck__titleinput:focus { border-color: var(--line, #d7dce3); background: #fff; outline: none; }
+.ck__phasesel {
+  flex-shrink: 0;
+  padding: 5px 6px;
+  border: 1px solid var(--line, #d7dce3);
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+.lb__reviewgroup { margin-top: 10px; }
+.dash__shopactions { display: inline-flex; gap: 14px; align-items: center; }
+
+/* Gear rigging data record */
+.gr__headgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.gr__rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.gr__row {
+  border: 1px solid var(--line, #e4e8ee);
+  border-left: 3px solid var(--line, #e4e8ee);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gr__row--pass { border-left-color: #1a7f37; }
+.gr__row--fail { border-left-color: #e0245e; background: rgba(224,36,94,0.03); }
+.gr__rowhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.gr__label { font-weight: 600; }
+.gr__pf { display: inline-flex; gap: 4px; flex-shrink: 0; }
+.gr__pfbtn {
+  width: 34px; height: 30px;
+  border: 1px solid var(--line, #d7dce3);
+  border-radius: 8px; background: #fff; font-weight: 700; cursor: pointer;
+}
+.gr__pfbtn.is-pass { border-color: #1a7f37; background: rgba(26,127,55,0.1); color: #1a7f37; }
+.gr__pfbtn.is-fail { border-color: #e0245e; background: rgba(224,36,94,0.1); color: #e0245e; }
+.gr__spec { display: flex; flex-direction: column; gap: 1px; }
+.gr__specline { font-size: 12px; color: var(--muted, #6b7280); }
+.insp__savebar { position: sticky; bottom: 0; padding: 12px 0; background: linear-gradient(transparent, var(--bg, #fff) 40%); }
+
+/* Report — gear rigging table */
+.report__grtable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.report__grtable th, .report__grtable td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e4e8ee; vertical-align: top; }
+.report__grpass { color: #1a7f37; font-weight: 700; }
+.report__grfail { color: #c81e4a; font-weight: 700; }

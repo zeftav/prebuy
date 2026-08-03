@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check, Wrench } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import {
@@ -26,6 +26,8 @@ import { fetchMemberships } from '../lib/shops.js'
 import { createHandoff, listHandoffs, revokeHandoff, handoffUrl } from '../lib/handoff.js'
 import { publishInspection, unpublishInspection, reportUrl } from '../lib/report.js'
 import { listFollowups, addFollowup, updateFollowup, deleteFollowup, openCount, groupByStatus, reasonLabel, FOLLOWUP_REASONS } from '../lib/followups.js'
+import { hasPhases, PHASES } from '../lib/templates.js'
+import { isBeech } from '../lib/gearrig.js'
 import './auth.css'
 import './inspections.css'
 
@@ -105,11 +107,21 @@ export default function InspectionDetail() {
       return [...kept, ...fresh]
     })
   }, [items])
-  const ordered = useMemo(() => {
+  const orderedAll = useMemo(() => {
     const byId = new Map(items.map((i) => [i.id, i]))
     return order.map((id) => byId.get(id)).filter(Boolean)
   }, [order, items])
-  const reviewed = items.filter((i) => i.status && i.status !== 'pending').length
+  // Two-phase checklists (e.g. Savvy) work Phase 1 first, then Phase 2.
+  const usesPhases = useMemo(() => hasPhases(items), [items])
+  const [phaseFilter, setPhaseFilter] = useState(1)
+  const ordered = useMemo(
+    () => (usesPhases ? orderedAll.filter((i) => Number(i.phase) === phaseFilter) : orderedAll),
+    [orderedAll, usesPhases, phaseFilter],
+  )
+  const phaseReviewed = (p) => items.filter((i) => Number(i.phase) === p).filter((i) => i.status && i.status !== 'pending').length
+  const phaseTotal = (p) => items.filter((i) => Number(i.phase) === p).length
+  const reviewed = usesPhases ? phaseReviewed(phaseFilter) : items.filter((i) => i.status && i.status !== 'pending').length
+  const shownTotal = usesPhases ? phaseTotal(phaseFilter) : items.length
 
   // Optimistic patch with revert-on-failure.
   async function patchItem(item, patch) {
@@ -124,7 +136,9 @@ export default function InspectionDetail() {
   }
 
   async function addItem(draft) {
-    const { data, error } = await addCustomItem(inspection, draft)
+    // Tag a manually-added item with the phase you're currently working.
+    const withPhase = usesPhases ? { ...draft, phase: phaseFilter } : draft
+    const { data, error } = await addCustomItem(inspection, withPhase)
     if (!error && data) setItems((prev) => [...prev, data])
     return error
   }
@@ -251,9 +265,33 @@ export default function InspectionDetail() {
         </div>
       ) : (
         <div className="insp__progress">
-          <span>{reviewed} of {items.length} items reviewed</span>
+          <span>{reviewed} of {shownTotal} items reviewed</span>
           <span className="auth__hint">Worked highest financial risk first.</span>
         </div>
+      )}
+
+      {!isListing && usesPhases && (
+        <>
+          <div className="insp__phasetabs" role="tablist" aria-label="Inspection phase">
+            {PHASES.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                role="tab"
+                aria-selected={phaseFilter === p.key}
+                className={`insp__phasetab ${phaseFilter === p.key ? 'is-active' : ''}`}
+                onClick={() => setPhaseFilter(p.key)}
+              >
+                {p.label} <span className="insp__phasecount">{phaseReviewed(p.key)}/{phaseTotal(p.key)}</span>
+              </button>
+            ))}
+          </div>
+          <p className="auth__hint insp__phasehint">
+            {phaseFilter === 1
+              ? 'Work Phase 1 first (records + a targeted look for deal-breakers), then report before Phase 2.'
+              : 'Phase 2 — the detailed inspection. Complete Phase 1 first.'}
+          </p>
+        </>
       )}
 
       <InspectionMeta inspection={inspection} onSave={saveMeta} />
@@ -273,6 +311,11 @@ export default function InspectionDetail() {
         <Link to={`/app/inspections/${inspection.id}/logbooks`} className="auth__btn auth__btn--ghost insp__walkthrough">
           <BookOpen size={15} aria-hidden="true" /> Logbook audit
         </Link>
+        {!isListing && isBeech(inspection.make) && (
+          <Link to={`/app/inspections/${inspection.id}/gear-rigging`} className="auth__btn auth__btn--ghost insp__walkthrough">
+            <Wrench size={15} aria-hidden="true" /> Gear rigging
+          </Link>
+        )}
       </div>
 
       <PublishBar inspection={inspection} onPublish={publish} onUnpublish={unpublish} openFollowups={openCount(followups)} />

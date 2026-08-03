@@ -12,6 +12,8 @@ import OverviewCapture from './pages/OverviewCapture.jsx'
 import Walkaround from './pages/Walkaround.jsx'
 import AircraftProfile from './pages/AircraftProfile.jsx'
 import LogbookAudit from './pages/LogbookAudit.jsx'
+import GearRigging from './pages/GearRigging.jsx'
+import Checklists from './pages/Checklists.jsx'
 import ClaimListing from './pages/ClaimListing.jsx'
 import ReportView from './pages/ReportView.jsx'
 import Help from './pages/Help.jsx'
@@ -40,6 +42,14 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/checklists"
+        element={
+          <ProtectedRoute>
+            <Checklists />
           </ProtectedRoute>
         }
       />
@@ -88,6 +98,14 @@ function App() {
         element={
           <ProtectedRoute>
             <AircraftProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/app/inspections/:id/gear-rigging"
+        element={
+          <ProtectedRoute>
+            <GearRigging />
           </ProtectedRoute>
         }
       />
