@@ -3,6 +3,25 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.42.0] — 2026-08-03
+
+### Changed
+- **Logbook scan processing is now fully background.** The compile-PDF + read-pages pipeline moved out of
+  `ScanFlow` (which used to block on a `process` step) into `LogbookAudit`: `ScanFlow.finish()` uploads
+  are already done, so it just calls `onQueue({ book, capturedIds, mode })` and closes. The parent runs a
+  serial queue (`queueRef`, one book at a time — gentle on a phone) via `processBook`, writing progress to
+  a `jobs` map keyed by logbook id.
+- **Per-book progress, mobile + desktop.** A new `ProcessingBanner` (always-visible strip) lists every
+  book still processing with a phase label + progress bar; each `LogbookCard` shows a "Processing…" badge.
+  On completion the card's key bumps (`rev`) so it re-fetches its now-compiled PDF/pages; aggregates
+  (events/parts/reconciliation) refresh. A failed job stays in the banner with **Retry**/**Dismiss** (the
+  pages are already saved).
+
+### Notes
+- Search was already shipped (v0.40.0): the search box on the Logbook audit page searches that aircraft's
+  events + part numbers once a scan is read.
+- Frontend only — no migration/redeploy. Ships on push to `main`.
+
 ## [0.41.2] — 2026-08-03
 
 ### Fixed

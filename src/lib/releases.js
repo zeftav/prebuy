@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.42.0',
+    date: '2026-08-03',
+    title: 'Scan logbooks back-to-back — processing runs in the background',
+    items: [
+      'After you tap “Save & read” on a logbook, building its PDF and reading the pages now happens in the background — you can start scanning the next logbook right away instead of waiting.',
+      'A progress strip at the top of the Logbook audit shows each logbook that’s still processing (on phone and desktop), and each logbook card shows its own “Processing…” badge until it’s done. If one fails, you get a Retry right there.',
+      'Reminder: once a logbook’s times, events and part numbers are read, use the search box on the Logbook audit page to search that aircraft’s records.',
+    ],
+  },
+  {
     version: '0.41.1',
     date: '2026-08-03',
     title: 'Your uploaded checklists are now opt-in per inspection',

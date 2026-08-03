@@ -1260,6 +1260,50 @@
   transition: width 0.25s ease;
 }
 
+/* ── Background processing (scan → PDF + read) ─────────────────────────── */
+.lb__jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+.lb__job {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--accent-border, rgba(0,0,0,0.12));
+  background: var(--accent-soft, rgba(107,70,193,0.06));
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.lb__job--error {
+  border-color: var(--danger-border, rgba(200,50,50,0.4));
+  background: var(--danger-soft, rgba(200,50,50,0.06));
+}
+.lb__jobmain { min-width: 0; flex: 1; }
+.lb__jobtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.lb__procbadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent, #6b46c1);
+}
+.lb__spin { animation: lb-spin 1s linear infinite; }
+@keyframes lb-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .lb__spin { animation: none; }
+}
+
 /* ── Logbook page manager + compiled PDF ──────────────────────────────── */
 .lb__pages { margin-top: 8px; }
 .lb__pagegrid {

@@ -505,6 +505,19 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `ChecklistPicker` to switch standard↔shop template, only before any template item is worked
   (`setInspectionChecklist` persists choice, drops template items but keeps custom, re-instantiates via
   extracted `instantiateTemplate`). Lint + 211 tests + build green.
+  - v0.41.1: pre-fix inspections carry auto-applied shop items but no `template_id`, so the picker can't
+    rebuild them (same-value select) → detect stale (standard selected + items have phases) and show a
+    "Reset to standard checklist" force-rebuild button.
+  - v0.41.2: Enter in NewInspection's identifier field runs the lookup (not form submit / create).
+- Session 4 cont. — **Background logbook processing** (v0.42.0, frontend only — no migration/redeploy).
+  Scan → "Save & read" no longer blocks: `ScanFlow.finish` (pages already uploaded) calls
+  `onQueue({book,capturedIds,mode})` + closes so you can scan the next book immediately. `LogbookAudit`
+  runs a **serial queue** (`queueRef`, one at a time) via `processBook` (compile PDF → read pages →
+  update times/events/parts), writing progress to a `jobs` map keyed by logbook id. `ProcessingBanner`
+  (always-visible, mobile+desktop) + per-card "Processing…" badge; on completion a per-book `rev` bumps
+  the card key so it re-fetches its compiled PDF/pages, then aggregates reload. Failed job → Retry/Dismiss
+  in the banner (pages are saved). Search (events + part numbers, per-aircraft) already shipped in v0.40.0
+  — the `lb__searchbar` on the Logbook audit page. Lint + 211 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

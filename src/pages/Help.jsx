@@ -42,7 +42,11 @@ const FAQ = [
   },
   {
     q: 'How does the logbook audit work?',
-    a: 'Open an inspection and tap “Logbook audit”, then “Scan a logbook.” Pick what it is — airframe, engine, propeller (and which engine/prop on a twin) — and snap the pages in order. When you’re done we compile a PDF copy of that book and read the dates, times and notable events (ADs, 337s, overhauls, prop strikes, damage) right off the pages. Each logbook is its own scan, so you build them up one at a time. We then reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). Because logs are handwritten, always double-check the read-back — every time and event stays editable, and you can add an event by hand.',
+    a: 'Open an inspection and tap “Logbook audit”, then “Scan a logbook.” Pick what it is — airframe, engine, propeller (and which engine/prop on a twin) — and snap the pages in order. When you tap “Save & read,” compiling the PDF and reading the pages happens in the background — so you can start scanning the next logbook right away instead of waiting. A progress strip at the top (and a badge on each logbook card) shows what’s still processing on phone and desktop. We read the dates, times and notable events (ADs, 337s, overhauls, prop strikes, damage) right off the pages, then reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). Because logs are handwritten, always double-check the read-back — every time and event stays editable, and you can add an event by hand.',
+  },
+  {
+    q: 'Can I search an aircraft’s logbook records?',
+    a: 'Yes. Once a logbook is scanned and read, a search box appears at the top of the Logbook audit page. It searches that aircraft’s records — notable events and extracted part numbers/components — so you can quickly answer “have we seen this AD?”, “when was the prop overhauled?”, or “do we have a record of this part?” Search is per-aircraft (scoped to that inspection/records job).',
   },
   {
     q: 'Can I make a PDF copy of each logbook?',

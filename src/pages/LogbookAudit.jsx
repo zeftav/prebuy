@@ -8,9 +8,9 @@
 // data comes from the scan); times and events stay editable, and you can still add
 // an event by hand. Reconciliation (gaps/overlaps) runs on the scanned data.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check, Search, Package } from 'lucide-react'
+import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check, Search, Package, Loader } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
   listLogbooks, addLogbook, deleteLogbook, updateLogbook,
@@ -60,12 +60,105 @@ export default function LogbookAudit() {
   const [query, setQuery] = useState('')
   const [state, setState] = useState('loading')
   const [scan, setScan] = useState(null) // { mode:'new'|'amend', book? } | null
+  // Background processing: after a scan, compiling the PDF + reading the pages runs
+  // off the scan flow so you can immediately scan the next book. `jobs` is keyed by
+  // logbook id → { title, label, done, total, error, args }. `rev` bumps a card's
+  // key when its job finishes so it re-fetches its (now compiled) PDF + pages.
+  const [jobs, setJobs] = useState({})
+  const [rev, setRev] = useState({})
+  const queueRef = useRef(Promise.resolve())
 
   async function reload(inspId) {
     const [{ data: lb }, { data: ev }, { data: pt }] = await Promise.all([listLogbooks(inspId), listEvents(inspId), listParts(inspId)])
     setLogbooks(lb)
     setEvents(ev)
     setParts(pt)
+  }
+
+  // Queue a scanned book for background processing (one at a time — gentle on a
+  // phone). Then the scan flow closes and you can start the next book.
+  function enqueueProcessing({ book, capturedIds, mode }) {
+    const title = book.label || kindLabel(book.kind)
+    setJobs((p) => ({ ...p, [book.id]: { title, label: 'Queued', done: 0, total: 0, error: null, args: { book, capturedIds, mode } } }))
+    queueRef.current = queueRef.current.then(() => processBook({ book, capturedIds, mode })).catch(() => {})
+  }
+
+  function retryJob(bookId) {
+    const job = jobs[bookId]
+    if (job?.args) enqueueProcessing(job.args)
+  }
+  function dismissJob(bookId) {
+    setJobs((p) => { const n = { ...p }; delete n[bookId]; return n })
+  }
+
+  // The processing pipeline (compile the PDF from the pages, then read the pages).
+  // Progress is written to `jobs[book.id]`; on failure the pages are already saved,
+  // so we leave the job in an error state with a Retry.
+  async function processBook({ book, capturedIds, mode }) {
+    const setJob = (patch) => setJobs((p) => (p[book.id] ? { ...p, [book.id]: { ...p[book.id], ...patch } } : p))
+    setJob({ label: 'Building PDF', done: 0, total: 0, error: null })
+    try {
+      const { data: media } = await listMediaByLogbook(book.id)
+      const pages = media.filter((m) => m.purpose === 'logbook')
+      const existingPdf = media.find((m) => m.purpose === 'logbook_pdf')
+
+      // 1. Compile the PDF from every page, in order.
+      setJob({ label: 'Building PDF', done: 0, total: pages.length })
+      const { blob, error: cErr } = await compileLogbookPdf(
+        pages.map((p) => ({ url: p.url, rotation: p.rotation })),
+        { onProgress: (pr) => setJob({ label: 'Building PDF', ...pr }) },
+      )
+      if (cErr) {
+        setJob({ error: 'Couldn’t build the PDF. Open the logbook and tap “Re-compile PDF”.', label: null })
+        return
+      }
+      const keepOnReport = existingPdf?.show_on_report ?? false
+      if (existingPdf) await deleteMedia(existingPdf)
+      const pdfFile = new File([blob], 'logbook.pdf', { type: 'application/pdf' })
+      const { data: pdfRow } = await uploadMedia({
+        orgId: inspection.org_id, inspectionId: inspection.id, logbookId: book.id,
+        purpose: 'logbook_pdf', caption: book.label || kindLabel(book.kind), file: pdfFile,
+      })
+      if (pdfRow && keepOnReport) await updateMedia(pdfRow.id, { show_on_report: true })
+
+      // 2. Read the pages (auto). New scan → read all; amend → only the new pages.
+      const newIds = new Set(capturedIds)
+      const toRead = mode === 'amend' ? pages.filter((p) => newIds.has(p.id)) : pages
+      const urls = toRead.map((p) => p.url).filter(Boolean)
+      if (urls.length) {
+        setJob({ label: 'Reading pages', done: 0, total: 1 })
+        const { data: draft } = await extractLogbooksBatched(urls, inspection.org_id, {
+          onProgress: (pr) => setJob({ label: 'Reading pages', ...pr }),
+          context: { kind: book.kind, position: book.position },
+        })
+        if (draft) {
+          const span = spanFromDrafts(draft.logbooks)
+          const next = mode === 'amend' ? mergeSpan(book, span) : span
+          const unclear = (Array.isArray(draft.unclear) ? draft.unclear : []).slice(0, 10).join('; ')
+          const reviewNote = mode === 'amend'
+            ? ([book.review_note, unclear].filter(Boolean).join('; ') || null)
+            : (unclear || null)
+          await updateLogbook(book.id, { ...next, review_note: reviewNote })
+          for (const ev of draft.events ?? []) {
+            await addEvent(inspection, {
+              logbookId: book.id, position: book.position, category: ev.category,
+              title: cleanDraftValue(ev.title) || 'Event',
+              event_date: cleanDraftValue(ev.event_date) || '',
+              tach: cleanDraftValue(ev.tach) ?? '',
+              description: cleanDraftValue(ev.description) || '',
+            })
+          }
+          if (Array.isArray(draft.parts) && draft.parts.length) await addParts(inspection, book.id, draft.parts)
+        }
+      }
+    } catch (e) {
+      setJob({ error: e?.message || 'Processing failed. Open the logbook and tap “Re-compile PDF”.', label: null })
+      return
+    }
+    // Done — clear the job, force the card to re-fetch its PDF/pages, refresh totals.
+    setJobs((p) => { const n = { ...p }; delete n[book.id]; return n })
+    setRev((r) => ({ ...r, [book.id]: (r[book.id] || 0) + 1 }))
+    await reload(inspection.id)
   }
 
   useEffect(() => {
@@ -91,7 +184,7 @@ export default function LogbookAudit() {
 
   const recon = useMemo(() => reconcileLogbooks(logbooks, { engineCount, layout }), [logbooks, engineCount, layout])
 
-  async function onScanDone() {
+  async function closeScan() {
     setScan(null)
     await reload(inspection.id)
   }
@@ -164,13 +257,16 @@ export default function LogbookAudit() {
           mode={scan.mode}
           book={scan.book}
           onCancel={() => setScan(null)}
-          onDone={onScanDone}
+          onQueue={enqueueProcessing}
+          onClose={closeScan}
         />
       ) : (
         <button type="button" className="auth__btn lb__scanbtn" onClick={() => setScan({ mode: 'new' })}>
           <ScanLine size={16} aria-hidden="true" /> Scan a logbook
         </button>
       )}
+
+      <ProcessingBanner jobs={jobs} onRetry={retryJob} onDismiss={dismissJob} />
 
       {(events.length > 0 || parts.length > 0) && (
         <div className="lb__searchbar">
@@ -195,12 +291,13 @@ export default function LogbookAudit() {
               .sort((a, b) => LOGBOOK_KINDS.indexOf(a.kind) - LOGBOOK_KINDS.indexOf(b.kind) || (a.position || 0) - (b.position || 0))
               .map((b) => (
                 <LogbookCard
-                  key={b.id}
+                  key={`${b.id}:${rev[b.id] || 0}`}
                   inspection={inspection}
                   book={b}
                   label={posLabel(b.kind, b.position)}
                   engineCount={engineCount}
                   layout={layout}
+                  job={jobs[b.id]}
                   onAmend={() => setScan({ mode: 'amend', book: b })}
                   onDelete={() => onDeleteBook(b)}
                   onUpdate={(patch) => onUpdateBook(b, patch)}
@@ -318,16 +415,16 @@ function ConfirmButton({ onConfirm, title = 'Delete', label = 'Delete', classNam
   )
 }
 
-// Scan a logbook: pick type/position (new) → snap pages sequentially → save +
-// compile a PDF + read the pages (auto). Amend mode skips the picker and appends
-// pages to an existing logbook, then re-compiles + reads the new pages.
-function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCancel, onDone }) {
+// Scan a logbook: pick type/position (new) → snap pages sequentially → hand off to
+// background processing (compile the PDF + read the pages) so you can immediately
+// scan the next book. Amend mode skips the picker and appends pages to an existing
+// logbook; the new pages are compiled + read in the background too.
+function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCancel, onQueue, onClose }) {
   const [step, setStep] = useState(mode === 'amend' ? 'capture' : 'pick')
   const [book, setBook] = useState(amendBook ?? null)
   const [captured, setCaptured] = useState([]) // page rows added THIS session
   const [existingCount, setExistingCount] = useState(0)
   const [busy, setBusy] = useState(false)
-  const [progress, setProgress] = useState(null)
   const [error, setError] = useState(null)
   const [cameraOpen, setCameraOpen] = useState(false)
   const opts = useMemo(() => kindOptions(engineCount, layout), [engineCount, layout])
@@ -380,88 +477,21 @@ function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCa
     onCancel()
   }
 
-  async function finish() {
-    if (!book) return onDone()
-    if (captured.length === 0 && mode === 'amend') return onDone() // nothing added
-    setStep('process')
-    setError(null)
-
-    // Gather ALL pages (existing + just-added) for the compile.
-    const { data: media } = await listMediaByLogbook(book.id)
-    const pages = media.filter((m) => m.purpose === 'logbook')
-    const existingPdf = media.find((m) => m.purpose === 'logbook_pdf')
-
-    // 1. Compile the PDF from every page, in order.
-    setProgress({ label: 'Building PDF', done: 0, total: pages.length })
-    const { blob, error: cErr } = await compileLogbookPdf(
-      pages.map((p) => ({ url: p.url, rotation: p.rotation })),
-      { onProgress: (pr) => setProgress({ label: 'Building PDF', ...pr }) },
-    )
-    if (cErr) {
-      setError(`${cErr.message} Pages are saved — try “Save & read” again.`)
-      setStep('capture')
-      setProgress(null)
-      return
-    }
-    const keepOnReport = existingPdf?.show_on_report ?? false
-    if (existingPdf) await deleteMedia(existingPdf)
-    const pdfFile = new File([blob], 'logbook.pdf', { type: 'application/pdf' })
-    const { data: pdfRow } = await uploadMedia({
-      orgId: inspection.org_id,
-      inspectionId: inspection.id,
-      logbookId: book.id,
-      purpose: 'logbook_pdf',
-      caption: book.label || kindLabel(book.kind),
-      file: pdfFile,
-    })
-    if (pdfRow && keepOnReport) await updateMedia(pdfRow.id, { show_on_report: true })
-
-    // 2. Read the pages (auto). New scan → read all; amend → only the new pages.
-    const newIds = new Set(captured.map((c) => c.id))
-    const toRead = mode === 'amend' ? pages.filter((p) => newIds.has(p.id)) : pages
-    const urls = toRead.map((p) => p.url).filter(Boolean)
-    if (urls.length) {
-      setProgress({ label: 'Reading pages', done: 0, total: 1 })
-      const { data: draft } = await extractLogbooksBatched(urls, inspection.org_id, {
-        onProgress: (pr) => setProgress({ label: 'Reading pages', ...pr }),
-        context: { kind: book.kind, position: book.position },
-      })
-      if (draft) {
-        const span = spanFromDrafts(draft.logbooks)
-        const next = mode === 'amend' ? mergeSpan(book, span) : span
-        // Surface anything the AI couldn't confidently read, so the inspector
-        // verifies it against the PDF. Append on amend; cap length.
-        const unclear = (Array.isArray(draft.unclear) ? draft.unclear : []).slice(0, 10).join('; ')
-        const reviewNote = mode === 'amend'
-          ? ([book.review_note, unclear].filter(Boolean).join('; ') || null)
-          : (unclear || null)
-        await updateLogbook(book.id, { ...next, review_note: reviewNote })
-        for (const ev of draft.events ?? []) {
-          await addEvent(inspection, {
-            logbookId: book.id,
-            position: book.position,
-            category: ev.category,
-            title: cleanDraftValue(ev.title) || 'Event',
-            event_date: cleanDraftValue(ev.event_date) || '',
-            tach: cleanDraftValue(ev.tach) ?? '',
-            description: cleanDraftValue(ev.description) || '',
-          })
-        }
-        // Notable part numbers → searchable parts list.
-        if (Array.isArray(draft.parts) && draft.parts.length) await addParts(inspection, book.id, draft.parts)
-      }
-    }
-    setProgress(null)
-    onDone()
+  // Hand the captured pages to background processing and close the scan flow so the
+  // inspector can start the next logbook immediately. Pages are already uploaded, so
+  // the background job just needs the book + which pages are new.
+  function finish() {
+    if (!book) return onClose()
+    if (captured.length === 0 && mode === 'amend') return onClose() // nothing added
+    onQueue({ book, capturedIds: captured.map((c) => c.id), mode })
+    onClose()
   }
 
   return (
     <section className="insp__section lb__scanflow">
       <div className="insp__sectionhead">
         <h2><ScanLine size={18} aria-hidden="true" /> {mode === 'amend' ? `Add pages — ${amendBook.label || kindLabel(amendBook.kind)}` : 'Scan a logbook'}</h2>
-        {step !== 'process' && (
-          <button type="button" className="auth__toggle" onClick={cancel}><X size={14} aria-hidden="true" /> Cancel</button>
-        )}
+        <button type="button" className="auth__toggle" onClick={cancel}><X size={14} aria-hidden="true" /> Cancel</button>
       </div>
 
       {error && <div className="auth__error" role="alert">{error}</div>}
@@ -526,25 +556,55 @@ function ScanFlow({ inspection, engineCount, layout, mode, book: amendBook, onCa
               <Check size={15} aria-hidden="true" /> Save &amp; read {captured.length > 0 ? `(${captured.length})` : ''}
             </button>
           </div>
+          {captured.length > 0 && (
+            <p className="auth__hint">We’ll build the PDF and read the pages in the background — you can scan the next logbook right away.</p>
+          )}
         </>
       )}
+    </section>
+  )
+}
 
-      {step === 'process' && (
-        <div className="auth__hint" aria-busy="true">
-          {progress ? `${progress.label} ${progress.done}${progress.total ? ` of ${progress.total}` : ''}…` : 'Saving…'}
-          {progress && (
-            <div className="lb__progressbar"><span style={{ width: `${progress.total ? Math.round((progress.done / progress.total) * 100) : 0}%` }} /></div>
+// Compact, always-visible progress for logbooks processing in the background. Shown
+// on mobile + desktop so you can scan the next book while these finish.
+function ProcessingBanner({ jobs, onRetry, onDismiss }) {
+  const entries = Object.entries(jobs)
+  if (!entries.length) return null
+  return (
+    <div className="lb__jobs" aria-live="polite">
+      {entries.map(([id, j]) => (
+        <div key={id} className={`lb__job ${j.error ? 'lb__job--error' : ''}`}>
+          <div className="lb__jobmain">
+            <span className="lb__jobtitle">
+              {!j.error && <Loader size={14} className="lb__spin" aria-hidden="true" />}
+              {j.error && <AlertTriangle size={14} aria-hidden="true" />}
+              {j.title}
+            </span>
+            <span className="auth__hint">
+              {j.error ? j.error : `${j.label || 'Processing'}${j.total ? ` — ${j.done} of ${j.total}` : '…'}`}
+            </span>
+            {!j.error && (
+              <div className="lb__progressbar">
+                <span style={{ width: `${j.total ? Math.round((j.done / j.total) * 100) : 12}%` }} />
+              </div>
+            )}
+          </div>
+          {j.error && (
+            <span className="insp__rowconfirm">
+              <button type="button" className="insp__rowyes" onClick={() => onRetry(id)}>Retry</button>
+              <button type="button" className="insp__rowno" onClick={() => onDismiss(id)}>Dismiss</button>
+            </span>
           )}
         </div>
-      )}
-    </section>
+      ))}
+    </div>
   )
 }
 
 // A scanned logbook: its compiled PDF (download + show-on-report), read times
 // (editable), an "add pages" amend action, a collapsible page manager
 // (rotate/reorder/delete), and delete-the-logbook — all destructive taps confirmed.
-function LogbookCard({ inspection, book, label, engineCount, layout, onAmend, onDelete, onUpdate }) {
+function LogbookCard({ inspection, book, label, engineCount, layout, job, onAmend, onDelete, onUpdate }) {
   const [media, setMedia] = useState([])
   const [loading, setLoading] = useState(true)
   const [managing, setManaging] = useState(false)
@@ -619,7 +679,12 @@ function LogbookCard({ inspection, book, label, engineCount, layout, onAmend, on
     <div className="lb__card">
       <div className="lb__cardhead">
         <div>
-          <span className="lb__cardtitle">{label}</span>
+          <span className="lb__cardtitle">
+            {label}
+            {job && !job.error && (
+              <span className="lb__procbadge"><Loader size={12} className="lb__spin" aria-hidden="true" /> {job.label || 'Processing'}…</span>
+            )}
+          </span>
           <span className="lb__cardsub">{loading ? '…' : `${pages.length} page${pages.length === 1 ? '' : 's'}`} · {fmtRange(book)}</span>
         </div>
         <ConfirmButton title="Delete logbook" label="Delete logbook" onConfirm={onDelete}>
