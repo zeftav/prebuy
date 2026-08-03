@@ -337,6 +337,16 @@ export async function deletePart(id) {
   return { error }
 }
 
+/**
+ * Clear a logbook's extracted events + parts (used before a re-read, so re-reading
+ * the same pages doesn't duplicate them). Manual entries on the book go too — the
+ * UI confirms first.
+ */
+export async function deleteScanRecordsForLogbook(logbookId) {
+  await supabase.from('logbook_events').delete().eq('logbook_id', logbookId)
+  await supabase.from('logbook_parts').delete().eq('logbook_id', logbookId)
+}
+
 /** Realign a logbook's events to a new position (used when its type is corrected). */
 export async function reassignLogbookEvents(logbookId, position) {
   const p = Number(position)

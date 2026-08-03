@@ -3,6 +3,15 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.46.1] — 2026-08-03
+
+### Added
+- **Re-read a logbook** (backfill for books scanned before v0.45/0.46). A "Re-read" action on each
+  `LogbookCard` enqueues `processBook` with `mode: 'reread'` — it clears the book's extracted events/parts
+  (`deleteScanRecordsForLogbook`) so re-reading the same pages doesn't duplicate them, then reads all
+  pages fresh (page base 0), storing `source_page` and merging compliance. Behind a two-step confirm
+  (replaces any manual entries on that book). Frontend only — no deploy.
+
 ## [0.46.0] — 2026-08-03
 
 ### Added

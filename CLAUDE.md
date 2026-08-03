@@ -561,7 +561,13 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   report — logbook PDFs are private). ⚠️ **Run migration 029 + REDEPLOY `structure-logbook` (JWT ON)**
   (that redeploy also covers v0.45.0). Lint + 258 tests + build green. Backlog item (2) now shipped;
   (1) edit-flagged-items-inline still open. Reorder/delete of pages can drift a stored `source_page`
-  (accepted; rare).
+  (accepted; rare). **Deploys done by Brett (2026-08-03): migration 029 + structure-logbook redeploy
+  (covers v0.45.0 + v0.46.0).**
+- Session 4 cont. — **Re-read a logbook** (v0.46.1, frontend only — no deploy). "Re-read" on each
+  `LogbookCard` → `enqueueProcessing({book, capturedIds:[], mode:'reread'})`; `processBook` clears the
+  book's extracted events/parts (`deleteScanRecordsForLogbook`) then reads all pages fresh (pageBase 0),
+  backfilling `source_page` (page links) + compliance on books scanned before v0.45/0.46 — no
+  re-photographing. Two-step confirm (replaces manual entries on that book). Lint + 258 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

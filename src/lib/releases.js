@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.46.1',
+    date: '2026-08-03',
+    title: 'Re-read an already-scanned logbook',
+    items: [
+      'New “Re-read” on each logbook card: re-runs the read over the pages you already scanned — no re-photographing — to backfill the page links and the auto-filled timed items on books scanned earlier. It replaces that book’s auto-read entries (so it won’t duplicate them), and asks you to confirm first.',
+    ],
+  },
+  {
     version: '0.46.0',
     date: '2026-08-03',
     title: 'Jump from any record to its logbook page',

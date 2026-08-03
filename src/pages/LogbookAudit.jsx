@@ -18,6 +18,7 @@ import {
   reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
   extractLogbooksBatched, spanFromDrafts, mergeSpan, reassignLogbookEvents,
   listParts, addParts, deletePart, searchRecords, orderLogbooks, duplicateEvents,
+  deleteScanRecordsForLogbook,
   EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { compileAdCompliance, adStats } from '../lib/ad.js'
@@ -107,6 +108,10 @@ export default function LogbookAudit() {
       const { data: media } = await listMediaByLogbook(book.id)
       const pages = media.filter((m) => m.purpose === 'logbook')
       const existingPdf = media.find((m) => m.purpose === 'logbook_pdf')
+
+      // Re-read: clear this book's extracted events/parts so re-reading the same
+      // pages replaces them (no duplicates), then read like a fresh scan.
+      if (mode === 'reread') await deleteScanRecordsForLogbook(book.id)
 
       // 1. Compile the PDF from every page, in order.
       setJob({ label: 'Building PDF', done: 0, total: pages.length })
@@ -311,6 +316,7 @@ export default function LogbookAudit() {
                   layout={layout}
                   job={jobs[b.id]}
                   onAmend={() => setScan({ mode: 'amend', book: b })}
+                  onReread={() => enqueueProcessing({ book: b, capturedIds: [], mode: 'reread' })}
                   onDelete={() => onDeleteBook(b)}
                   onUpdate={(patch) => onUpdateBook(b, patch)}
                 />
@@ -708,7 +714,7 @@ function ProcessingBanner({ jobs, onRetry, onDismiss }) {
 // A scanned logbook: its compiled PDF (download + show-on-report), read times
 // (editable), an "add pages" amend action, a collapsible page manager
 // (rotate/reorder/delete), and delete-the-logbook — all destructive taps confirmed.
-function LogbookCard({ inspection, book, label, engineCount, layout, job, onAmend, onDelete, onUpdate }) {
+function LogbookCard({ inspection, book, label, engineCount, layout, job, onAmend, onReread, onDelete, onUpdate }) {
   const [media, setMedia] = useState([])
   const [loading, setLoading] = useState(true)
   const [managing, setManaging] = useState(false)
@@ -846,6 +852,11 @@ function LogbookCard({ inspection, book, label, engineCount, layout, job, onAmen
 
       <div className="insp__capture lb__cardactions">
         <button type="button" className="auth__btn auth__btn--ghost" onClick={onAmend}><Plus size={14} aria-hidden="true" /> Add pages</button>
+        {pages.length > 0 && !job && (
+          <ConfirmButton title="Re-read pages" label="Re-read & replace entries" className="auth__toggle" onConfirm={onReread}>
+            Re-read
+          </ConfirmButton>
+        )}
         <button type="button" className="auth__toggle" onClick={() => setRetyping((v) => !v)}>Change type</button>
         <button type="button" className="auth__toggle" onClick={() => setEditing((v) => !v)}>Edit times</button>
         {pages.length > 0 && <button type="button" className="auth__toggle" onClick={() => setManaging((v) => !v)}>{managing ? 'Hide pages' : 'Manage pages'}</button>}
