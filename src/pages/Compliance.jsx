@@ -7,11 +7,15 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, CalendarClock, Check, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, CalendarClock, Check, Plus, Trash2, ScanLine } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
   normalizeCompliance, complianceRows, complianceStats, statusLabel, saveCompliance, slugKey,
+  limitsToComplianceItems,
 } from '../lib/compliance.js'
+import { extractLogbooks } from '../lib/logbooks.js'
+import { uploadMedia, signedUrlsFor } from '../lib/media.js'
+import PhotoPicker from '../components/PhotoPicker.jsx'
 import './auth.css'
 import './inspections.css'
 
@@ -66,6 +70,13 @@ export default function Compliance() {
     }])
     setSaved(false)
   }
+  function addMmItems(newItems) {
+    setItems((prev) => {
+      const add = newItems.map((it) => ({ ...it, key: uniqueKey(it.key, prev) }))
+      return [...prev, ...add]
+    })
+    setSaved(false)
+  }
 
   async function save() {
     setSaving(true)
@@ -114,6 +125,13 @@ export default function Compliance() {
         </ul>
         <AddItem onAdd={addCustom} />
       </section>
+
+      <MmScan inspection={inspection} onAdd={addMmItems} />
+
+      <p className="auth__hint comp__scanhint">
+        Tip: the recurring items above fill in automatically from your logbook scans (annual, IFR checks,
+        ELT, vacuum pump, wing bolts) — scan the books on the Logbook audit and come back here to review.
+      </p>
 
       <div className="insp__savebar">
         <button type="button" className="auth__btn" onClick={save} disabled={saving}>
@@ -227,6 +245,91 @@ function AddItem({ onAdd }) {
         <button type="button" className="auth__btn auth__btn--ghost" onClick={() => setOpen(false)}>Cancel</button>
       </div>
     </form>
+  )
+}
+
+// Scan the Maintenance Manual's life-limited / airworthiness-limitations pages →
+// Claude vision → review the extracted items → add them as mm-scan compliance items.
+function MmScan({ inspection, onAdd }) {
+  const [phase, setPhase] = useState('idle') // idle | working | review
+  const [drafts, setDrafts] = useState([])
+  const [pick, setPick] = useState(new Set())
+  const [error, setError] = useState(null)
+
+  async function onPick(files) {
+    const list = Array.from(files ?? [])
+    if (!list.length) return
+    setError(null)
+    setPhase('working')
+    const paths = []
+    for (const f of list) {
+      const { data, error: upErr } = await uploadMedia({ orgId: inspection.org_id, inspectionId: inspection.id, purpose: 'logbook', file: f })
+      if (!upErr && data) paths.push(data.storage_path)
+    }
+    const urls = await signedUrlsFor(paths)
+    if (!urls.length) { setError('Couldn’t upload the photos. Try again.'); return setPhase('idle') }
+    const { data, error: exErr } = await extractLogbooks(urls, inspection.org_id, { kind: 'mm_limits' })
+    if (exErr) { setError(exErr.message); return setPhase('idle') }
+    const items = limitsToComplianceItems(data?.limits)
+    if (!items.length) { setError('No life-limited items found on those pages — try clearer photos of the limits table.'); return setPhase('idle') }
+    setDrafts(items)
+    setPick(new Set(items.map((_, i) => i)))
+    setPhase('review')
+  }
+
+  function toggle(i) {
+    setPick((p) => { const n = new Set(p); if (n.has(i)) n.delete(i); else n.add(i); return n })
+  }
+  function apply() {
+    onAdd(drafts.filter((_, i) => pick.has(i)))
+    setPhase('idle')
+    setDrafts([])
+  }
+
+  return (
+    <section className="insp__section lb__scan">
+      <div className="insp__sectionhead">
+        <h2><ScanLine size={18} aria-hidden="true" /> Scan MM life-limited pages <span className="lb__beta">beta</span></h2>
+      </div>
+
+      {phase === 'idle' && (
+        <>
+          <p className="auth__hint">Photograph the Maintenance Manual’s life-limited / airworthiness-limitations table and we’ll pull each item and its limit (hours / cycles / calendar) in for you to review.</p>
+          {error && <div className="auth__error" role="alert">{error}</div>}
+          <PhotoPicker onPick={onPick} multiple takeLabel="Scan MM pages" takeIcon={ScanLine} uploadLabel="Upload pages" className="auth__btn auth__btn--ghost insp__walkthrough" />
+        </>
+      )}
+
+      {phase === 'working' && <p className="auth__hint" aria-busy="true">Reading the limits pages…</p>}
+
+      {phase === 'review' && (
+        <>
+          <p className="auth__hint">{pick.size} of {drafts.length} selected. Untick anything you don’t want.</p>
+          <ul className="comp__list">
+            {drafts.map((it, i) => (
+              <li key={it.key} className="comp__row">
+                <label className="comp__na">
+                  <input type="checkbox" checked={pick.has(i)} onChange={() => toggle(i)} />
+                  <span>
+                    <span className="comp__label">{it.label}</span>
+                    <span className="comp__basis">
+                      {it.basis}
+                      {it.interval_hours ? ` · ${it.interval_hours} hrs` : ''}
+                      {it.interval_months ? ` · ${it.interval_months} mo` : ''}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <div className="insp__capture">
+            <button type="button" className="auth__btn" onClick={apply} disabled={pick.size === 0}>Add {pick.size} item{pick.size === 1 ? '' : 's'}</button>
+            <button type="button" className="auth__btn auth__btn--ghost" onClick={() => { setPhase('idle'); setDrafts([]) }}>Cancel</button>
+          </div>
+          <p className="auth__hint">Then set the current airframe time and each item’s last-complied to compute due status. Save when done.</p>
+        </>
+      )}
+    </section>
   )
 }
 

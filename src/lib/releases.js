@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.45.0',
+    date: '2026-08-03',
+    title: 'Timed items fill in from your scans + MM life-limited scan',
+    items: [
+      'The Timed-items tool now populates itself from your logbook scans: as we read the books, the most recent annual, IFR (pitot-static / transponder / altimeter), ELT, vacuum-pump and (Beech) wing-bolt compliance drops into the list for you to review — no more typing every date by hand.',
+      'New “Scan MM life-limited pages” on the Timed-items tool: photograph the Maintenance Manual’s life-limited / airworthiness-limitations table and we pull each item and its limit (hours / cycles / calendar) in for you to review and add.',
+    ],
+  },
+  {
     version: '0.44.0',
     date: '2026-08-03',
     title: 'AD compliance resource + duplicate-scan flag',

@@ -538,8 +538,18 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   scanned AD compliance report, else logbooks) + diffs (report-only=unverified / logbook-only=not-on-report).
   `LogbookAudit` **AD compliance** section (compiled list, recurring flag, source chips, cross-check
   advisories). `lib/logbooks.js` `duplicateEvents` (+tests) → audit flags likely double-scanned entries.
-  No new AI (reuses AD events already read). Lint + 249 tests + build green. **Still pending: MM
-  life-limited scan** (needs a vision edge fn) — the remaining piece of the timed-items ask.
+  No new AI (reuses AD events already read). Lint + 249 tests + build green.
+- Session 4 cont. — **Compliance auto-populate from scans + MM life-limited scan** (v0.45.0).
+  `structure-logbook` extended: `compliance[]` (most-recent annual/91.411 pitot-static+altimeter/91.413
+  transponder/91.207 ELT+battery/vacuum-pump/Beech wing-bolt w/ date+tach) + `limits[]` (MM
+  airworthiness-limitations table) + `mm_limits` context. `lib/compliance.js` `mergeScanCompliance`
+  (fill items only when scan is newer) + `limitsToComplianceItems` (MM limits → mm-scan items) (+tests,
+  27). `LogbookAudit` `processBook` auto-merges `draft.compliance` into `attributes.compliance` at scan
+  time (fetches fresh, saves). `Compliance.jsx` `MmScan` section (upload MM pages → review limits → add).
+  `extractLogbooks`/`mergeExtractDrafts` carry `compliance`+`limits`. ⚠️ **REDEPLOY `structure-logbook`
+  (JWT ON)** — no migration. Lint + 255 tests + build green.
+  **Backlog (Brett asks, not built):** (1) edit/correct items flagged during processing inline;
+  (2) **hotlink each item** (event/part/AD/compliance) to the section of the scanned PDF it came from.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

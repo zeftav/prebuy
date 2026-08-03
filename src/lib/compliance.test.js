@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   defaultComplianceItems, normalizeCompliance, addMonths, daysBetween, dueStatus,
   complianceStats, complianceRows, isComplianceEmpty, slugKey,
+  mergeScanCompliance, limitsToComplianceItems,
 } from './compliance.js'
 
 describe('defaultComplianceItems', () => {
@@ -117,6 +118,54 @@ describe('complianceStats / complianceRows / isComplianceEmpty', () => {
   it('detects an empty (nothing-filled) set', () => {
     expect(isComplianceEmpty([{ key: 'x', interval_months: 12 }])).toBe(true)
     expect(isComplianceEmpty([{ key: 'x', last_date: '2025-01-01' }])).toBe(false)
+  })
+})
+
+describe('mergeScanCompliance', () => {
+  const items = [
+    { key: 'annual', label: 'Annual inspection', last_date: null, last_tach: null },
+    { key: 'transponder', label: 'Transponder', last_date: '2024-01-01', last_tach: null },
+  ]
+  it('fills a blank item from the scan (by key)', () => {
+    const { items: out, filled } = mergeScanCompliance(items, [{ key: 'annual', label: 'Annual', date: '2025-05-01', tach: 2200 }])
+    expect(filled).toBe(1)
+    const annual = out.find((i) => i.key === 'annual')
+    expect(annual.last_date).toBe('2025-05-01')
+    expect(annual.last_tach).toBe(2200)
+  })
+  it('only updates when the scan is newer', () => {
+    const older = mergeScanCompliance(items, [{ key: 'transponder', date: '2023-06-01', tach: 0 }])
+    expect(older.filled).toBe(0) // 2023 < recorded 2024
+    const newer = mergeScanCompliance(items, [{ key: 'transponder', date: '2025-02-01' }])
+    expect(newer.filled).toBe(1)
+    expect(newer.items.find((i) => i.key === 'transponder').last_date).toBe('2025-02-01')
+  })
+  it('matches by fuzzy label when no key', () => {
+    const { filled, items: out } = mergeScanCompliance(items, [{ key: '', label: 'annual', date: '2025-03-01' }])
+    expect(filled).toBe(1)
+    expect(out.find((i) => i.key === 'annual').last_date).toBe('2025-03-01')
+  })
+  it('does not mutate the input', () => {
+    mergeScanCompliance(items, [{ key: 'annual', date: '2025-05-01' }])
+    expect(items[0].last_date).toBeNull()
+  })
+})
+
+describe('limitsToComplianceItems', () => {
+  it('maps MM limits to mm-scan compliance items', () => {
+    const out = limitsToComplianceItems([
+      { label: 'Fuel bladder', part_number: 'ABC-123', limit_hours: 0, limit_cycles: 0, limit_months: 120, note: '' },
+      { label: 'Seat rails', part_number: '', limit_hours: 5000, limit_cycles: 300, limit_months: 0, note: 'inspect' },
+    ])
+    expect(out).toHaveLength(2)
+    expect(out[0].source).toBe('mm-scan')
+    expect(out[0].interval_months).toBe(120)
+    expect(out[0].basis).toContain('ABC-123')
+    expect(out[1].interval_hours).toBe(5000)
+    expect(out[1].basis).toContain('300 cycles')
+  })
+  it('skips entries without a label', () => {
+    expect(limitsToComplianceItems([{ label: '', limit_hours: 100 }])).toEqual([])
   })
 })
 

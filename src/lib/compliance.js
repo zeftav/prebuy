@@ -229,6 +229,67 @@ export async function saveCompliance(inspection, { items, currentTach }) {
   return { data, error }
 }
 
+/**
+ * Fill/update compliance items from what a logbook scan read (`structure-logbook`
+ * `compliance[]`: { key, label, date, tach }). Matches each scanned entry to an
+ * item by key, else by fuzzy label, and updates last_date/last_tach only when the
+ * scan is NEWER than what's recorded (so a later scan doesn't overwrite a more
+ * recent manual entry). Returns { items, filled }. Pure.
+ */
+export function mergeScanCompliance(items, scanCompliance) {
+  const scans = Array.isArray(scanCompliance) ? scanCompliance : []
+  const next = (items ?? []).map((i) => ({ ...i }))
+  const norm = (s) => String(s ?? '').trim().toLowerCase()
+  let filled = 0
+  for (const sc of scans) {
+    const key = String(sc?.key ?? '').trim()
+    let idx = key ? next.findIndex((it) => it.key === key) : -1
+    if (idx < 0) {
+      const lbl = norm(sc?.label)
+      if (lbl) idx = next.findIndex((it) => norm(it.label) && (norm(it.label).includes(lbl) || lbl.includes(norm(it.label))))
+    }
+    if (idx < 0) continue
+    const it = next[idx]
+    const scDate = sc?.date ? String(sc.date).slice(0, 10) : null
+    const scTach = Number.isFinite(Number(sc?.tach)) && Number(sc.tach) !== 0 ? Number(sc.tach) : null
+    const newer =
+      (scDate && (!it.last_date || scDate > it.last_date)) ||
+      (scTach != null && (it.last_tach == null || scTach > it.last_tach))
+    if (!newer) continue
+    if (scDate) it.last_date = scDate
+    if (scTach != null) it.last_tach = scTach
+    filled += 1
+  }
+  return { items: next, filled }
+}
+
+/**
+ * Map Maintenance-Manual life-limited items (`structure-logbook` `limits[]`) into
+ * compliance items (source 'mm-scan'). Hours/months become the due intervals;
+ * cycles + part number go into the basis note (we don't track cycles for due yet).
+ * Pure.
+ */
+export function limitsToComplianceItems(limits) {
+  return (Array.isArray(limits) ? limits : [])
+    .filter((l) => l?.label)
+    .map((l) => {
+      const bits = []
+      if (l.part_number) bits.push(`P/N ${l.part_number}`)
+      if (l.limit_cycles) bits.push(`${l.limit_cycles} cycles`)
+      if (l.note) bits.push(l.note)
+      return {
+        key: slugKey(l.label),
+        label: String(l.label).trim(),
+        category: 'life-limit',
+        source: 'mm-scan',
+        basis: bits.join(' · ') || 'MM life limit',
+        last_date: null, last_tach: null, note: null, disabled: false,
+        interval_months: Number(l.limit_months) || null,
+        interval_hours: Number(l.limit_hours) || null,
+      }
+    })
+}
+
 /** A slug for a new custom item's key. Pure. */
 export function slugKey(label) {
   const base = String(label ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')

@@ -213,8 +213,8 @@ describe('mergeExtractDrafts', () => {
     expect(merged.unclear).toEqual(['SMOH smudged', 'last date unreadable'])
   })
   it('tolerates missing/null arrays and nullish input', () => {
-    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [], unclear: [], parts: [] })
-    expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [], unclear: [], parts: [] })
+    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [], unclear: [], parts: [], compliance: [], limits: [] })
+    expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [], unclear: [], parts: [], compliance: [], limits: [] })
   })
 })
 

@@ -179,8 +179,53 @@ const SCHEMA = {
         required: ['part_number', 'description', 'event_date', 'tach'],
       },
     },
+    compliance: {
+      type: 'array',
+      description:
+        'Recurring inspection / airworthiness compliance recorded in the entries — the annual (or 100-hr), ' +
+        'pitot-static system (91.411), altimeter/encoder, transponder (91.413), ELT inspection & ELT ' +
+        'battery replacement (91.207), vacuum/air pump replacement, and (Beech) wing-bolt torque check. ' +
+        'For EACH, report the MOST RECENT compliance you can see: the standard key if it matches, a short ' +
+        'label, the date, and the tach if shown. Skip anything not present on these pages.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          key: {
+            type: 'string',
+            enum: ['annual', 'pitot_static', 'altimeter', 'transponder', 'elt', 'elt_battery', 'vacuum_pump', 'wing_bolts', ''],
+            description: 'The standard item key it matches, or "" if it is some other recurring item.',
+          },
+          label: { type: 'string', description: 'Short label, e.g. "Annual inspection", "Transponder 91.413".' },
+          date: { type: 'string', description: 'YYYY-MM-DD of the most recent compliance, or "".' },
+          tach: { type: 'number', description: 'Tach at compliance, or 0.' },
+        },
+        required: ['key', 'label', 'date', 'tach'],
+      },
+    },
+    limits: {
+      type: 'array',
+      description:
+        'Life-limited / hard-time items from a Maintenance Manual limits table (Chapter 4 / Airworthiness ' +
+        'Limitations Section). One entry per item: the component, its part number if shown, and its limit ' +
+        'expressed in flight HOURS and/or CYCLES and/or calendar MONTHS. Only populate this from actual ' +
+        'MM limits pages; leave it an empty array for ordinary logbook pages.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          label: { type: 'string', description: 'The item, e.g. "Fuel bladder", "Seat rails", "Rescue hoist cable".' },
+          part_number: { type: 'string', description: 'Part number if shown, else "".' },
+          limit_hours: { type: 'number', description: 'Hour limit, or 0.' },
+          limit_cycles: { type: 'number', description: 'Cycle limit, or 0.' },
+          limit_months: { type: 'number', description: 'Calendar-month limit, or 0.' },
+          note: { type: 'string', description: 'Short note (e.g. "on condition after", ref), or "".' },
+        },
+        required: ['label', 'part_number', 'limit_hours', 'limit_cycles', 'limit_months', 'note'],
+      },
+    },
   },
-  required: ['logbooks', 'events', 'specs', 'currency', 'equipment', 'unclear', 'parts'],
+  required: ['logbooks', 'events', 'specs', 'currency', 'equipment', 'unclear', 'parts', 'compliance', 'limits'],
 }
 
 const EMPTY_SPECS = { total_time: 0, engine_smoh: 0, engine_notes: '', prop_since: 0, prop_notes: '', mgtow: 0, empty_weight: 0, useful_load: 0, fuel_capacity: 0 }
@@ -212,9 +257,15 @@ Deno.serve(async (req: Request) => {
   // new / since overhaul) for the span — not the airframe tach — which is the
   // figure that matters for an engine or propeller book.
   const ctx = (payload.context && typeof payload.context === 'object' ? payload.context : {}) as { kind?: string; position?: number; label?: string }
-  const ctxKind = ['airframe', 'engine', 'propeller', 'other', 'ad', 'form_337'].includes(String(ctx.kind)) ? String(ctx.kind) : ''
+  const ctxKind = ['airframe', 'engine', 'propeller', 'other', 'ad', 'form_337', 'mm_limits'].includes(String(ctx.kind)) ? String(ctx.kind) : ''
   let contextLine = ''
-  if (ctxKind === 'ad') {
+  if (ctxKind === 'mm_limits') {
+    contextLine =
+      '\n\nIMPORTANT CONTEXT: these pages are a Maintenance Manual Airworthiness Limitations / life-limited ' +
+      'items table. Focus on the "limits" array: extract EVERY life-limited or hard-time item with its ' +
+      'limit in hours and/or cycles and/or calendar months, and its part number if shown. Logbook span, ' +
+      'events and specs are not expected here — return them empty.'
+  } else if (ctxKind === 'ad') {
     contextLine =
       '\n\nIMPORTANT CONTEXT: these pages are an AD (Airworthiness Directive) compliance report. ' +
       'Focus on the events list: extract EACH AD as an event with category="ad", the AD number in the ' +
@@ -258,7 +309,11 @@ Deno.serve(async (req: Request) => {
         '(6) "unclear" — short notes on anything PRESENT on the pages you could not confidently read ' +
         '(smudged/faded figures, illegible handwriting), so a human knows to verify it; ' +
         '(7) "parts" — notable part numbers / components installed or replaced (mag, alternator, cylinder, ' +
-        'avionics, pump, tire) with their part number + a short description. ' +
+        'avionics, pump, tire) with their part number + a short description; ' +
+        '(8) "compliance" — the most recent recurring inspection / airworthiness compliance you can see ' +
+        '(annual/100-hr, pitot-static 91.411, altimeter, transponder 91.413, ELT & ELT battery 91.207, ' +
+        'vacuum/air pump replacement, Beech wing-bolt torque) with its date + tach; ' +
+        '(9) "limits" — life-limited / hard-time items ONLY if these are Maintenance Manual limits pages. ' +
         'Only report what is legible — do not guess. Use empty strings / 0 for anything you cannot ' +
         'read, and add it to "unclear". This is a draft a human will review.' +
         contextLine,
@@ -301,6 +356,28 @@ Deno.serve(async (req: Request) => {
               tach: Number(p.tach) || 0,
             }))
             .filter((p: { part_number: string; description: string }) => p.part_number || p.description)
+        : [],
+      compliance: Array.isArray(result.compliance)
+        ? result.compliance
+            .map((c: Record<string, unknown>) => ({
+              key: String(c.key ?? '').trim(),
+              label: String(c.label ?? '').trim(),
+              date: String(c.date ?? '').trim(),
+              tach: Number(c.tach) || 0,
+            }))
+            .filter((c: { key: string; label: string; date: string; tach: number }) => (c.key || c.label) && (c.date || c.tach))
+        : [],
+      limits: Array.isArray(result.limits)
+        ? result.limits
+            .map((l: Record<string, unknown>) => ({
+              label: String(l.label ?? '').trim(),
+              part_number: String(l.part_number ?? '').trim(),
+              limit_hours: Number(l.limit_hours) || 0,
+              limit_cycles: Number(l.limit_cycles) || 0,
+              limit_months: Number(l.limit_months) || 0,
+              note: String(l.note ?? '').trim(),
+            }))
+            .filter((l: { label: string; limit_hours: number; limit_cycles: number; limit_months: number }) => l.label && (l.limit_hours || l.limit_cycles || l.limit_months))
         : [],
     })
   } catch (e) {

@@ -79,6 +79,9 @@ Run in order. All are idempotent (safe to re-run).
         (flags illegible reads → logbook "verify against PDF" advisory).
   - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.40.0** (2026-06-30) — also returns `parts`
         (searchable part numbers). Needs migration 028.
+  - [ ] 🔁 **REDEPLOY `structure-logbook` (JWT ON) for v0.45.0** — also returns `compliance` (recurring
+        inspection dates → auto-fills the Timed-items tool) + `limits` (MM life-limited scan). No
+        migration; reuses `ANTHROPIC_API_KEY`. (2026-08-03)
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile

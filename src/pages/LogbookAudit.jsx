@@ -21,6 +21,7 @@ import {
   EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { compileAdCompliance, adStats } from '../lib/ad.js'
+import { normalizeCompliance, mergeScanCompliance, saveCompliance } from '../lib/compliance.js'
 import { normalizeProfile, engineLabel } from '../lib/profile.js'
 import { uploadMedia, listMediaByLogbook, updateMedia, deleteMedia } from '../lib/media.js'
 import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
@@ -150,6 +151,17 @@ export default function LogbookAudit() {
             })
           }
           if (Array.isArray(draft.parts) && draft.parts.length) await addParts(inspection, book.id, draft.parts)
+          // Auto-populate the Timed-items / compliance tool from what the scan read
+          // (annual, IFR checks, ELT, vacuum pump, wing bolts). Only fills newer
+          // dates; the inspector still reviews on the Compliance page.
+          if (Array.isArray(draft.compliance) && draft.compliance.length) {
+            const { data: fresh } = await getInspection(inspection.id)
+            if (fresh) {
+              const norm = normalizeCompliance(fresh.attributes, { vertical: fresh.vertical, make: fresh.make })
+              const merged = mergeScanCompliance(norm.items, draft.compliance)
+              if (merged.filled) await saveCompliance(fresh, { items: merged.items, currentTach: norm.current_tach })
+            }
+          }
         }
       }
     } catch (e) {

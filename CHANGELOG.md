@@ -3,6 +3,28 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.45.0] — 2026-08-03
+
+### Added
+- **Timed items auto-populate from logbook scans.** `structure-logbook` now also extracts a `compliance[]`
+  array (most-recent annual / pitot-static 91.411 / altimeter / transponder 91.413 / ELT + battery 91.207 /
+  vacuum pump / Beech wing-bolt, with date + tach). The scan pipeline (`processBook`) reads it and
+  auto-fills the Timed-items tool via `mergeScanCompliance` (only when the scan is newer than what's
+  recorded), persisted to `attributes.compliance`.
+- **Scan MM life-limited pages.** `structure-logbook` gains a `limits[]` output + a `mm_limits` context
+  (Airworthiness-Limitations / life-limited table → item, part number, hours/cycles/months). New `MmScan`
+  section on the Compliance page: upload MM pages → review the extracted limits → add as `mm-scan`
+  compliance items (`limitsToComplianceItems`). Both helpers pure + tested.
+- `lib/logbooks.js` `extractLogbooks`/`mergeExtractDrafts` carry `compliance` + `limits`.
+
+### Deploy
+- **REDEPLOY `structure-logbook` (Verify JWT ON)** for the new `compliance` + `limits` extraction. No
+  migration; reuses `ANTHROPIC_API_KEY`.
+
+### Backlog (from this session, not yet built)
+- Let the inspector **edit/correct items flagged during processing** inline.
+- **Hotlink each item** (event / part / AD / compliance) to the section of the scanned PDF it came from.
+
 ## [0.44.0] — 2026-08-03
 
 ### Added

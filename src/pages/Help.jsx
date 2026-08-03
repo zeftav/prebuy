@@ -126,7 +126,11 @@ const FAQ = [
   },
   {
     q: 'How do I track recurring / timed items (IFR checks, ELT, annual, wing bolts)?',
-    a: 'Open an aircraft and tap “Timed items.” We list the recurring inspections and life-limited items for the airframe — the IFR pitot-static / transponder / altimeter checks (91.411/413), the ELT and its battery, the annual, plus make-specific ones (e.g. the Beech wing-bolt check) and on-condition components like the vacuum/air pump. Enter the last-complied date and/or tach for each and we compute the next-due and flag it Overdue, Due soon, or Current. Set the current airframe time up top for the hours-based items. Add your own item (with a months and/or hours interval) for anything specific to the aircraft, or mark one Not applicable. What you record prints as a compliance table on the customer report.',
+    a: 'Open an aircraft and tap “Timed items.” We list the recurring inspections and life-limited items for the airframe — the IFR pitot-static / transponder / altimeter checks (91.411/413), the ELT and its battery, the annual, plus make-specific ones (e.g. the Beech wing-bolt check) and on-condition components like the vacuum/air pump. These fill in automatically from your logbook scans (the most recent compliance date/time we can read), so you mostly just review. Enter or correct the last-complied date and/or tach for each and we compute the next-due and flag it Overdue, Due soon, or Current. Set the current airframe time up top for the hours-based items. Add your own item (with a months and/or hours interval), or mark one Not applicable. What you record prints as a compliance table on the customer report.',
+  },
+  {
+    q: 'Can I scan the Maintenance Manual’s life-limited items?',
+    a: 'Yes (beta). On the Timed-items tool, tap “Scan MM life-limited pages” and photograph the Maintenance Manual’s life-limited / airworthiness-limitations table. We read each item and its limit (hours, cycles, and/or calendar months) and its part number, and list them for you to review and add. Then set the current airframe time and each item’s last-complied to compute due status. Always verify against the actual manual — it’s a starting draft.',
   },
   {
     q: 'How do I record Beech landing-gear rigging?',

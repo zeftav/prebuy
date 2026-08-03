@@ -370,12 +370,14 @@ export function chunk(arr, size) {
  * them. Pure. Tolerates null/missing arrays.
  */
 export function mergeExtractDrafts(drafts) {
-  const out = { logbooks: [], events: [], unclear: [], parts: [] }
+  const out = { logbooks: [], events: [], unclear: [], parts: [], compliance: [], limits: [] }
   for (const d of drafts ?? []) {
     if (Array.isArray(d?.logbooks)) out.logbooks.push(...d.logbooks)
     if (Array.isArray(d?.events)) out.events.push(...d.events)
     if (Array.isArray(d?.unclear)) out.unclear.push(...d.unclear)
     if (Array.isArray(d?.parts)) out.parts.push(...d.parts)
+    if (Array.isArray(d?.compliance)) out.compliance.push(...d.compliance)
+    if (Array.isArray(d?.limits)) out.limits.push(...d.limits)
   }
   return out
 }
@@ -466,7 +468,13 @@ export async function extractLogbooks(imageUrls, orgId, context = null) {
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }
-    return { data: { logbooks: body.logbooks ?? [], events: body.events ?? [], unclear: body.unclear ?? [], parts: body.parts ?? [] }, error: null }
+    return {
+      data: {
+        logbooks: body.logbooks ?? [], events: body.events ?? [], unclear: body.unclear ?? [],
+        parts: body.parts ?? [], compliance: body.compliance ?? [], limits: body.limits ?? [],
+      },
+      error: null,
+    }
   } catch (e) {
     return { data: null, error: e instanceof Error ? e : new Error('Network error') }
   }
