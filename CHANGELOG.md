@@ -3,6 +3,13 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.41.2] — 2026-08-03
+
+### Fixed
+- **Enter in the identifier field runs the lookup, not the form submit.** On `NewInspection` (inspection,
+  listing, or records), pressing Enter after typing an N-number/HIN now triggers "Look up" (when the
+  vertical has a lookup) instead of creating the job prematurely. Frontend only.
+
 ## [0.41.1] — 2026-08-03
 
 ### Added

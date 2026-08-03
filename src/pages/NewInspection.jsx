@@ -254,6 +254,14 @@ export default function NewInspection() {
                 setIdentifier(e.target.value)
                 if (lookup.status !== 'idle') setLookup({ status: 'idle' })
               }}
+              onKeyDown={(e) => {
+                // Enter in the identifier field runs the lookup, not the form submit,
+                // so a quick N-number/HIN entry doesn't create the job prematurely.
+                if (e.key === 'Enter' && canLookup) {
+                  e.preventDefault()
+                  if (idCheck.valid && lookup.status !== 'busy') onLookup()
+                }
+              }}
             />
             {canLookup && (
               <button
