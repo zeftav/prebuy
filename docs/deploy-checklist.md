@@ -63,7 +63,7 @@ Run in order. All are idempotent (safe to re-run).
       (searchable part numbers). Idempotent. (v0.40.0, 2026-06-30)
 - [x] ✅ `029_logbook_source_page.sql` — `source_page` on `logbook_events` + `logbook_parts` (hotlink
       each record to its logbook PDF page). Idempotent. (v0.46.0, 2026-08-03)
-- [ ] ⬜ `030_logbook_event_next_due.sql` — `next_due_date` / `next_due_hours` on `logbook_events`
+- [x] ✅ `030_logbook_event_next_due.sql` — `next_due_date` / `next_due_hours` on `logbook_events`
       (AD next-due on the AD compliance chart). Idempotent. (v0.47.0, 2026-08-03)
 
 ## 2. Edge functions (Supabase → Edge Functions)
@@ -87,8 +87,9 @@ Run in order. All are idempotent (safe to re-run).
         `compliance` (recurring inspection dates → auto-fills the Timed-items tool) + `limits` (MM
         life-limited scan) [v0.45.0], and a `page` per event/part for the PDF-page hotlinks [v0.46.0].
         Migration 029 also run. Reuses `ANTHROPIC_API_KEY`.
-  - [ ] 🔁 **REDEPLOY `structure-logbook` (JWT ON) for v0.47.0** — AD events now carry `next_due_date` /
-        `next_due_hours` (AD next-due on the chart). Needs migration 030. Reuses `ANTHROPIC_API_KEY`. (2026-08-03)
+  - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.47.0** (2026-08-03) — AD events now carry
+        `next_due_date` / `next_due_hours` (AD next-due on the chart). Migration 030 also run. Reuses
+        `ANTHROPIC_API_KEY`.
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile
