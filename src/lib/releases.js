@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.47.0',
+    date: '2026-08-03',
+    title: 'Records search up top + an AD compliance chart',
+    items: [
+      'The records search box is back at the top of the Logbook audit, with matching events and parts showing directly beneath it — no more scrolling past everything to find it.',
+      'AD compliance is now a tidy card that opens a full AD chart: every AD de-duplicated by number, recurring flag, last complied, next due, a status (Overdue / Due soon / Current), the source (report vs logbooks), a link to the exact scanned page, and the report-vs-logbooks cross-check.',
+      'Scanning an AD compliance report now also pulls next-due dates/hours for recurring ADs.',
+    ],
+  },
+  {
     version: '0.46.1',
     date: '2026-08-03',
     title: 'Re-read an already-scanned logbook',

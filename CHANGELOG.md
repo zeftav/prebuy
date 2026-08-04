@@ -3,6 +3,26 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.47.0] — 2026-08-03
+
+### Changed
+- **Logbook audit reorg.** The records **search bar moved back to the top** of the page with matches
+  rendering directly beneath it (extracted `EventRow`/`PartRow` reused by the results panel + the full
+  lists below). **AD compliance** is no longer a long inline list burying the page — it's a compact card
+  that links to a new **AD compliance chart page** (`/app/inspections/:id/ad-compliance`,
+  `AdCompliancePage`): every AD de-duped by number with recurring flag, last-complied, **next due**, a
+  status (overdue / due-soon / current), source chips (report vs logbooks), a page hotlink, and the
+  cross-check advisories, worst-first.
+
+### Added
+- **AD next-due.** `structure-logbook` reads `next_due_date` / `next_due_hours` for recurring ADs off an
+  AD compliance report (migration `030` adds the columns to `logbook_events`); `lib/ad.js`
+  `compileAdCompliance` carries next-due (+tests); the AD chart computes overdue/due-soon from it.
+
+### Deploy
+- **Run migration `030_logbook_event_next_due.sql`** and **REDEPLOY `structure-logbook` (Verify JWT ON)**
+  for AD next-due. The search/AD-card/AD-chart reorg is frontend-only. Reuses `ANTHROPIC_API_KEY`.
+
 ## [0.46.1] — 2026-08-03
 
 ### Added

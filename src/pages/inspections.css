@@ -1695,6 +1695,37 @@
 .comp__pill--ok { background: rgba(26,127,55,0.12); color: #1a7f37; }
 .comp__pill--unknown { background: rgba(100,110,130,0.12); color: #667; }
 
+/* AD compliance summary card (links to the chart page) */
+.lb__adcard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  text-decoration: none;
+  color: inherit;
+  background: var(--card, #fff);
+}
+.lb__adcard:hover { border-color: var(--accent-border, rgba(107,70,193,0.4)); }
+.lb__adcardmain { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lb__adcardtitle { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.lb__adcardgo { display: inline-flex; align-items: center; gap: 2px; color: var(--accent, #6b46c1); font-weight: 600; white-space: nowrap; }
+
+/* Records search section (top of the audit page) */
+.lb__searchsection { display: flex; flex-direction: column; gap: 10px; }
+.lb__results .insp__list { margin-top: 4px; }
+
+/* AD chart table */
+.ad__table td, .ad__table th { white-space: nowrap; }
+.ad__table td:nth-child(2) { white-space: normal; }
+.ad__num { font-weight: 700; }
+.ad__src { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ad__row--overdue { background: rgba(200,30,74,0.05); }
+.ad__row--due-soon { background: rgba(214,138,0,0.06); }
+
 /* Hotlink to a page of a logbook PDF */
 .lb__pagelink {
   display: inline-flex;

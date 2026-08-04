@@ -263,7 +263,7 @@ export function mergeSpan(a, b) {
 export async function listEvents(inspectionId) {
   const { data, error } = await supabase
     .from('logbook_events')
-    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page')
+    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page, next_due_date, next_due_hours')
     .eq('inspection_id', inspectionId)
     .order('event_date', { ascending: true })
   return { data: data ?? [], error }
@@ -285,11 +285,13 @@ export async function addEvent(inspection, draft) {
     tach: num(draft.tach),
     description: draft.description?.trim() || null,
     source_page: Number.isFinite(sp) && sp > 0 ? sp : null,
+    next_due_date: draft.next_due_date || null,
+    next_due_hours: num(draft.next_due_hours),
   }
   const { data, error } = await supabase
     .from('logbook_events')
     .insert(row)
-    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page')
+    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page, next_due_date, next_due_hours')
     .single()
   return { data, error }
 }

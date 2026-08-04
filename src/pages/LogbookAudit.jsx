@@ -10,7 +10,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check, Search, Package, Loader } from 'lucide-react'
+import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check, Search, Package, Loader, ShieldCheck, ChevronRight } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
   listLogbooks, addLogbook, deleteLogbook, updateLogbook,
@@ -163,6 +163,8 @@ export default function LogbookAudit() {
               tach: cleanDraftValue(ev.tach) ?? '',
               description: cleanDraftValue(ev.description) || '',
               source_page: srcPage(ev.page),
+              next_due_date: cleanDraftValue(ev.next_due_date) || '',
+              next_due_hours: cleanDraftValue(ev.next_due_hours) ?? '',
             })
           }
           if (Array.isArray(draft.parts) && draft.parts.length) {
@@ -215,6 +217,7 @@ export default function LogbookAudit() {
   const recon = useMemo(() => reconcileLogbooks(logbooks, { engineCount, layout }), [logbooks, engineCount, layout])
   const dups = useMemo(() => duplicateEvents(events), [events])
   const adc = useMemo(() => compileAdCompliance(events, logbooks), [events, logbooks])
+  const adcStats = useMemo(() => adStats(adc.ads), [adc])
 
   async function closeScan() {
     setScan(null)
@@ -300,6 +303,39 @@ export default function LogbookAudit() {
 
       <ProcessingBanner jobs={jobs} onRetry={retryJob} onDismiss={dismissJob} />
 
+      {/* Records search — top of the page, matches render directly below the bar. */}
+      {(events.length > 0 || parts.length > 0) && (
+        <section className="insp__section lb__searchsection">
+          <div className="lb__searchbar">
+            <Search size={15} aria-hidden="true" />
+            <input
+              type="search"
+              placeholder="Search this aircraft’s records — events, part numbers…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search records"
+            />
+            {query && <button type="button" className="auth__toggle" onClick={() => setQuery('')}>Clear</button>}
+          </div>
+          {query && (
+            <div className="lb__results">
+              {filtered.events.length + filtered.parts.length === 0 ? (
+                <p className="auth__hint">No matching records.</p>
+              ) : (
+                <ul className="insp__list">
+                  {filtered.events.map((e) => (
+                    <EventRow key={e.id} e={e} posLabel={posLabel} pdfUrl={pdfByLogbook.get(e.logbook_id)} onDelete={onDeleteEvent} />
+                  ))}
+                  {filtered.parts.map((p) => (
+                    <PartRow key={p.id} p={p} pdfUrl={pdfByLogbook.get(p.logbook_id)} onDelete={onDeletePart} />
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       {/* Logbooks (scanned) */}
       {logbooks.length > 0 && (
         <section className="insp__section">
@@ -362,135 +398,84 @@ export default function LogbookAudit() {
         )}
       </section>
 
-      {/* AD compliance — compiled from the scans, compared vs the AD compliance report. */}
-      {adc.ads.length > 0 && <AdCompliance adc={adc} pdfByLogbook={pdfByLogbook} />}
-
-      {/* Records search — bar sits directly above its results (events + parts). */}
-      {(events.length > 0 || parts.length > 0) && (
-        <div className="lb__searchbar">
-          <Search size={15} aria-hidden="true" />
-          <input
-            type="search"
-            placeholder="Search this aircraft’s records — events, part numbers…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label="Search records"
-          />
-          {query && <button type="button" className="auth__toggle" onClick={() => setQuery('')}>Clear</button>}
-        </div>
+      {/* AD compliance — compact card linking to the full chart. */}
+      {adc.ads.length > 0 && (
+        <Link to={`/app/inspections/${id}/ad-compliance`} className="lb__adcard">
+          <span className="lb__adcardmain">
+            <span className="lb__adcardtitle"><ShieldCheck size={16} aria-hidden="true" /> AD compliance</span>
+            <span className="auth__hint">
+              {adcStats.total} AD{adcStats.total === 1 ? '' : 's'}
+              {adcStats.recurring ? ` · ${adcStats.recurring} recurring` : ''}
+              {adc.issues.length ? ` · ${adc.issues.length} to check` : ''}
+            </span>
+          </span>
+          <span className="lb__adcardgo">View chart <ChevronRight size={15} aria-hidden="true" /></span>
+        </Link>
       )}
 
-      {/* Notable events */}
+      {/* Notable events (full list; search is up top) */}
       <section className="insp__section">
-        <div className="insp__sectionhead"><h2>Notable events {query && <span className="auth__hint">· {filtered.events.length} match</span>}</h2></div>
-        {filtered.events.length > 0 ? (
+        <div className="insp__sectionhead"><h2>Notable events</h2></div>
+        {events.length > 0 && (
           <ul className="insp__list">
-            {filtered.events.map((e) => (
-              <li key={e.id} className="insp__row">
-                <span className="insp__main">
-                  <span className="insp__id">
-                    <span className={`lb__cat lb__cat--${e.category}`}>{categoryLabel(e.category)}</span> {e.title}
-                  </span>
-                  <span className="insp__sub">
-                    {[e.position ? posLabel('engine', e.position) : null, e.event_date, e.tach != null ? `tach ${fmtTach(e.tach)}` : null, e.description]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </span>
-                </span>
-                <PageLink url={pdfByLogbook.get(e.logbook_id)} page={e.source_page} />
-                <ConfirmButton title="Delete event" onConfirm={() => onDeleteEvent(e)}>
-                  <Trash2 size={15} aria-hidden="true" />
-                </ConfirmButton>
-              </li>
+            {events.map((e) => (
+              <EventRow key={e.id} e={e} posLabel={posLabel} pdfUrl={pdfByLogbook.get(e.logbook_id)} onDelete={onDeleteEvent} />
             ))}
           </ul>
-        ) : query ? (
-          <p className="auth__hint">No matching events.</p>
-        ) : null}
+        )}
         <AddEvent onAdd={onAddEvent} engineCount={engineCount} layout={layout} />
       </section>
 
-      {/* Parts / components (searchable) */}
+      {/* Parts / components (full list) */}
       {parts.length > 0 && (
         <section className="insp__section">
-          <div className="insp__sectionhead"><h2><Package size={18} aria-hidden="true" /> Parts &amp; components {query && <span className="auth__hint">· {filtered.parts.length} match</span>}</h2></div>
-          {filtered.parts.length > 0 ? (
-            <ul className="insp__list">
-              {filtered.parts.map((p) => (
-                <li key={p.id} className="insp__row">
-                  <span className="insp__main">
-                    <span className="insp__id">{p.part_number || p.description || 'Part'}</span>
-                    <span className="insp__sub">{[p.part_number ? p.description : null, p.event_date, p.tach != null ? `tach ${fmtTach(p.tach)}` : null].filter(Boolean).join(' · ')}</span>
-                  </span>
-                  <PageLink url={pdfByLogbook.get(p.logbook_id)} page={p.source_page} />
-                  <ConfirmButton title="Delete part" onConfirm={() => onDeletePart(p)}>
-                    <Trash2 size={15} aria-hidden="true" />
-                  </ConfirmButton>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="auth__hint">No matching parts.</p>
-          )}
+          <div className="insp__sectionhead"><h2><Package size={18} aria-hidden="true" /> Parts &amp; components</h2></div>
+          <ul className="insp__list">
+            {parts.map((p) => (
+              <PartRow key={p.id} p={p} pdfUrl={pdfByLogbook.get(p.logbook_id)} onDelete={onDeletePart} />
+            ))}
+          </ul>
         </section>
       )}
     </main>
   )
 }
 
-// AD compliance resource: the ADs read off every scan, de-duplicated by number,
-// with which source references each (logbooks vs the scanned AD compliance report)
-// and a cross-check that flags ADs on the report but not in the logbooks (and the
-// reverse). Scan an "AD compliance report" (a kind='ad' logbook) to enable the diff.
-function AdCompliance({ adc, pdfByLogbook }) {
-  const stats = adStats(adc.ads)
+// A notable event row (used in search results + the full list).
+function EventRow({ e, posLabel, pdfUrl, onDelete }) {
   return (
-    <section className="insp__section">
-      <div className="insp__sectionhead">
-        <h2>AD compliance <span className="auth__hint">· {stats.total} AD{stats.total === 1 ? '' : 's'}{stats.recurring ? `, ${stats.recurring} recurring` : ''}</span></h2>
-      </div>
-      {adc.hasReport ? (
-        adc.issues.length > 0 ? (
-          <ul className="lb__issues">
-            {adc.issues.map((iss) => (
-              <li key={iss.key} className={`lb__issue lb__issue--${iss.type === 'unverified' ? 'gap' : 'coverage'}`}>
-                <AlertTriangle size={14} aria-hidden="true" /> {iss.message}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="auth__hint"><Check size={13} aria-hidden="true" /> Every AD on the compliance report was also found in the logbooks.</p>
-        )
-      ) : (
-        <p className="auth__hint">Scan an <strong>AD compliance report</strong> (pick “AD compliance report” when you scan a logbook) to cross-check it against what the logbooks record.</p>
-      )}
-      <ul className="insp__list">
-        {adc.ads.map((ad) => (
-          <li key={ad.key} className="insp__row">
-            <span className="insp__main">
-              <span className="insp__id">
-                {ad.ad_number || ad.title || 'AD'}
-                {ad.recurring && <span className="lb__adtag lb__adtag--recurring">recurring</span>}
-              </span>
-              <span className="insp__sub">
-                {[
-                  ad.ad_number ? ad.title : null,
-                  ad.latest_date ? `latest ${ad.latest_date}` : null,
-                  ad.latest_tach != null ? `tach ${fmtTach(ad.latest_tach)}` : null,
-                ].filter(Boolean).join(' · ')}
-              </span>
-            </span>
-            <span className="lb__adsources">
-              {ad.ref && <PageLink url={pdfByLogbook?.get(ad.ref.logbook_id)} page={ad.ref.page} />}
-              {ad.sources.logbook && <span className="lb__adchip">Logbook</span>}
-              {ad.sources.report && <span className="lb__adchip lb__adchip--report">Report</span>}
-              {adc.hasReport && ad.sources.report && !ad.sources.logbook && <span className="lb__adchip lb__adchip--warn">unverified</span>}
-              {adc.hasReport && ad.sources.logbook && !ad.sources.report && <span className="lb__adchip lb__adchip--warn">not on report</span>}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <li className="insp__row">
+      <span className="insp__main">
+        <span className="insp__id">
+          <span className={`lb__cat lb__cat--${e.category}`}>{categoryLabel(e.category)}</span> {e.title}
+        </span>
+        <span className="insp__sub">
+          {[e.position ? posLabel('engine', e.position) : null, e.event_date, e.tach != null ? `tach ${fmtTach(e.tach)}` : null, e.description]
+            .filter(Boolean)
+            .join(' · ')}
+        </span>
+      </span>
+      <PageLink url={pdfUrl} page={e.source_page} />
+      <ConfirmButton title="Delete event" onConfirm={() => onDelete(e)}>
+        <Trash2 size={15} aria-hidden="true" />
+      </ConfirmButton>
+    </li>
+  )
+}
+
+// A part / component row (used in search results + the full list).
+function PartRow({ p, pdfUrl, onDelete }) {
+  return (
+    <li className="insp__row">
+      <span className="insp__main">
+        <span className="insp__id">{p.part_number || p.description || 'Part'}</span>
+        <span className="insp__sub">{[p.part_number ? p.description : null, p.event_date, p.tach != null ? `tach ${fmtTach(p.tach)}` : null].filter(Boolean).join(' · ')}</span>
+      </span>
+      <PageLink url={pdfUrl} page={p.source_page} />
+      <ConfirmButton title="Delete part" onConfirm={() => onDelete(p)}>
+        <Trash2 size={15} aria-hidden="true" />
+      </ConfirmButton>
+    </li>
   )
 }
 

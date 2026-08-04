@@ -48,7 +48,7 @@ export function compileAdCompliance(events, logbooks) {
     const text = `${e.title ?? ''} ${e.description ?? ''}`
     for (const k of keys) {
       if (!map.has(k)) {
-        map.set(k, { ad_number: nums.length ? k : null, title: e.title ?? '', dates: [], tachs: [], sources: { logbook: false, report: false }, recurring: false, count: 0, ref: null, refDate: '' })
+        map.set(k, { ad_number: nums.length ? k : null, title: e.title ?? '', dates: [], tachs: [], sources: { logbook: false, report: false }, recurring: false, count: 0, ref: null, refDate: '', next_due_date: null, next_due_hours: null, dueDate: '' })
       }
       const rec = map.get(k)
       rec.count += 1
@@ -61,6 +61,15 @@ export function compileAdCompliance(events, logbooks) {
       if (e.logbook_id && (e.source_page ?? null) != null && (!rec.ref || String(e.event_date ?? '') >= rec.refDate)) {
         rec.ref = { logbook_id: e.logbook_id, page: e.source_page }
         rec.refDate = String(e.event_date ?? '')
+      }
+      // Keep the latest next-due we can see (an AD report states it).
+      const nd = e.next_due_date || null
+      const nh = e.next_due_hours != null && Number.isFinite(Number(e.next_due_hours)) ? Number(e.next_due_hours) : null
+      if ((nd || nh != null) && String(e.event_date ?? '') >= rec.dueDate) {
+        rec.next_due_date = nd
+        rec.next_due_hours = nh
+        rec.dueDate = String(e.event_date ?? '')
+        rec.recurring = true
       }
     }
   }
@@ -77,6 +86,8 @@ export function compileAdCompliance(events, logbooks) {
       sources: r.sources,
       count: r.count,
       ref: r.ref,
+      next_due_date: r.next_due_date,
+      next_due_hours: r.next_due_hours,
     }))
     .sort((a, b) => String(a.ad_number ?? a.title).localeCompare(String(b.ad_number ?? b.title), undefined, { numeric: true }))
 

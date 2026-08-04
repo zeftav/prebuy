@@ -56,6 +56,17 @@ describe('compileAdCompliance', () => {
     expect(issues.some((i) => i.type === 'missing_from_report' && i.message.includes('2015-19-07'))).toBe(true)
   })
 
+  it('carries next-due (date/hours) from the AD report occurrence', () => {
+    const events = [
+      ev({ title: '2015-19-07', event_date: '2020-01-01', logbook_id: 'af' }),
+      ev({ title: '2015-19-07', event_date: '2021-06-01', next_due_date: '2023-06-01', next_due_hours: 1800, logbook_id: 'rep' }),
+    ]
+    const { ads } = compileAdCompliance(events, logbooks)
+    expect(ads[0].next_due_date).toBe('2023-06-01')
+    expect(ads[0].next_due_hours).toBe(1800)
+    expect(ads[0].recurring).toBe(true)
+  })
+
   it('marks an AD present in both sources as matched (no issue)', () => {
     const events = [
       ev({ title: '2015-19-07', logbook_id: 'af' }),

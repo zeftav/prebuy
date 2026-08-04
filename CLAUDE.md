@@ -568,6 +568,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   book's extracted events/parts (`deleteScanRecordsForLogbook`) then reads all pages fresh (pageBase 0),
   backfilling `source_page` (page links) + compliance on books scanned before v0.45/0.46 — no
   re-photographing. Two-step confirm (replaces manual entries on that book). Lint + 258 tests + build green.
+- Session 4 cont. — **Audit reorg: search up top + AD chart page** (v0.47.0). `LogbookAudit` render
+  reorganized: records **search bar back at the top** with matches directly beneath (extracted
+  `EventRow`/`PartRow` reused by results panel + full lists). **AD compliance** → compact `lb__adcard`
+  linking to new **`AdCompliancePage`** (`/app/inspections/:id/ad-compliance`): every AD de-duped, recurring,
+  last-complied, **next due**, status (overdue/due-soon/current), source chips, page hotlink, cross-check
+  advisories, worst-first. **AD next-due:** migration `030` (`logbook_events.next_due_date`/`next_due_hours`);
+  `structure-logbook` reads them for recurring ADs off an AD compliance report; `lib/ad.js`
+  `compileAdCompliance` carries `next_due_date`/`next_due_hours` (+test). ⚠️ **Run migration 030 + REDEPLOY
+  `structure-logbook` (JWT ON)** (reorg itself is frontend-only). Lint + 259 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

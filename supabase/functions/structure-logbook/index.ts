@@ -90,8 +90,10 @@ const SCHEMA = {
           tach: { type: 'number', description: 'Tach at the event, or 0 if unknown.' },
           description: { type: 'string', description: 'One-line detail. Empty string if none.' },
           page: { type: 'number', description: '1-based number of the page image (in the order given) where this entry appears. 0 if unsure.' },
+          next_due_date: { type: 'string', description: 'For a RECURRING item (esp. a recurring AD), the next-due date YYYY-MM-DD if shown, else "".' },
+          next_due_hours: { type: 'number', description: 'For a recurring item, the next-due tach/hours if shown, else 0.' },
         },
-        required: ['category', 'title', 'event_date', 'tach', 'description', 'page'],
+        required: ['category', 'title', 'event_date', 'tach', 'description', 'page', 'next_due_date', 'next_due_hours'],
       },
     },
     specs: {
@@ -271,8 +273,9 @@ Deno.serve(async (req: Request) => {
     contextLine =
       '\n\nIMPORTANT CONTEXT: these pages are an AD (Airworthiness Directive) compliance report. ' +
       'Focus on the events list: extract EACH AD as an event with category="ad", the AD number in the ' +
-      'title (e.g. "AD 2015-19-07"), the compliance date in event_date, and the method + whether it’s ' +
-      'recurring (and next-due) in description. A logbook time span is not needed here.'
+      'title (e.g. "AD 2015-19-07"), the compliance date in event_date, the method + subject in ' +
+      'description, and — for recurring ADs — the NEXT-DUE date in next_due_date and/or next-due hours in ' +
+      'next_due_hours. A logbook time span is not needed here.'
   } else if (ctxKind === 'form_337') {
     contextLine =
       '\n\nIMPORTANT CONTEXT: these pages are FAA Form 337s (major repair & alteration). Focus on the ' +
