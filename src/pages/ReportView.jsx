@@ -14,7 +14,7 @@ import { fetchReport, reportSummary } from '../lib/report.js'
 import { reasonLabel } from '../lib/followups.js'
 import { normalizeGearRig, isGearRigEmpty, gearRigStats, GEAR_RIG_GROUPS } from '../lib/gearrig.js'
 import { normalizeCompliance, complianceRows, statusLabel } from '../lib/compliance.js'
-import { normalizeCompression, cylinderStatus, isCompressionEmpty, isCompressionItem } from '../lib/compression.js'
+import { normalizeCompression, cylinderStatus, isCompressionEmpty, isCompressionItem, cylTag } from '../lib/compression.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
   normalizeProfile,
@@ -485,6 +485,15 @@ function CompressionSection({ items, compression }) {
       <h2>Compression test</h2>
       {rows.map(({ item, rec }) => {
         const n = normalizeCompression(rec)
+        // Borescope images tagged to a cylinder (caption `cyl:N`), grouped by number.
+        const boreByCyl = new Map()
+        for (const ph of item.photos ?? []) {
+          const cyl = cylTag(ph.caption)
+          if (cyl == null) continue
+          if (!boreByCyl.has(cyl)) boreByCyl.set(cyl, [])
+          boreByCyl.get(cyl).push(ph)
+        }
+        const boreCyls = [...boreByCyl.keys()].sort((a, b) => a - b)
         return (
           <div key={item.id} className="report__comp">
             <p className="report__sectionnote">
@@ -505,6 +514,20 @@ function CompressionSection({ items, compression }) {
               </table>
             </div>
             {n.notes && <p className="report__findingtext">{n.notes}</p>}
+            {boreCyls.map((cyl) => (
+              <div key={cyl} className="report__borerow">
+                <span className="report__borelabel">Cylinder #{cyl} borescope</span>
+                <div className="report__gallery report__gallery--small">
+                  {boreByCyl.get(cyl).map((ph, idx) => (
+                    <figure key={idx} className="report__figure">
+                      {ph.kind === 'video'
+                        ? <video src={ph.url} controls playsInline preload="metadata" />
+                        : <img src={ph.url} alt={`Cylinder ${cyl} borescope ${idx + 1}`} loading="lazy" />}
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )
       })}
@@ -534,9 +557,9 @@ function ReportSection({ title, items, showPhotos }) {
                 ))}
               </ul>
             )}
-            {showPhotos && i.photos?.length > 0 && (
+            {showPhotos && i.photos?.filter((ph) => cylTag(ph.caption) == null).length > 0 && (
               <div className="report__gallery report__gallery--small">
-                {i.photos.map((ph, idx) => (
+                {i.photos.filter((ph) => cylTag(ph.caption) == null).map((ph, idx) => (
                   <figure key={idx} className="report__figure">
                     {ph.kind === 'video'
                       ? <video src={ph.url} controls playsInline preload="metadata" />

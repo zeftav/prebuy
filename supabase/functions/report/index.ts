@@ -49,13 +49,13 @@ async function assemble(admin: Admin, insp: Record<string, unknown>) {
     .filter((m: Record<string, unknown>) => m.purpose === 'logbook_pdf' && m.show_on_report)
     .map((m: Record<string, unknown>) => ({ name: m.caption || 'Document', path: m.storage_path }))
 
-  const photosByItem = new Map<string, { path: string; kind: string }[]>()
+  const photosByItem = new Map<string, { path: string; kind: string; caption: string | null }[]>()
   const filesByItem = new Map<string, { path: string; name: string }[]>()
   for (const m of media ?? []) {
     if (!m.inspection_item_id) continue
     if (m.purpose === 'discrepancy' && m.kind !== 'document') {
       const arr = photosByItem.get(m.inspection_item_id) ?? []
-      arr.push({ path: m.storage_path, kind: m.kind })
+      arr.push({ path: m.storage_path, kind: m.kind, caption: m.caption ?? null })
       photosByItem.set(m.inspection_item_id, arr)
     } else if (m.purpose === 'attachment') {
       const arr = filesByItem.get(m.inspection_item_id) ?? []

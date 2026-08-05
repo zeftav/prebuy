@@ -30,7 +30,7 @@ import { publishInspection, unpublishInspection, reportUrl, listRevisions } from
 import { listFollowups, addFollowup, updateFollowup, deleteFollowup, openCount, groupByStatus, reasonLabel, FOLLOWUP_REASONS } from '../lib/followups.js'
 import { hasPhases, PHASES } from '../lib/templates.js'
 import { isBeech } from '../lib/gearrig.js'
-import { isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, cylinderOrder, saveItemCompression } from '../lib/compression.js'
+import { isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, cylinderOrder, cylCaption, cylTag, saveItemCompression } from '../lib/compression.js'
 import './auth.css'
 import './inspections.css'
 
@@ -512,7 +512,9 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
   const band = riskBand(item)
   const isDiscrepancy = item.status === 'discrepancy'
   // Photos render as thumbnails; documents (PDF lab reports, etc.) as download links.
-  const photos = media.filter((m) => m.kind !== 'document')
+  // Borescope shots tagged to a cylinder (caption `cyl:N`) show in the compression
+  // form instead, so keep them out of the generic gallery.
+  const photos = media.filter((m) => m.kind !== 'document' && cylTag(m.caption) == null)
   const docs = media.filter((m) => m.kind === 'document')
 
   async function addPhoto(file) {
@@ -663,7 +665,14 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
           {item.description && <p className="insp__itemdesc">{item.description}</p>}
 
           {isCompression && (
-            <CompressionForm rec={compression} onSave={(r) => onSaveCompression(item.id, r)} />
+            <CompressionForm
+              rec={compression}
+              onSave={(r) => onSaveCompression(item.id, r)}
+              inspection={inspection}
+              itemId={item.id}
+              media={media}
+              onMediaChange={onMediaChange}
+            />
           )}
 
           <div className="insp__capture">
@@ -767,11 +776,32 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
 
 // Differential compression test: the day's master-orifice reading + a value per
 // cylinder (XX/80). A cylinder below the master orifice is flagged for a look.
-function CompressionForm({ rec, onSave }) {
+function CompressionForm({ rec, onSave, inspection, itemId, media = [], onMediaChange }) {
   const [data, setData] = useState(() => normalizeCompression(rec))
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [boreBusy, setBoreBusy] = useState(null) // cylinder # currently uploading
   const stats = compressionStats(data)
+
+  // Borescope files usually come off the scope's camera roll — often several at
+  // once, image or video. Upload each and tag it to this cylinder.
+  async function addBorescope(n, files) {
+    const list = Array.from(files ?? [])
+    if (!list.length) return
+    setBoreBusy(n)
+    for (const file of list) {
+      await uploadMedia({
+        orgId: inspection.org_id, inspectionId: inspection.id, inspectionItemId: itemId,
+        purpose: 'discrepancy', caption: cylCaption(n), file,
+      })
+    }
+    setBoreBusy(null)
+    onMediaChange?.()
+  }
+  async function delBorescope(m) {
+    await deleteMedia(m)
+    onMediaChange?.()
+  }
 
   function setMaster(v) { setData((d) => ({ ...d, master_orifice: v })); setSaved(false) }
   function setNotes(v) { setData((d) => ({ ...d, notes: v })); setSaved(false) }
@@ -822,6 +852,41 @@ function CompressionForm({ rec, onSave }) {
           )
         })}
       </div>
+
+      <div className="insp__borescope">
+        <span className="auth__hint">Borescope images per cylinder — upload from your borescope (photos or video), or take a shot. You can add several at once.</span>
+        {cylinderOrder(data.cylinders.length).map((i) => {
+          const n = i + 1
+          const shots = media.filter((m) => cylTag(m.caption) === n && m.kind !== 'document')
+          return (
+            <div key={n} className="insp__borerow">
+              <span className="insp__borenum">#{n}</span>
+              <div className="insp__thumbs insp__borethumbs">
+                {shots.map((m) => (
+                  <span key={m.id} className="insp__thumbwrap">
+                    {m.url && (m.kind === 'video'
+                      ? <video className="insp__thumb" src={m.url} controls playsInline preload="metadata" />
+                      : <img className="insp__thumb" src={m.url} alt={`Cylinder ${n} borescope`} loading="lazy" />)}
+                    <button type="button" className="insp__thumbdel" onClick={() => delBorescope(m)} aria-label="Remove">
+                      <X size={12} aria-hidden="true" />
+                    </button>
+                  </span>
+                ))}
+                <PhotoPicker
+                  onPick={(files) => addBorescope(n, files)}
+                  multiple
+                  video
+                  busy={boreBusy === n}
+                  takeLabel="Borescope"
+                  uploadLabel="Upload"
+                  className="insp__capturebtn insp__borepick"
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
       <textarea className="insp__findings" rows={2} placeholder="Compression notes (staking, borescope, wet/dry, where the air is going…)" value={data.notes} onChange={(e) => setNotes(e.target.value)} />
       <div className="insp__capture">
         <button type="button" className="auth__btn" onClick={save} disabled={busy}>

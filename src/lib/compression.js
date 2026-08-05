@@ -34,6 +34,17 @@ export function cylinderOrder(count) {
   return [...odds, ...evens]
 }
 
+// Borescope images are stored as normal per-item media, tagged in the caption with
+// their cylinder number (`cyl:N`) — no schema change. These pair the tag with the
+// number so the form/report can group images per cylinder. Pure.
+export function cylCaption(n) {
+  return `cyl:${Number(n)}`
+}
+export function cylTag(caption) {
+  const m = /^cyl:(\d+)$/.exec(String(caption ?? ''))
+  return m ? Number(m[1]) : null
+}
+
 function num(v) {
   if (v === '' || v == null) return null
   const n = Number(v)

@@ -1,7 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import {
   isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, isCompressionEmpty, cylinderOrder,
+  cylCaption, cylTag,
 } from './compression.js'
+
+describe('cylCaption / cylTag', () => {
+  it('round-trips a cylinder number through the caption tag', () => {
+    expect(cylCaption(3)).toBe('cyl:3')
+    expect(cylTag('cyl:3')).toBe(3)
+  })
+  it('returns null for untagged / plain captions', () => {
+    expect(cylTag(null)).toBeNull()
+    expect(cylTag('Left magneto photo')).toBeNull()
+    expect(cylTag('cylinder 3')).toBeNull()
+  })
+})
 
 describe('cylinderOrder', () => {
   it('orders odds then evens (1-3-5-2-4-6 on a six)', () => {

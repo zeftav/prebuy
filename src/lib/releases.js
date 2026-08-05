@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.51.0',
+    date: '2026-08-03',
+    title: 'Borescope images per cylinder',
+    items: [
+      'On the compression item you can now attach borescope images (or video) to each cylinder number. It’s built for uploading straight from your borescope — pick several files at once — and you can still take a shot with the phone.',
+      'Each cylinder’s images show under its number, and they print grouped by cylinder on the customer report.',
+    ],
+  },
+  {
     version: '0.50.1',
     date: '2026-08-03',
     title: 'You can see your notes saving',

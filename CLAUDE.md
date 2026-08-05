@@ -607,6 +607,16 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   DB is migrated). `report` fn returns `inspection.compression`; `ReportView` `CompressionSection` prints a
   per-cylinder table. Capture side frontend-only; report table rides the pending `report` redeploy
   (v0.48/0.49/0.50 = one redeploy). Lint + 273 tests + build green.
+  - v0.50.0 also: `cylinderOrder` (odds-then-evens 1-3-5-2-4-6 entry order). v0.50.1: notes auto-save
+    status (Unsaved/Saving/Saved + retry, debounced). v0.50.2: `isCompressionItem` tightened to
+    `/\bcompression\b/` (not "compressor"); report gates compression on `isCompressionItem`.
+- Session 4 cont. — **Borescope images per cylinder** (v0.51.0). Compression item's `CompressionForm`
+  gains a per-cylinder borescope uploader (test order); shots stored as per-item media tagged in caption
+  `cyl:N` (**no schema change**), multi-file + video + upload-first. `lib/compression.js` `cylCaption`/
+  `cylTag` (+tests). Tagged shots excluded from the item's generic gallery. `report` fn returns `caption`
+  on item photos; `ReportView` `CompressionSection` groups borescope under each cylinder, generic gallery
+  excludes tagged. ⚠️ **REDEPLOY `report` (JWT OFF)** for per-cylinder grouping (capture side frontend-only;
+  degrades to the general gallery until redeployed). No migration. Lint + 279 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

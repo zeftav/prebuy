@@ -101,6 +101,10 @@ const FAQ = [
     a: 'Open the compression-check item on the inspection. It shows a compression form: enter the day’s master orifice reading and a value for each cylinder (XX/80), and set the cylinder count for the engine (defaults to 6). Any cylinder reading below the master orifice is highlighted so a weak jug stands out. Add notes (staking, borescope, where the air’s going), and it all prints as a per-cylinder table on the customer report. On a twin, each engine’s compression item has its own set of readings.',
   },
   {
+    q: 'Can I attach borescope images to each cylinder?',
+    a: 'Yes. On the compression item, under the readings there’s a borescope row for each cylinder. Upload the images straight from your borescope (you can pick several files at once, photos or video), or take a shot with the phone. Each image is tied to its cylinder number, shows under that cylinder, and prints grouped by cylinder on the customer report.',
+  },
+  {
     q: 'Can I customize the checklist for a job?',
     a: 'Yes. On an inspection, tap “Add item” to add your own checks (with a High/Medium/Low priority). Use the flag button on any item to mark it an owner-requested priority — those float to the top of the list so you hit them first. Customizations apply to that inspection only; the starter checklist stays intact.',
   },

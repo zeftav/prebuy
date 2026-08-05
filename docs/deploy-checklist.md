@@ -96,6 +96,8 @@ Run in order. All are idempotent (safe to re-run).
       revisions** (serve latest frozen snapshot + self-verifying `publish` action), `kind` on media
       (**video** on the report), and `inspection.compression` (**compression table**). Migration 031 also
       run. Stays JWT OFF (publish self-verifies the Bearer).
+- [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.51.0** — returns `caption` on item photos so **borescope
+      images group per cylinder** on the report. No migration. (2026-08-03)
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile

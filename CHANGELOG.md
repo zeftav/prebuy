@@ -3,6 +3,22 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.51.0] — 2026-08-03
+
+### Added
+- **Borescope images per cylinder** on the compression item. The `CompressionForm` gains a per-cylinder
+  borescope uploader (in test order): each shot is stored as normal per-item media tagged in the caption
+  with its cylinder (`cyl:N`) — **no schema change**. Multi-file + video, upload-first (borescopes dump
+  several files off their camera roll), plus take-a-shot. `lib/compression.js` `cylCaption`/`cylTag`
+  (+tests). Tagged shots are kept out of the item's generic gallery. `report` edge fn now returns
+  `caption` on item photos; `ReportView` `CompressionSection` groups borescope images under each cylinder,
+  and the generic finding gallery excludes cylinder-tagged shots.
+
+### Deploy
+- Capture side is frontend-only (works now). The **per-cylinder grouping on the report** needs a
+  **`report` redeploy (Verify JWT OFF)** for the photo `caption`. Until then borescope shots just appear
+  in the item's general photo gallery on the report (not broken, just not grouped). No migration.
+
 ## [0.50.2] — 2026-08-03
 
 ### Fixed

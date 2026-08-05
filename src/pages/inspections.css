@@ -464,6 +464,10 @@
 .insp__compdenom { color: var(--muted, #889); }
 .insp__compcyl--low { border-color: #c81e4a; background: rgba(200,30,74,0.06); }
 .insp__compcyl--low input { color: #c81e4a; font-weight: 700; }
+.insp__borescope { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.insp__borerow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.insp__borenum { font-weight: 700; color: var(--muted, #667); min-width: 26px; }
+.insp__borethumbs { align-items: center; }
 
 .insp__revlist { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .insp__revrow { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
@@ -1696,6 +1700,8 @@
 .report__compstatus--ok { color: #1a7f37; }
 .report__comp { margin-bottom: 12px; }
 .report__complow { color: #c81e4a; font-weight: 700; }
+.report__borerow { margin-top: 8px; }
+.report__borelabel { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
 
 /* Timed items / compliance page */
 .comp__tach { max-width: 320px; }
