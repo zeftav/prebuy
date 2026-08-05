@@ -124,9 +124,17 @@ export function daysBetween(a, b) {
  * hoursRemaining, reason }. status ∈ overdue | due-soon | ok | unknown. Pure.
  */
 export function dueStatus(item, { asOfDate = null, currentTach = null } = {}) {
-  if (item?.disabled) return { status: 'unknown', dueDate: null, dueTach: null, daysRemaining: null, hoursRemaining: null, reason: 'disabled' }
-  const out = { status: 'unknown', dueDate: null, dueTach: null, daysRemaining: null, hoursRemaining: null, reason: null }
+  if (item?.disabled) return { status: 'unknown', dueDate: null, dueTach: null, daysRemaining: null, hoursRemaining: null, reason: null, assumedNew: false }
+  const out = { status: 'unknown', dueDate: null, dueTach: null, daysRemaining: null, hoursRemaining: null, reason: null, assumedNew: false }
   const states = []
+
+  // A life-limited part is measured from its installation on total airframe time.
+  // If it's never been replaced (no last-complied recorded), the original part was
+  // installed when the aircraft was new — so its hours baseline is 0, and it becomes
+  // due at the limit itself (e.g. a 2000-hr life on a 1600-hr airframe = 400 to go,
+  // NOT "unknown"). Baseline-0 is the conservative direction: a later real
+  // replacement only pushes the due point further out, so an "ok" here stays ok.
+  const isLifeLimit = item?.source === 'mm-scan' || item?.category === 'life-limit'
 
   // Calendar-months track.
   if (item?.interval_months && item.last_date) {
@@ -138,9 +146,11 @@ export function dueStatus(item, { asOfDate = null, currentTach = null } = {}) {
       states.push(days < 0 ? 'overdue' : days <= DUE_SOON_MONTHS * 30 ? 'due-soon' : 'ok')
     }
   }
-  // Hours track.
-  if (item?.interval_hours && item.last_tach != null) {
-    const dueTach = Math.round((item.last_tach + item.interval_hours) * 10) / 10
+  // Hours track. Life-limits baseline to 0 when never replaced (see above).
+  const hoursBaseline = item?.last_tach != null ? item.last_tach : isLifeLimit ? 0 : null
+  if (item?.interval_hours && hoursBaseline != null) {
+    if (item.last_tach == null && isLifeLimit) out.assumedNew = true
+    const dueTach = Math.round((hoursBaseline + item.interval_hours) * 10) / 10
     out.dueTach = dueTach
     const hrs = currentTach != null ? Math.round((dueTach - currentTach) * 10) / 10 : null
     out.hoursRemaining = hrs

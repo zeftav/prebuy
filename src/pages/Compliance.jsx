@@ -163,9 +163,11 @@ export default function Compliance() {
 
 function ComplianceRow({ item, onPatch, onRemove }) {
   const { due } = item
+  const isLifeLimit = item.source === 'mm-scan' || item.category === 'life-limit'
   const dueBits = [
     due.dueDate ? `due ${due.dueDate}` : null,
     due.dueTach != null ? `at ${due.dueTach.toFixed(1)} hrs` : null,
+    due.assumedNew ? 'since new' : null,
     due.daysRemaining != null ? (due.daysRemaining < 0 ? `${-due.daysRemaining} days ago` : `in ${due.daysRemaining} days`) : null,
     due.hoursRemaining != null ? (due.hoursRemaining < 0 ? `${(-due.hoursRemaining).toFixed(1)} hrs over` : `${due.hoursRemaining.toFixed(1)} hrs left`) : null,
   ].filter(Boolean).join(' · ')
@@ -177,8 +179,8 @@ function ComplianceRow({ item, onPatch, onRemove }) {
           <span className="comp__label">{item.label}</span>
           <span className="comp__basis">
             {item.basis}
-            {item.interval_months ? ` · every ${item.interval_months} mo` : ''}
-            {item.interval_hours ? ` · every ${item.interval_hours} hrs` : ''}
+            {item.interval_months ? ` · ${isLifeLimit ? 'life' : 'every'} ${item.interval_months} mo` : ''}
+            {item.interval_hours ? ` · ${isLifeLimit ? 'life' : 'every'} ${item.interval_hours} hrs` : ''}
             {item.source === 'mm-scan' ? ' · from MM scan' : item.source === 'custom' ? ' · custom' : ''}
           </span>
         </div>

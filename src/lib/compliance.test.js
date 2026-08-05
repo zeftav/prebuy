@@ -101,6 +101,36 @@ describe('dueStatus', () => {
   it('disabled items are unknown', () => {
     expect(dueStatus({ interval_months: 12, last_date: '2025-12-01', disabled: true }, { asOfDate }).status).toBe('unknown')
   })
+  it('life-limit never replaced: baselines to 0 → current with hours remaining', () => {
+    // 2000-hr life on a 1600-hr airframe, part never replaced (no last_tach).
+    const item = { source: 'mm-scan', interval_hours: 2000, last_tach: null }
+    const s = dueStatus(item, { currentTach: 1600 })
+    expect(s.status).toBe('ok')
+    expect(s.dueTach).toBe(2000)
+    expect(s.hoursRemaining).toBe(400)
+    expect(s.assumedNew).toBe(true)
+  })
+  it('life-limit never replaced: overdue once airframe passes the limit', () => {
+    const item = { category: 'life-limit', interval_hours: 2000, last_tach: null }
+    expect(dueStatus(item, { currentTach: 2100 }).status).toBe('overdue')
+  })
+  it('life-limit never replaced: due-soon inside the hours window', () => {
+    const item = { source: 'mm-scan', interval_hours: 2000, last_tach: null }
+    expect(dueStatus(item, { currentTach: 1990 }).status).toBe('due-soon')
+  })
+  it('a standard hours item with no last_tach stays unknown (not baselined to 0)', () => {
+    // A blank last-done on the vacuum pump is genuinely unknown — don't assume new.
+    const s = dueStatus({ source: 'standard', interval_hours: 500, last_tach: null }, { currentTach: 1600 })
+    expect(s.status).toBe('unknown')
+    expect(s.assumedNew).toBe(false)
+  })
+  it('a replaced life-limit uses its recorded last_tach, not 0', () => {
+    const item = { source: 'mm-scan', interval_hours: 2000, last_tach: 800 }
+    const s = dueStatus(item, { currentTach: 1600 })
+    expect(s.dueTach).toBe(2800)
+    expect(s.status).toBe('ok')
+    expect(s.assumedNew).toBe(false)
+  })
 })
 
 describe('normalizeCompliance', () => {

@@ -384,7 +384,7 @@ function ComplianceSection({ inspection }) {
     .filter((r) => r.due.status !== 'unknown' && r.show_on_report !== false)
   if (!rows.length) return null
   const dueText = (r) => [r.due.dueDate, r.due.dueTach != null ? `${r.due.dueTach.toFixed(1)} hrs` : null].filter(Boolean).join(' · ') || '—'
-  const lastText = (r) => [r.last_date, r.last_tach != null ? `${r.last_tach} hrs` : null].filter(Boolean).join(' · ') || '—'
+  const lastText = (r) => (r.due.assumedNew ? 'Since new' : [r.last_date, r.last_tach != null ? `${r.last_tach} hrs` : null].filter(Boolean).join(' · ') || '—')
   return (
     <section className="report__section">
       <h2>Timed items &amp; compliance</h2>

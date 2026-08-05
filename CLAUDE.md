@@ -667,6 +667,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `label` (differs from default type name) wins, else type name auto-numbered only when >1 same
   kind+position. `LogbookCard` renders from it (was `posLabel`, ignored stored `label`) + inline rename
   form (`updateLogbook({label})`; clear reverts to auto). No migration (`logbooks.label` already exists).
+- Session 4 cont. — **Life-limited items baseline from new** (v0.57.0, frontend only). Brett: many
+  life-limited parts have an hours limit (2000) the airframe hasn't reached (1600) — never done but not
+  due. `compliance.js` `dueStatus` now baselines a life-limit (`source==='mm-scan'` or
+  `category==='life-limit'`) to airframe-time **0** when `last_tach` is blank → due at the limit (Current
+  w/ hours-left), Overdue once airframe passes it; conservative (a later real replacement only pushes due
+  further out). Standard recurring items with blank last-done stay `unknown` (not baselined). New
+  `assumedNew` flag on the output; Compliance chart shows "since new" + "life X hrs" (vs "every"), report
+  compliance table shows "Since new". Status is computed client-side → no report redeploy. Tests 294.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

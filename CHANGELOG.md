@@ -3,6 +3,23 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.57.0] — 2026-08-05
+
+### Fixed
+- **Life-limited items never replaced now read "not yet due" instead of unknown.** Many life-limited
+  parts have an hours limit (e.g. 2000 hr) that the airframe hasn't reached (e.g. 1600 hr) — never
+  complied with, but not due either. `dueStatus` previously fell through to `unknown` when a life-limit
+  item had no recorded last-complied tach. It now baselines a life-limit (`source: 'mm-scan'` or
+  `category: 'life-limit'`) to **airframe time zero** when never replaced — the original part was
+  installed when the aircraft was new — so it becomes due at the limit itself: at 1600 hr against a
+  2000-hr life it's **Current, 400 hrs left**, and only goes overdue once the airframe passes the limit.
+  Baseline-0 is the conservative direction (a real later replacement only pushes the due point further
+  out, so an "ok" verdict stays valid). A blank last-done on a *standard recurring* item (annual, IFR,
+  vacuum pump) still stays `unknown` — we don't assume those were done at manufacture. `dueStatus` now
+  returns an `assumedNew` flag; the Timed-items chart shows "since new" and labels the limit "life X hrs"
+  (vs "every X hrs" for recurring), and the report's compliance table shows "Since new" as the
+  last-complied. Frontend only (status is computed client-side) — no migration, no redeploy.
+
 ## [0.56.0] — 2026-08-05
 
 ### Added

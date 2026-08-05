@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.57.0',
+    date: '2026-08-05',
+    title: 'Life-limited items: “not yet due” instead of blank',
+    items: [
+      'A life-limited part with, say, a 2000-hour limit on an aircraft that’s only flown 1600 hours has never been replaced — but it isn’t due yet either. The Timed-items chart now shows these as Current with the hours remaining (“400 hrs left, since new”), instead of leaving them blank/unknown.',
+      'It assumes the original part went on when the aircraft was new (the safe assumption — a later replacement only pushes the due point further out), and flips to Overdue once the airframe passes the limit. Recurring inspections like the annual still show as unknown until you enter when they were last done.',
+    ],
+  },
+  {
     version: '0.56.0',
     date: '2026-08-05',
     title: 'Name your logbooks',
