@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.51.1',
+    date: '2026-08-03',
+    title: 'Compression fix + clearer item dots',
+    items: [
+      'Fixed the compression form (and its per-cylinder borescope uploader) not appearing on some checklist items — it now shows wherever the item is a compression/leakdown check.',
+      'The colored dot next to each checklist item now means something: it’s hollow until you review the item, then turns green (OK), amber (Monitor), or red (Discrepancy) to match your result — instead of a fixed risk color.',
+    ],
+  },
+  {
     version: '0.51.0',
     date: '2026-08-03',
     title: 'Borescope images per cylinder',

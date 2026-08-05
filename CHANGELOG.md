@@ -3,6 +3,20 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.51.1] — 2026-08-03
+
+### Fixed
+- **Compression form (and its borescope uploader) not showing on some checklist items.** v0.50.2's
+  `/\bcompression\b/i` was too strict — the trailing word boundary missed plural/combined titles (e.g.
+  "compressions", "compression/leakdown"), so the form didn't render on those items. Loosened to
+  `/\bcompression/i`, which still excludes "compressor" (turbo / A/C) but matches the real variants. (+tests)
+
+### Changed
+- **Checklist item dot now reflects status, not static risk.** The dot was the financial-risk band
+  (fixed per item → looked random). It now mirrors the item's result: **hollow = not reviewed yet**, then
+  green (OK) · amber (Monitor) · red (Discrepancy) · grey (N/A) — matching the status buttons. Risk moved
+  to the tooltip. Frontend only.
+
 ## [0.51.0] — 2026-08-03
 
 ### Added

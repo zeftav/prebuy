@@ -215,22 +215,20 @@
   align-items: flex-start;
   gap: 10px;
 }
-.insp__riskdot {
-  width: 10px;
-  height: 10px;
+.insp__statusdot {
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   margin-top: 6px;
   flex-shrink: 0;
+  box-sizing: border-box;
+  border: 2px solid #c3c8ce;
+  background: transparent; /* pending = hollow ring ("not reviewed yet") */
 }
-.insp__riskdot--high {
-  background: #e0245e;
-}
-.insp__riskdot--medium {
-  background: #e6a01e;
-}
-.insp__riskdot--low {
-  background: #9aa0a6;
-}
+.insp__statusdot--ok { background: #1e9e57; border-color: #1e9e57; }
+.insp__statusdot--monitor { background: #e6a01e; border-color: #e6a01e; }
+.insp__statusdot--discrepancy { background: #c0392b; border-color: #c0392b; }
+.insp__statusdot--na { background: #9aa0a6; border-color: #9aa0a6; }
 .insp__itemtitle {
   font: inherit;
   text-align: left;

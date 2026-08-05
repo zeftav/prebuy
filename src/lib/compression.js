@@ -17,7 +17,9 @@ const DEFAULT_CYLINDERS = 6 // Continental/Lycoming sixes are the common case (A
  * check. Pure.
  */
 export function isCompressionItem(item) {
-  return /\bcompression\b/i.test(String(item?.title ?? ''))
+  // Matches "compression" / "compressions" / "compression-leakdown" etc., but NOT
+  // "compressor" (turbo / A/C — "compress**or**" has no "compression" substring).
+  return /\bcompression/i.test(String(item?.title ?? ''))
 }
 
 /**

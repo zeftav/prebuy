@@ -30,9 +30,12 @@ describe('cylinderOrder', () => {
 })
 
 describe('isCompressionItem', () => {
-  it('matches compression-test items', () => {
+  it('matches compression-test items (incl. plural / combined wording)', () => {
     expect(isCompressionItem({ title: 'Differential compression check' })).toBe(true)
+    expect(isCompressionItem({ title: 'Cylinder compression & borescope' })).toBe(true)
     expect(isCompressionItem({ title: 'Compression check — Engine #1 (Left)' })).toBe(true)
+    expect(isCompressionItem({ title: 'Cylinder compressions' })).toBe(true)
+    expect(isCompressionItem({ title: 'Compression/leakdown test' })).toBe(true)
     expect(isCompressionItem({ title: 'Oil filter cut open' })).toBe(false)
   })
   it('does NOT match "compressor" (turbo / A-C compressor)', () => {

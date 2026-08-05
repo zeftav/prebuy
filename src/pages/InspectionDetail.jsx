@@ -41,6 +41,16 @@ const STATUSES = [
   { key: 'na', label: 'N/A' },
 ]
 
+// The status dot mirrors the item's result: hollow = not reviewed yet, then the
+// same colors as the status buttons (green OK · amber Monitor · red Discrepancy).
+const DOT_LABELS = {
+  pending: 'Not reviewed yet',
+  ok: 'OK',
+  monitor: 'Monitor',
+  discrepancy: 'Discrepancy',
+  na: 'N/A',
+}
+
 export default function InspectionDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -510,6 +520,7 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
   const [docBusy, setDocBusy] = useState(false)
   const dict = useDictation()
   const band = riskBand(item)
+  const dotStatus = ['ok', 'monitor', 'discrepancy', 'na'].includes(item.status) ? item.status : 'pending'
   const isDiscrepancy = item.status === 'discrepancy'
   // Photos render as thumbnails; documents (PDF lab reports, etc.) as download links.
   // Borescope shots tagged to a cylinder (caption `cyl:N`) show in the compression
@@ -613,7 +624,11 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
   return (
     <li className={`insp__item insp__item--${item.status || 'pending'}`}>
       <div className="insp__itemhead">
-        <span className={`insp__riskdot insp__riskdot--${band}`} title={`Risk: ${band}`} aria-label={`Risk ${band}`} />
+        <span
+          className={`insp__statusdot insp__statusdot--${dotStatus}`}
+          title={`${DOT_LABELS[dotStatus]} · ${band} financial risk`}
+          aria-label={DOT_LABELS[dotStatus]}
+        />
         <button type="button" className="insp__itemtitle" onClick={() => setOpen((o) => !o)}>
           <span className="insp__itemcat">
             {item.category}
