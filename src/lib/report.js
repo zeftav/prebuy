@@ -1,23 +1,38 @@
-// Report: publish an inspection and fetch the customer-facing report.
+// Report: publish an inspection (as a frozen revision) and fetch the customer-
+// facing report.
 //
-// Publishing flips status → 'published' + stamps published_at (the client can,
-// under RLS, as an org member). The public report itself is served by the
-// `report` edge function (service role, no login) — never via anon RLS.
+// Publishing freezes a SNAPSHOT (a revision) via the `report` edge fn: the share
+// link serves the latest published revision, so edits made afterward stay in draft
+// until the next revision is published. The public report is served by the same
+// edge function (service role, no login) — never via anon RLS.
 
 import { supabase } from './supabase.js'
 
-/** Publish an inspection so its share link works. */
-export async function publishInspection(id) {
-  const { data, error } = await supabase
-    .from('inspections')
-    .update({ status: 'published', published_at: new Date().toISOString() })
-    .eq('id', id)
-    .select('id, status, published_at, share_token')
-    .single()
-  return { data, error }
+/**
+ * Publish the current state of an inspection as a new revision. The share link then
+ * serves this snapshot; further edits are draft until the next revision. Returns
+ * { data: { revision, published_at, share_token }, error }.
+ */
+export async function publishInspection(id, note = null) {
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData.session?.access_token
+  if (!token) return { data: null, error: new Error('You must be signed in.') }
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/report`
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'publish', inspection_id: id, note }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }
+    return { data: body, error: null }
+  } catch (e) {
+    return { data: null, error: e instanceof Error ? e : new Error('Network error') }
+  }
 }
 
-/** Unpublish (back to in-progress) — the share link then 404s. */
+/** Unpublish (back to in-progress) — the share link then 404s. Revisions are kept. */
 export async function unpublishInspection(id) {
   const { data, error } = await supabase
     .from('inspections')
@@ -26,6 +41,16 @@ export async function unpublishInspection(id) {
     .select('id, status')
     .single()
   return { data, error }
+}
+
+/** List an inspection's published revisions, newest first. */
+export async function listRevisions(inspectionId) {
+  const { data, error } = await supabase
+    .from('report_revisions')
+    .select('id, revision, note, published_at')
+    .eq('inspection_id', inspectionId)
+    .order('revision', { ascending: false })
+  return { data: data ?? [], error }
 }
 
 /** Public report URL for a share token. */

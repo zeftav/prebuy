@@ -60,7 +60,7 @@ export function pickTemplate(templates, { make, model } = {}) {
 export async function getInspection(id) {
   const { data, error } = await supabase
     .from('inspections')
-    .select('id, org_id, vertical, mode, source_inspection_id, identifier, make, model, year, customer_name, customer_email, inspector_name, location, inspection_date, status, attributes, share_token, published_at, created_at')
+    .select('id, org_id, vertical, mode, source_inspection_id, identifier, make, model, year, customer_name, customer_email, inspector_name, location, inspection_date, status, attributes, share_token, published_at, current_revision, created_at')
     .eq('id', id)
     .maybeSingle()
   return { data, error }

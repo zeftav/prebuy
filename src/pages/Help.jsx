@@ -49,6 +49,10 @@ const FAQ = [
     a: 'As we read your scans, every AD (Airworthiness Directive) we find is compiled into an “AD compliance” list on the Logbook audit — de-duplicated by AD number, with the latest compliance date/time and whether it recurs. If you also scan a standalone AD compliance report (pick “AD compliance report” when you scan a logbook), we cross-check it against the logbooks: any AD on the report we can’t find a logbook entry for is flagged “unverified,” and any AD in the logbooks that isn’t on the report is flagged too. It’s a starting cross-check, not a legal sign-off — always confirm against the actual records.',
   },
   {
+    q: 'Can I publish a report and keep editing it?',
+    a: 'Yes. Publishing freezes a snapshot — Revision 1 — and that’s exactly what the customer link shows. Any edits you make afterward stay in draft and are NOT visible on the link until you publish again. When you’re ready, tap “Publish revision N” to push your latest changes live as a new revision. Your publish bar and the report footer show the current revision, and there’s a revision history. “Unpublish” takes the link offline (history is kept).',
+  },
+  {
     q: 'Can I check a scanned entry against the original page?',
     a: 'Yes. Every event, part and AD we read off a scan shows a small “p.N” link on the Logbook audit. Tap it and the logbook’s compiled PDF opens at that exact page, so you can verify the read against the original handwriting in one tap. (These page links are internal — they don’t appear on the customer report.)',
   },

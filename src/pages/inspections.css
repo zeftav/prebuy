@@ -420,6 +420,10 @@
   padding: 14px;
 }
 
+.insp__revlist { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.insp__revrow { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+.insp__revnum { font-weight: 700; white-space: nowrap; }
+
 .insp__checklistpick {
   display: flex;
   flex-direction: column;

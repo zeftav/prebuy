@@ -26,7 +26,7 @@ import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
 import { updateInspectionMeta, startInspectionFromListing, deleteInspection } from '../lib/inspections.js'
 import { fetchMemberships } from '../lib/shops.js'
 import { createHandoff, listHandoffs, revokeHandoff, handoffUrl } from '../lib/handoff.js'
-import { publishInspection, unpublishInspection, reportUrl } from '../lib/report.js'
+import { publishInspection, unpublishInspection, reportUrl, listRevisions } from '../lib/report.js'
 import { listFollowups, addFollowup, updateFollowup, deleteFollowup, openCount, groupByStatus, reasonLabel, FOLLOWUP_REASONS } from '../lib/followups.js'
 import { hasPhases, PHASES } from '../lib/templates.js'
 import { isBeech } from '../lib/gearrig.js'
@@ -201,8 +201,9 @@ export default function InspectionDetail() {
   async function publish() {
     const { data, error } = await publishInspection(inspection.id)
     if (!error && data) {
-      setInspection((p) => ({ ...p, status: 'published', published_at: data.published_at, share_token: data.share_token ?? p.share_token }))
+      setInspection((p) => ({ ...p, status: 'published', published_at: data.published_at, share_token: data.share_token ?? p.share_token, current_revision: data.revision }))
     }
+    return error
   }
 
   async function unpublish() {
@@ -850,8 +851,18 @@ function ChecklistPicker({ inspection, items, onChange }) {
 function PublishBar({ inspection, onPublish, onUnpublish, openFollowups = 0 }) {
   const [copied, setCopied] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [revisions, setRevisions] = useState([])
+  const [showHistory, setShowHistory] = useState(false)
   const published = inspection.status === 'published'
+  const rev = Number(inspection.current_revision) || 0
   const link = reportUrl(inspection.share_token)
+
+  useEffect(() => {
+    if (!published) return
+    let active = true
+    listRevisions(inspection.id).then(({ data }) => { if (active) setRevisions(data ?? []) })
+    return () => { active = false }
+  }, [published, inspection.id, rev])
 
   async function copy() {
     try {
@@ -874,7 +885,7 @@ function PublishBar({ inspection, onPublish, onUnpublish, openFollowups = 0 }) {
       <div className="insp__publish">
         <div>
           <strong>Share with your customer</strong>
-          <p className="auth__hint">Publish to create a read-only report link (and PDF).</p>
+          <p className="auth__hint">Publish to freeze this report as Revision 1 and create a read-only link. You can keep editing and publish further revisions later.</p>
           {openFollowups > 0 && (
             <p className="auth__hint insp__pubwarn">
               {openFollowups} open follow-up{openFollowups === 1 ? '' : 's'} — work or resolve them first, or mark them to show on the report.
@@ -888,10 +899,11 @@ function PublishBar({ inspection, onPublish, onUnpublish, openFollowups = 0 }) {
     )
   }
 
+  const lastRev = revisions[0]
   return (
     <div className="insp__publish is-published">
       <div className="insp__publishtop">
-        <span className="insp__status insp__status--published">published</span>
+        <span className="insp__status insp__status--published">published{rev ? ` · rev ${rev}` : ''}</span>
         <a href={link} target="_blank" rel="noreferrer" className="auth__toggle">
           View report <ExternalLink size={13} aria-hidden="true" />
         </a>
@@ -902,9 +914,38 @@ function PublishBar({ inspection, onPublish, onUnpublish, openFollowups = 0 }) {
           <Copy size={14} aria-hidden="true" /> {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <button type="button" className="auth__toggle" disabled={busy} onClick={() => act(onUnpublish)}>
-        Unpublish
-      </button>
+      <p className="auth__hint">
+        The link shows <strong>Revision {rev || 1}</strong>{lastRev?.published_at ? ` (published ${new Date(lastRev.published_at).toLocaleDateString()})` : ''}. Any edits you make now are
+        draft — they go live when you publish the next revision.
+      </p>
+      <div className="insp__capture">
+        <button type="button" className="auth__btn" disabled={busy} onClick={() => act(onPublish)}>
+          <Share2 size={15} aria-hidden="true" /> {busy ? 'Publishing…' : `Publish revision ${rev + 1}`}
+        </button>
+        <button type="button" className="auth__toggle" disabled={busy} onClick={() => act(onUnpublish)}>
+          Unpublish
+        </button>
+      </div>
+      {revisions.length > 0 && (
+        <>
+          <button type="button" className="auth__toggle" onClick={() => setShowHistory((v) => !v)}>
+            {showHistory ? 'Hide' : 'Revision history'} ({revisions.length})
+          </button>
+          {showHistory && (
+            <ul className="insp__revlist">
+              {revisions.map((r) => (
+                <li key={r.id} className="insp__revrow">
+                  <span className="insp__revnum">Rev {r.revision}</span>
+                  <span className="auth__hint">
+                    {r.published_at ? new Date(r.published_at).toLocaleString() : ''}
+                    {r.note ? ` · ${r.note}` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
     </div>
   )
 }

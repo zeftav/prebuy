@@ -587,6 +587,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   001; `mediaKind`/`uploadMedia` tag it) → **no migration**. `report` fn returns `kind` on overview + item
   media; `ReportView` plays clips inline. ⚠️ **REDEPLOY `report` (JWT OFF)** for video on the report
   (capture side is frontend-only). Storage: Supabase per-file cap (default 50MB) bounds clip length.
+- Session 4 cont. — **Published report revisions** (v0.49.0). Publishing freezes a **snapshot** (revision);
+  the share link serves the latest frozen revision, so post-publish edits stay draft until the next
+  revision. Migration `031` (`report_revisions` + org RLS, `inspections.current_revision`). `report` edge
+  fn rewritten: **serve** `{token}` (latest snapshot, media stored as PATHS + re-signed per request; live
+  fallback for legacy) + **publish** `{action:'publish',inspection_id,note?}`+Bearer (self-verifies JWT +
+  membership → `assemble()` snapshot → insert revision → stamp status/published_at/current_revision).
+  `assemble()`/`signPayload()` factored out. `lib/report.js` `publishInspection` → fn publish action;
+  `listRevisions`. `PublishBar` shows current rev + "Publish revision N" + draft hint + history;
+  `ReportView` footer "Revision N". ⚠️ **Run migration 031 + REDEPLOY `report` (JWT OFF)** (covers v0.48.0
+  video too). Stays JWT OFF (publish self-verifies Bearer). Chosen: one link → latest revision (per-revision
+  permalinks = possible follow-up). Lint + 263 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

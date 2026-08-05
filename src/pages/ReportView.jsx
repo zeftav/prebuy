@@ -69,7 +69,7 @@ export default function ReportView() {
     )
   }
 
-  const { shop, inspection, items, overview, events = [], followups = [], documents = [] } = data
+  const { shop, inspection, items, overview, events = [], followups = [], documents = [], revision = null } = data
   const ordered = orderByFinancialRisk(items)
   const discrepancies = ordered.filter((i) => i.status === 'discrepancy')
   const monitors = ordered.filter((i) => i.status === 'monitor')
@@ -350,7 +350,7 @@ export default function ReportView() {
 
       <footer className="report__foot">
         <span>Prepared with PreBuy</span>
-        {published && <span>{published}</span>}
+        {(revision || published) && <span>{revision ? `Revision ${revision}` : ''}{revision && published ? ' · ' : ''}{published}</span>}
       </footer>
     </main>
   )

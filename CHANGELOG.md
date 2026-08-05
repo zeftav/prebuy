@@ -3,6 +3,27 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.49.0] — 2026-08-03
+
+### Added
+- **Published report revisions.** Publishing now freezes a **snapshot** (a revision) instead of serving
+  live data, so edits made after publishing stay in draft until the next revision is published. Migration
+  `031` adds `report_revisions` (org-scoped RLS) + `inspections.current_revision`.
+  - `report` edge fn rewritten as two actions in one fn: **serve** `{token}` (public — returns the latest
+    frozen revision's snapshot, media paths re-signed per request; falls back to live assembly for legacy
+    published inspections) and **publish** `{action:'publish', inspection_id, note?}` + Bearer (self-verifies
+    the JWT + org membership, assembles a snapshot with storage **paths**, inserts the next revision, stamps
+    `status/published_at/current_revision`). Assembly + signing factored into `assemble()` / `signPayload()`.
+  - `lib/report.js`: `publishInspection` now calls the fn's publish action (returns
+    `{revision, published_at, share_token}`); new `listRevisions`. `InspectionDetail` `PublishBar` shows the
+    current revision, a **"Publish revision N"** button, a draft-until-next-revision hint, and revision
+    history. `ReportView` footer shows "Revision N". `getInspection` selects `current_revision`.
+
+### Deploy
+- **Run migration `031_report_revisions.sql`** and **REDEPLOY `report` (Verify JWT OFF)** — the redeploy
+  also covers v0.48.0 (video `kind` on the report). The publish action self-verifies the Bearer token, so
+  the function stays JWT OFF. No new secret.
+
 ## [0.48.0] — 2026-08-03
 
 ### Added

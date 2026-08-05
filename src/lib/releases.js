@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.49.0',
+    date: '2026-08-03',
+    title: 'Published report revisions',
+    items: [
+      'Publishing now freezes a snapshot — Revision 1. The customer link shows exactly that, so any edits you make afterward stay in draft until you publish the next revision.',
+      'When you’re ready, hit “Publish revision N” to push your latest changes live as a new revision. The report footer and your publish bar show which revision is current, and there’s a revision history.',
+      'Unpublish still takes the link offline; your revision history is kept.',
+    ],
+  },
+  {
     version: '0.48.0',
     date: '2026-08-03',
     title: 'Capture video, not just photos',
