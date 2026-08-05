@@ -653,7 +653,20 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `PhotoPicker` `pdf` flag adds `application/pdf` to the **Upload** picker only (camera stays image-only).
   `Compliance.jsx` `MmScan.onPick` partitions PDFs vs images (each PDF uploaded→signed→read as a document;
   photos still batched), merges all `limits` before `limitsToComplianceItems`. ⚠️ **Redeploy
-  `structure-logbook` (JWT ON)** — no migration. Lint + 284 tests + build green.
+  `structure-logbook` (JWT ON)** — no migration. Lint + 284 tests + build green. **Deployed by Brett
+  (2026-08-05).**
+- Session 4 cont. — **Logbook PDF compile hardening** (v0.55.1, frontend only). All books were failing
+  background processing at "Building PDF" with a generic message. `logbookpdf.js` `loadDrawable` (was
+  `loadBitmap`) now falls back to an `<img>` decode when `createImageBitmap` is unavailable/throws
+  (desktop browser flakiness was the culprit here; also rescues Safari/HEIC), and throws specific
+  fetch/decode/encode messages; `toJpegBytes` takes either an ImageBitmap or HTMLImageElement;
+  `processBook` appends the real error to the banner. Confirmed working after deploy.
+- Session 4 cont. — **Logbook cards: auto-number + rename** (v0.56.0, frontend only). Three airframe
+  scans all read "Airframe"; now auto-numbered "Airframe 1/2/3" (chronological) and renameable. Pure
+  `logbookDisplayLabel(book, ordered, {engineCount, layout})` in `logbooks.js` (+tests, 289): custom
+  `label` (differs from default type name) wins, else type name auto-numbered only when >1 same
+  kind+position. `LogbookCard` renders from it (was `posLabel`, ignored stored `label`) + inline rename
+  form (`updateLogbook({label})`; clear reverts to auto). No migration (`logbooks.label` already exists).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

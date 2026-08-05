@@ -119,6 +119,28 @@ export function groupLabel(kind, position, engineCount = 1, layout = 'convention
 }
 
 /**
+ * Display name for a single logbook card. Pure.
+ * - A user-set custom name (label that differs from the default type name) wins.
+ * - Otherwise fall back to the type name, auto-numbered "Airframe 1 / 2 / 3" when
+ *   more than one book shares the same kind + position (so three airframe books
+ *   don't all read "Airframe"). `ordered` should be the orderLogbooks() list so
+ *   the numbers run in chronological (start-tach/date) order.
+ */
+export function logbookDisplayLabel(book, ordered, { engineCount = 1, layout = 'conventional' } = {}) {
+  const base = groupLabel(book?.kind, book?.position, engineCount, layout)
+  const custom = String(book?.label ?? '').trim()
+  // A stored label equal to the default type name is a default, not a rename.
+  const isDefault = !custom || custom === base || custom === kindLabel(book?.kind)
+  if (!isDefault) return custom
+  const same = (ordered ?? []).filter(
+    (x) => x.kind === book?.kind && (x.position || 0) === (book?.position || 0),
+  )
+  if (same.length <= 1) return base
+  const idx = same.findIndex((x) => x.id === book?.id)
+  return `${base} ${idx < 0 ? same.length : idx + 1}`
+}
+
+/**
  * Reconcile all logbooks into display groups. Engine/propeller books split by
  * position when the aircraft has >1 engine; everything else groups by kind.
  * Returns { groups, issues }. Pure.

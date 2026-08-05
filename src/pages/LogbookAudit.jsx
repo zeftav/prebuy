@@ -10,14 +10,14 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check, Search, Package, Loader, ShieldCheck, ChevronRight } from 'lucide-react'
+import { ChevronLeft, BookOpen, AlertTriangle, Plus, Trash2, ScanLine, RotateCw, ArrowUp, ArrowDown, FileText, Download, X, Check, Search, Package, Loader, ShieldCheck, ChevronRight, Pencil } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
   listLogbooks, addLogbook, deleteLogbook, updateLogbook,
   listEvents, addEvent, deleteEvent,
   reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
   extractLogbooksBatched, spanFromDrafts, mergeSpan, reassignLogbookEvents,
-  listParts, addParts, deletePart, searchRecords, orderLogbooks, duplicateEvents,
+  listParts, addParts, deletePart, searchRecords, orderLogbooks, logbookDisplayLabel, duplicateEvents,
   deleteScanRecordsForLogbook, updateLogbookEvent, updatePart, setAllEventsReport, setAllPartsReport,
   EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
@@ -386,13 +386,14 @@ export default function LogbookAudit() {
         <section className="insp__section">
           <div className="insp__sectionhead"><h2>Logbooks</h2></div>
           <div className="lb__cards">
-            {orderLogbooks(logbooks)
-              .map((b) => (
+            {(() => {
+              const ordered = orderLogbooks(logbooks)
+              return ordered.map((b) => (
                 <LogbookCard
                   key={`${b.id}:${rev[b.id] || 0}`}
                   inspection={inspection}
                   book={b}
-                  label={posLabel(b.kind, b.position)}
+                  label={logbookDisplayLabel(b, ordered, { engineCount, layout })}
                   engineCount={engineCount}
                   layout={layout}
                   job={jobs[b.id]}
@@ -401,7 +402,8 @@ export default function LogbookAudit() {
                   onDelete={() => onDeleteBook(b)}
                   onUpdate={(patch) => onUpdateBook(b, patch)}
                 />
-              ))}
+              ))
+            })()}
           </div>
         </section>
       )}
@@ -785,6 +787,8 @@ function LogbookCard({ inspection, book, label, engineCount, layout, job, onAmen
   const [managing, setManaging] = useState(false)
   const [editing, setEditing] = useState(false)
   const [retyping, setRetyping] = useState(false)
+  const [renaming, setRenaming] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(null)
 
@@ -854,12 +858,44 @@ function LogbookCard({ inspection, book, label, engineCount, layout, job, onAmen
     <div className="lb__card">
       <div className="lb__cardhead">
         <div>
-          <span className="lb__cardtitle">
-            {label}
-            {job && !job.error && (
-              <span className="lb__procbadge"><Loader size={12} className="lb__spin" aria-hidden="true" /> {job.label || 'Processing'}…</span>
-            )}
-          </span>
+          {renaming ? (
+            <form
+              className="lb__rename"
+              onSubmit={async (e) => {
+                e.preventDefault()
+                const name = nameDraft.trim()
+                await onUpdate({ label: name || null })
+                setRenaming(false)
+              }}
+            >
+              <input
+                className="auth__input"
+                value={nameDraft}
+                autoFocus
+                placeholder={label}
+                aria-label="Logbook name"
+                onChange={(e) => setNameDraft(e.target.value)}
+              />
+              <button type="submit" className="auth__btn auth__btn--ghost">Save</button>
+              <button type="button" className="auth__toggle" onClick={() => setRenaming(false)}>Cancel</button>
+            </form>
+          ) : (
+            <span className="lb__cardtitle">
+              {label}
+              <button
+                type="button"
+                className="lb__rename-btn"
+                title="Rename logbook"
+                aria-label="Rename logbook"
+                onClick={() => { setNameDraft(label); setRenaming(true) }}
+              >
+                <Pencil size={13} aria-hidden="true" />
+              </button>
+              {job && !job.error && (
+                <span className="lb__procbadge"><Loader size={12} className="lb__spin" aria-hidden="true" /> {job.label || 'Processing'}…</span>
+              )}
+            </span>
+          )}
           <span className="lb__cardsub">{loading ? '…' : `${pages.length} page${pages.length === 1 ? '' : 's'}`} · {fmtRange(book)}</span>
         </div>
         <ConfirmButton title="Delete logbook" label="Delete logbook" onConfirm={onDelete}>

@@ -3,6 +3,19 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.56.0] — 2026-08-05
+
+### Added
+- **Logbook cards auto-number + are renameable.** Multiple books of the same type no longer all read
+  "Airframe" — they auto-number "Airframe 1 / 2 / 3" in chronological (start-tach/date) order, and each
+  card has a pencil to give it a meaningful name ("Airframe 1998–2012", "Engine #1 logbook"). New pure
+  `logbookDisplayLabel(book, ordered, { engineCount, layout })` in `logbooks.js` (+tests): a user-set name
+  (a `label` that differs from the default type name) wins; otherwise it falls back to the type name,
+  auto-numbered only when >1 book shares the same kind + position. `LogbookCard` renders from it and gets
+  an inline rename form (`updateLogbook({ label })`; clearing the field reverts to the auto label). The
+  card previously labeled purely from kind+position and ignored the stored `label`. Frontend only — no
+  migration, no redeploy (the `logbooks.label` column already exists).
+
 ## [0.55.1] — 2026-08-05
 
 ### Fixed

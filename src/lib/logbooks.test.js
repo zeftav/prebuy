@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords, orderLogbooks, duplicateEvents, offsetDraftPages } from './logbooks.js'
+import { summarizeKind, reconcileLogbooks, groupLabel, cleanDraftValue, chunk, mergeExtractDrafts, spanFromDrafts, mergeSpan, searchRecords, orderLogbooks, logbookDisplayLabel, duplicateEvents, offsetDraftPages } from './logbooks.js'
 
 const groupBy = (groups, key) => groups.find((g) => g.key === key)
 
@@ -46,6 +46,39 @@ describe('orderLogbooks', () => {
     const books = [{ id: 'b', kind: 'airframe', start_tach: 2 }, { id: 'a', kind: 'airframe', start_tach: 1 }]
     orderLogbooks(books)
     expect(books.map((b) => b.id)).toEqual(['b', 'a'])
+  })
+})
+
+describe('logbookDisplayLabel', () => {
+  const ordered = [
+    { id: 'a', kind: 'airframe', position: null, label: 'Airframe' },
+    { id: 'b', kind: 'airframe', position: null, label: 'Airframe' },
+    { id: 'c', kind: 'airframe', position: null, label: 'Airframe' },
+    { id: 'e', kind: 'engine', position: 1, label: 'Engine' },
+  ]
+  it('auto-numbers multiple books of the same kind', () => {
+    expect(logbookDisplayLabel(ordered[0], ordered)).toBe('Airframe 1')
+    expect(logbookDisplayLabel(ordered[1], ordered)).toBe('Airframe 2')
+    expect(logbookDisplayLabel(ordered[2], ordered)).toBe('Airframe 3')
+  })
+  it('does not number a lone book of its kind', () => {
+    expect(logbookDisplayLabel(ordered[3], ordered)).toBe('Engine')
+  })
+  it('treats a stored label equal to the default type name as not-a-rename', () => {
+    // label 'Airframe' equals the default → still auto-numbers.
+    expect(logbookDisplayLabel({ id: 'a', kind: 'airframe', label: 'Airframe' }, ordered)).toBe('Airframe 1')
+  })
+  it('uses a real custom name verbatim (no numbering)', () => {
+    const books = [
+      { id: 'x', kind: 'airframe', label: 'Airframe 1998–2012' },
+      { id: 'y', kind: 'airframe', label: 'Airframe' },
+    ]
+    expect(logbookDisplayLabel(books[0], books)).toBe('Airframe 1998–2012')
+    // the sibling with a default label still numbers off the same-kind set
+    expect(logbookDisplayLabel(books[1], books)).toBe('Airframe 2')
+  })
+  it('falls back to the type name when there is no label', () => {
+    expect(logbookDisplayLabel({ id: 'z', kind: 'airframe' }, [{ id: 'z', kind: 'airframe' }])).toBe('Airframe')
   })
 })
 

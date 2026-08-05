@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.56.0',
+    date: '2026-08-05',
+    title: 'Name your logbooks',
+    items: [
+      'Scanning three airframe books used to leave you with three cards all labeled “Airframe.” Now they number themselves “Airframe 1 / 2 / 3” in date order.',
+      'Tap the pencil on any logbook card to give it your own name — e.g. “Airframe 1998–2012” or “Engine #1 logbook.” Clear the name to go back to the automatic one.',
+    ],
+  },
+  {
     version: '0.55.0',
     date: '2026-08-05',
     title: 'Upload a PDF of the MM life-limited list',
