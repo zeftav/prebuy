@@ -18,7 +18,7 @@ import {
   setInspectionChecklist,
 } from '../lib/checklist.js'
 import { listShopTemplates } from '../lib/templates.js'
-import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
+import { orderByFinancialRisk, orderByChecklist, riskBand } from '../lib/risk.js'
 import { getVertical, profileSchema } from '../lib/verticals.js'
 import { useDictation } from '../lib/dictation.js'
 import { structureFinding } from '../lib/findings.js'
@@ -96,9 +96,13 @@ export default function InspectionDetail() {
     }
   }, [inspection?.org_id])
 
-  // Stable display order: risk-ranked ONCE when items load, then held steady so an
-  // item doesn't jump as you edit it (e.g. "Clean up with AI" changes status +
-  // severity). New items append in risk order; removed ones drop. Re-ranks on reload.
+  // Two-phase checklists (e.g. Savvy) work Phase 1 first, then Phase 2 — and they
+  // follow the CHECKLIST's own top-to-bottom sequence (sort_order), not risk order.
+  const usesPhases = useMemo(() => hasPhases(items), [items])
+
+  // Stable display order for the standard (non-phased) checklist: risk-ranked ONCE
+  // when items load, then held steady so an item doesn't jump as you edit it (e.g.
+  // "Clean up with AI" changes status + severity). Re-ranks on reload.
   const [order, setOrder] = useState([])
   useEffect(() => {
     setOrder((prev) => {
@@ -110,11 +114,12 @@ export default function InspectionDetail() {
     })
   }, [items])
   const orderedAll = useMemo(() => {
+    // Phased/uploaded checklists follow their document order; standard checklists
+    // use the stable risk-ranked order.
+    if (usesPhases) return orderByChecklist(items)
     const byId = new Map(items.map((i) => [i.id, i]))
     return order.map((id) => byId.get(id)).filter(Boolean)
-  }, [order, items])
-  // Two-phase checklists (e.g. Savvy) work Phase 1 first, then Phase 2.
-  const usesPhases = useMemo(() => hasPhases(items), [items])
+  }, [usesPhases, order, items])
   const [phaseFilter, setPhaseFilter] = useState(1)
   const ordered = useMemo(
     () => (usesPhases ? orderedAll.filter((i) => Number(i.phase) === phaseFilter) : orderedAll),

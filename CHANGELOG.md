@@ -3,6 +3,15 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.47.1] — 2026-08-03
+
+### Changed
+- **Phased checklists follow the checklist's own order.** For two-phase / uploaded checklists (e.g.
+  Savvy), `InspectionDetail` now orders items within each phase by the template `sort_order` (the document
+  sequence) instead of financial-risk order — new pure `orderByChecklist` in `risk.js` (+tests). Standard
+  (non-phased) checklists keep the risk-ranked order. Display-only, so it applies **retroactively** to
+  in-progress inspections (items already carry `sort_order`/`phase`; no data change). Frontend only.
+
 ## [0.47.0] — 2026-08-03
 
 ### Changed

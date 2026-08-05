@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { riskScore, orderByFinancialRisk, riskBand } from './risk.js'
+import { riskScore, orderByFinancialRisk, orderByChecklist, riskBand } from './risk.js'
 
 describe('orderByFinancialRisk — owner priority', () => {
   it('floats an owner-priority item above higher-risk items in the same status band', () => {
@@ -16,6 +16,39 @@ describe('orderByFinancialRisk — owner priority', () => {
       { id: 'ok-owner', status: 'ok', risk_weight: 90, owner_priority: true },
     ]
     expect(orderByFinancialRisk(items)[0].id).toBe('pending-normal')
+  })
+})
+
+describe('orderByChecklist', () => {
+  it('orders by the checklist sort_order, not by risk', () => {
+    const items = [
+      { id: 'c', risk_weight: 95, sort_order: 30 },
+      { id: 'a', risk_weight: 10, sort_order: 10 },
+      { id: 'b', risk_weight: 50, sort_order: 20 },
+    ]
+    expect(orderByChecklist(items).map((i) => i.id)).toEqual(['a', 'b', 'c'])
+  })
+  it('does not float unresolved/owner items (keeps sequence)', () => {
+    const items = [
+      { id: 'first', status: 'ok', sort_order: 1 },
+      { id: 'second', status: 'pending', owner_priority: true, sort_order: 2 },
+    ]
+    expect(orderByChecklist(items).map((i) => i.id)).toEqual(['first', 'second'])
+  })
+  it('sinks custom items (no sort_order) to the end, heaviest-risk first', () => {
+    const items = [
+      { id: 'custom-lo', risk_weight: 20 },
+      { id: 'tmpl', risk_weight: 5, sort_order: 5 },
+      { id: 'custom-hi', risk_weight: 80 },
+    ]
+    expect(orderByChecklist(items).map((i) => i.id)).toEqual(['tmpl', 'custom-hi', 'custom-lo'])
+  })
+  it('does not mutate and tolerates junk', () => {
+    const input = [{ id: 'x', sort_order: 1 }]
+    const copy = [...input]
+    orderByChecklist(input)
+    expect(input).toEqual(copy)
+    expect(orderByChecklist(null)).toEqual([])
   })
 })
 

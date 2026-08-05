@@ -577,6 +577,10 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `structure-logbook` reads them for recurring ADs off an AD compliance report; `lib/ad.js`
   `compileAdCompliance` carries `next_due_date`/`next_due_hours` (+test). ⚠️ **Run migration 030 + REDEPLOY
   `structure-logbook` (JWT ON)** (reorg itself is frontend-only). Lint + 259 tests + build green.
+  - v0.47.1: phased/uploaded checklists (Savvy) now display in the **checklist's own order** (template
+    `sort_order`) within each phase, not risk order — pure `orderByChecklist` in `risk.js` (+tests);
+    `InspectionDetail` uses it when `usesPhases`, else the stable risk order. Display-only → retroactive
+    to in-progress inspections. Frontend only.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

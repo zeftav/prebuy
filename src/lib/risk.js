@@ -44,6 +44,26 @@ export function orderByFinancialRisk(items) {
 }
 
 /**
+ * Order items in the CHECKLIST's own sequence (template sort_order ascending) — for
+ * uploaded structured checklists (e.g. Savvy's two-phase) where the shop works the
+ * document top-to-bottom rather than in financial-risk order. Unlike
+ * orderByFinancialRisk this does NOT float unresolved/owner items, since the
+ * checklist sequence is the whole point. Custom items (no sort_order) fall to the
+ * end, heaviest-risk first. Returns a new array; does not mutate. Pure.
+ */
+export function orderByChecklist(items) {
+  if (!Array.isArray(items)) return []
+  const key = (i) => (i?.sort_order == null || i.sort_order === '' ? Infinity : num(i.sort_order))
+  return [...items].sort((a, b) => {
+    const ka = key(a)
+    const kb = key(b)
+    if (ka !== kb) return ka - kb
+    // Ties (typically hand-added items with no sort_order): heavier risk first.
+    return riskScore(b) - riskScore(a) || String(a?.id ?? '').localeCompare(String(b?.id ?? ''))
+  })
+}
+
+/**
  * Coarse risk band for UI labelling/colour: 'high' | 'medium' | 'low'.
  * Thresholds chosen so big-dollar deal-killers read as "high".
  */
