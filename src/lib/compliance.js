@@ -268,6 +268,47 @@ export function mergeScanCompliance(items, scanCompliance) {
 }
 
 /**
+ * Fill life-limited / custom compliance items' last-complied from logbook-scanned
+ * parts (`logbook_parts`: { part_number, description, event_date, tach }). Matches a
+ * part to an item by fuzzy label or part number, and updates last_date/last_tach
+ * only when the part is NEWER than what's recorded. Standard recurring items are
+ * skipped (they fill from the scan's `compliance[]`). Returns { items, filled }. Pure.
+ */
+export function mergeScanParts(items, parts) {
+  const list = Array.isArray(parts) ? parts : []
+  const next = (items ?? []).map((i) => ({ ...i }))
+  const norm = (s) => String(s ?? '').trim().toLowerCase()
+  // Significant tokens: >=4 chars, plural 's' stripped so "bladders"~"bladder".
+  const sig = (s) => norm(s).split(/[^a-z0-9]+/).map((t) => t.replace(/s$/, '')).filter((t) => t.length >= 4)
+  let filled = 0
+  for (const pt of list) {
+    const pn = norm(pt?.part_number)
+    const descTokens = new Set(sig(pt?.description))
+    const ptDate = pt?.event_date ? String(pt.event_date).slice(0, 10) : null
+    const ptTach = Number.isFinite(Number(pt?.tach)) && Number(pt.tach) !== 0 ? Number(pt.tach) : null
+    if (!ptDate && ptTach == null) continue
+    const idx = next.findIndex((it) => {
+      if (it.source === 'standard') return false // standard set fills from compliance[]
+      const labelTokens = sig(it.label)
+      // Every significant word of the item's label must appear in the part (precise).
+      const labelMatch = labelTokens.length > 0 && labelTokens.every((t) => descTokens.has(t))
+      const pnMatch = pn.length >= 3 && (norm(it.basis).includes(pn) || norm(it.label).includes(pn))
+      return labelMatch || pnMatch
+    })
+    if (idx < 0) continue
+    const it = next[idx]
+    const newer =
+      (ptDate && (!it.last_date || ptDate > it.last_date)) ||
+      (ptTach != null && (it.last_tach == null || ptTach > it.last_tach))
+    if (!newer) continue
+    if (ptDate) it.last_date = ptDate
+    if (ptTach != null) it.last_tach = ptTach
+    filled += 1
+  }
+  return { items: next, filled }
+}
+
+/**
  * Map Maintenance-Manual life-limited items (`structure-logbook` `limits[]`) into
  * compliance items (source 'mm-scan'). Hours/months become the due intervals;
  * cycles + part number go into the basis note (we don't track cycles for due yet).

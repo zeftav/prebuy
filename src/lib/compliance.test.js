@@ -2,8 +2,37 @@ import { describe, it, expect } from 'vitest'
 import {
   defaultComplianceItems, normalizeCompliance, addMonths, daysBetween, dueStatus,
   complianceStats, complianceRows, isComplianceEmpty, slugKey,
-  mergeScanCompliance, limitsToComplianceItems,
+  mergeScanCompliance, limitsToComplianceItems, mergeScanParts,
 } from './compliance.js'
+
+describe('mergeScanParts', () => {
+  const items = [
+    { key: 'annual', source: 'standard', label: 'Annual inspection', last_date: null, last_tach: null },
+    { key: 'custom_fuel_bladders', source: 'mm-scan', label: 'Fuel bladders', basis: 'P/N ABC-123 · 120 mo', last_date: null, last_tach: null },
+    { key: 'custom_seat_rails', source: 'mm-scan', label: 'Seat rails', basis: 'MM life limit', last_date: '2024-01-01', last_tach: null },
+  ]
+  it('fills a life-limited item from a matching part (by label)', () => {
+    const { items: out, filled } = mergeScanParts(items, [{ description: 'Left fuel bladder replaced', event_date: '2021-06-01', tach: 2100 }])
+    expect(filled).toBe(1)
+    const fb = out.find((i) => i.key === 'custom_fuel_bladders')
+    expect(fb.last_date).toBe('2021-06-01')
+    expect(fb.last_tach).toBe(2100)
+  })
+  it('matches by part number in the basis', () => {
+    const { items: out } = mergeScanParts(items, [{ part_number: 'ABC-123', description: 'bladder', event_date: '2022-02-02' }])
+    expect(out.find((i) => i.key === 'custom_fuel_bladders').last_date).toBe('2022-02-02')
+  })
+  it('does not match standard items or fill with older data', () => {
+    const older = mergeScanParts(items, [{ description: 'Seat rails inspected', event_date: '2020-01-01' }])
+    expect(older.filled).toBe(0) // 2020 < recorded 2024
+    const annual = mergeScanParts(items, [{ description: 'annual', event_date: '2025-01-01' }])
+    expect(annual.filled).toBe(0) // standard item skipped
+  })
+  it('does not mutate input', () => {
+    mergeScanParts(items, [{ description: 'Fuel bladders', event_date: '2021-06-01' }])
+    expect(items[1].last_date).toBeNull()
+  })
+})
 
 describe('defaultComplianceItems', () => {
   it('includes the standard IFR + airworthiness set for aviation', () => {

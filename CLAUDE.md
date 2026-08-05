@@ -638,6 +638,13 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
     default→false + resets existing to hidden; report fn filter already correct → **no report redeploy**.
     **Bulk "On report: All/None"** on events + parts (`setAllEventsReport`/`setAllPartsReport`, `ReportBulk`)
     and the Compliance list (`setAllReport`).
+- Session 4 cont. — **MM life-limited items fill last-done from logbook parts** (v0.54.0, frontend only —
+  no deploy). Pure `mergeScanParts(items, parts)` in `compliance.js` (+tests) matches a scanned
+  `logbook_parts` entry to a life-limited/custom compliance item by token-based label match (plural-
+  tolerant; every significant label word must appear) or part number, fills last_date/last_tach when
+  newer (standard set skipped — fills from `compliance[]`). `LogbookAudit.processBook` merges scan `parts[]`
+  into compliance alongside `compliance[]`; `Compliance.addMmItems` pre-fills new MM items from `listParts`
+  (works whichever scanned first). Chart + report reflect it (attributes-driven). Lint + 284 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

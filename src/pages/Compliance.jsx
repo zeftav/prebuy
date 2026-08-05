@@ -11,9 +11,9 @@ import { ChevronLeft, CalendarClock, Check, Plus, Trash2, ScanLine } from 'lucid
 import { getInspection } from '../lib/checklist.js'
 import {
   normalizeCompliance, complianceRows, complianceStats, statusLabel, saveCompliance, slugKey,
-  limitsToComplianceItems,
+  limitsToComplianceItems, mergeScanParts,
 } from '../lib/compliance.js'
-import { extractLogbooks } from '../lib/logbooks.js'
+import { extractLogbooks, listParts } from '../lib/logbooks.js'
 import { uploadMedia, signedUrlsFor } from '../lib/media.js'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import './auth.css'
@@ -74,10 +74,14 @@ export default function Compliance() {
     }])
     setSaved(false)
   }
-  function addMmItems(newItems) {
+  async function addMmItems(newItems) {
+    // Pre-fill each new life-limited item's last-done from parts already read off the
+    // logbooks (matched by name / part number), so the chart isn't blank.
+    const { data: parts } = await listParts(inspection.id)
     setItems((prev) => {
       const add = newItems.map((it) => ({ ...it, key: uniqueKey(it.key, prev) }))
-      return [...prev, ...add]
+      const { items: filled } = mergeScanParts(add, parts ?? [])
+      return [...prev, ...filled]
     })
     setSaved(false)
   }

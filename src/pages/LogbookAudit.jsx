@@ -22,7 +22,7 @@ import {
   EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { compileAdCompliance, adStats } from '../lib/ad.js'
-import { normalizeCompliance, mergeScanCompliance, saveCompliance } from '../lib/compliance.js'
+import { normalizeCompliance, mergeScanCompliance, mergeScanParts, saveCompliance } from '../lib/compliance.js'
 import { normalizeProfile, engineLabel, draftFromExtraction, mergeProfileDraft, saveProfile } from '../lib/profile.js'
 import { uploadMedia, listMediaByLogbook, listMediaByPurpose, updateMedia, deleteMedia } from '../lib/media.js'
 import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
@@ -178,15 +178,21 @@ export default function LogbookAudit() {
           if (Array.isArray(draft.parts) && draft.parts.length) {
             await addParts(inspection, book.id, draft.parts.map((p) => ({ ...p, source_page: srcPage(p.page) })))
           }
-          // Auto-populate the Timed-items / compliance tool from what the scan read
-          // (annual, IFR checks, ELT, vacuum pump, wing bolts). Only fills newer
-          // dates; the inspector still reviews on the Compliance page.
-          if (Array.isArray(draft.compliance) && draft.compliance.length) {
+          // Auto-populate the Timed-items / compliance tool from what the scan read:
+          // the standard recurring set (annual/IFR/ELT/…) from `compliance[]`, and
+          // life-limited items' last-done from the scanned `parts[]` (matched by
+          // name / part number). Only fills newer dates; the inspector still reviews.
+          const scanCompliance = Array.isArray(draft.compliance) ? draft.compliance : []
+          const scanParts = Array.isArray(draft.parts) ? draft.parts : []
+          if (scanCompliance.length || scanParts.length) {
             const { data: fresh } = await getInspection(inspection.id)
             if (fresh) {
               const norm = normalizeCompliance(fresh.attributes, { vertical: fresh.vertical, make: fresh.make })
-              const merged = mergeScanCompliance(norm.items, draft.compliance)
-              if (merged.filled) await saveCompliance(fresh, { items: merged.items, currentTach: norm.current_tach })
+              let citems = norm.items
+              let filled = 0
+              if (scanCompliance.length) { const m = mergeScanCompliance(citems, scanCompliance); citems = m.items; filled += m.filled }
+              if (scanParts.length) { const m = mergeScanParts(citems, scanParts); citems = m.items; filled += m.filled }
+              if (filled) await saveCompliance(fresh, { items: citems, currentTach: norm.current_tach })
             }
           }
           // Suggest the Aircraft Profile from the same scan (specs/currency/equipment

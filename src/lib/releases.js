@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.54.0',
+    date: '2026-08-03',
+    title: 'MM life-limited items fill their last-done from the logbooks',
+    items: [
+      'Scan the Maintenance Manual’s life-limited list for the limits, and the “last done” now fills in automatically from your logbook scans — we match each life-limited item to the part replacement in the logbooks (by name / part number) and drop in its date and tach.',
+      'Works both ways: scan the logbooks then the MM, or the MM then the logbooks. As always, it only fills newer dates and never overwrites what you’ve entered — so the life-limited compliance chart is fully scan-driven, ready to review.',
+    ],
+  },
+  {
     version: '0.53.1',
     date: '2026-08-03',
     title: 'Select-all for report items + events opt-in',

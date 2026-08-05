@@ -150,7 +150,7 @@ const FAQ = [
   },
   {
     q: 'Can I scan the Maintenance Manual’s life-limited items?',
-    a: 'Yes (beta). On the Timed-items tool, tap “Scan MM life-limited pages” and photograph the Maintenance Manual’s life-limited / airworthiness-limitations table. We read each item and its limit (hours, cycles, and/or calendar months) and its part number, and list them for you to review and add. Then set the current airframe time and each item’s last-complied to compute due status. Always verify against the actual manual — it’s a starting draft.',
+    a: 'Yes (beta). On the Timed-items tool, tap “Scan MM life-limited pages” and photograph the Maintenance Manual’s life-limited / airworthiness-limitations table. We read each item and its limit (hours, cycles, and/or calendar months) and its part number, and list them for you to review and add. Each item’s “last done” then fills in automatically from your logbook scans — we match the life-limited item to its part replacement in the logbooks (by name / part number) and drop in the date and tach — so the chart isn’t blank. Works whether you scan the logbooks or the MM first, only fills newer dates, and never overwrites what you’ve entered. Set the current airframe time to compute due status, and always verify against the actual manual — it’s a starting draft.',
   },
   {
     q: 'How do I record Beech landing-gear rigging?',

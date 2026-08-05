@@ -3,6 +3,18 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.54.0] — 2026-08-03
+
+### Added
+- **MM life-limited items fill their last-complied from logbook-scanned parts.** New pure
+  `mergeScanParts(items, parts)` in `compliance.js` (+tests) matches a scanned `logbook_parts` entry to a
+  life-limited / custom compliance item by token-based label match (plural-tolerant, every significant
+  label word must appear) or part number, and fills last_date/last_tach when newer (skips the standard
+  recurring set, which fills from `compliance[]`). Wired both ways: `LogbookAudit.processBook` merges the
+  scan's `parts[]` into the compliance items alongside `compliance[]`; `Compliance.addMmItems` pre-fills
+  newly-added MM items from `listParts` — so it works whether you scan the logbooks or the MM first. The
+  life-limited chart + report table (already attributes-driven) reflect it. **No migration, no deploy.**
+
 ## [0.53.1] — 2026-08-03
 
 ### Changed
