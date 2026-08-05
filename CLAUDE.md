@@ -626,6 +626,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `processBook` builds a profile draft (`draftFromExtraction`) + `mergeProfileDraft` into
   `attributes.profile` (fill-blanks only) at scan time — no separate scan needed for records in the
   logbooks. Profile "Scan to pre-fill" reframed for records not in the logbooks. Lint + 280 tests + build green.
+- Session 4 cont. — **Per-record report visibility** (v0.53.0). Curate what scanned records show on the
+  customer report. Migration `032` adds `show_on_report` to `logbook_events` (default **true**) +
+  `logbook_parts` (default **false**); timed-items visibility rides `attributes.compliance` (per-item
+  `show_on_report`, no column). `report` fn filters held events, returns opted-in **parts** as a new
+  "Components & parts" section; `ReportView` compliance table skips held items. `LogbookAudit` shared
+  `ReportToggle` on each event/part (`updateLogbookEvent`/`updatePart`); Compliance page "On report"
+  checkbox per item; `compliance.js` carries/persists `show_on_report`. ⚠️ **Run migration 032 + REDEPLOY
+  `report` (JWT OFF)**. Chosen (Brett): per-item hold toggle. Lint + 280 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

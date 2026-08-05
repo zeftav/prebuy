@@ -70,7 +70,7 @@ export default function ReportView() {
     )
   }
 
-  const { shop, inspection, items, overview, events = [], followups = [], documents = [], revision = null } = data
+  const { shop, inspection, items, overview, events = [], followups = [], documents = [], parts = [], revision = null } = data
   const ordered = orderByFinancialRisk(items)
   const discrepancies = ordered.filter((i) => i.status === 'discrepancy')
   const monitors = ordered.filter((i) => i.status === 'monitor')
@@ -105,7 +105,7 @@ export default function ReportView() {
     })
     .filter((b) => b.rows.length)
   // Part 1 is worth a header if there's any profile data, a maintenance timeline, or photos.
-  const hasPart1 = hasProfile || events.length > 0 || overview.length > 0 || documents.length > 0
+  const hasPart1 = hasProfile || events.length > 0 || overview.length > 0 || documents.length > 0 || parts.length > 0
 
   return (
     <main className="report">
@@ -243,6 +243,23 @@ export default function ReportView() {
             </section>
           )}
 
+          {/* Notable parts / components replaced (opt-in). */}
+          {parts.length > 0 && (
+            <section className="report__section">
+              <h2>Components &amp; parts</h2>
+              <ul className="report__partslist">
+                {parts.map((p, i) => (
+                  <li key={i} className="report__partitem">
+                    <span className="report__partname">{p.part_number || p.description || 'Part'}</span>
+                    <span className="report__partmeta">
+                      {[p.part_number ? p.description : null, p.event_date, p.tach != null ? `${Number(p.tach).toFixed(1)} hrs` : null].filter(Boolean).join(' · ')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {/* Categorized equipment (group labels per vertical). */}
           {(profile.equipment.avionics.length > 0 || profile.equipment.additional.length > 0) && (
             <section className="report__section">
@@ -362,8 +379,9 @@ export default function ReportView() {
 function ComplianceSection({ inspection }) {
   const norm = normalizeCompliance({ compliance: inspection.compliance }, { vertical: inspection.vertical, make: inspection.make })
   const asOfDate = new Date().toISOString().slice(0, 10)
-  // Only show items the shop actually recorded (skip 'unknown' = no data), worst-first.
-  const rows = complianceRows(norm.items, { asOfDate, currentTach: norm.current_tach }).filter((r) => r.due.status !== 'unknown')
+  // Only show items the shop recorded (skip 'unknown') and didn't hold back, worst-first.
+  const rows = complianceRows(norm.items, { asOfDate, currentTach: norm.current_tach })
+    .filter((r) => r.due.status !== 'unknown' && r.show_on_report !== false)
   if (!rows.length) return null
   const dueText = (r) => [r.due.dueDate, r.due.dueTach != null ? `${r.due.dueTach.toFixed(1)} hrs` : null].filter(Boolean).join(' · ') || '—'
   const lastText = (r) => [r.last_date, r.last_tach != null ? `${r.last_tach} hrs` : null].filter(Boolean).join(' · ') || '—'

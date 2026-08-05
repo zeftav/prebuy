@@ -71,6 +71,8 @@ export function normalizeCompliance(attributes, { vertical = 'aviation', make = 
       // A shop may override the interval on a standard item.
       interval_months: s.interval_months != null ? num(s.interval_months) : d.interval_months ?? null,
       interval_hours: s.interval_hours != null ? num(s.interval_hours) : d.interval_hours ?? null,
+      // Shown on the customer report unless explicitly held back.
+      show_on_report: s.show_on_report !== false,
     }
   })
 
@@ -89,6 +91,7 @@ export function normalizeCompliance(attributes, { vertical = 'aviation', make = 
       disabled: !!i.disabled,
       interval_months: num(i.interval_months),
       interval_hours: num(i.interval_hours),
+      show_on_report: i.show_on_report !== false,
     }))
 
   return { items: [...defaults, ...custom], current_tach: num(stored.current_tach) }
@@ -215,6 +218,7 @@ export async function saveCompliance(inspection, { items, currentTach }) {
       if (i.disabled) row.disabled = true
       if (num(i.interval_months) != null) row.interval_months = num(i.interval_months)
       if (num(i.interval_hours) != null) row.interval_hours = num(i.interval_hours)
+      if (i.show_on_report === false) row.show_on_report = false // default true; store only the hold
       return row
     })
   const compliance = { items: compact }

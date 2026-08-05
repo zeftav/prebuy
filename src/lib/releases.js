@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.53.0',
+    date: '2026-08-03',
+    title: 'Choose what shows on the report',
+    items: [
+      'You can now curate what appears on the customer report. On the Logbook audit, each notable event and each part/component has an “on report” toggle. Events show by default (hold back the ones you haven’t verified); parts/components are opt-in — flip one on to add it to a “Components & parts” section on the report.',
+      'Timed items (compliance) get the same “On report” checkbox — untick any you don’t want on the report.',
+      'Because publishing freezes a revision, hold back an incomplete item, finish it, then publish the next revision to include it.',
+    ],
+  },
+  {
     version: '0.52.0',
     date: '2026-08-03',
     title: 'Aircraft profile fills in from your logbook scans',

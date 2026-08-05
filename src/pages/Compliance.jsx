@@ -188,6 +188,12 @@ function ComplianceRow({ item, onPatch, onRemove }) {
           <input type="checkbox" checked={!!item.disabled} onChange={(e) => onPatch(item.key, { disabled: e.target.checked })} />
           Not applicable
         </label>
+        {!item.disabled && (
+          <label className="comp__na">
+            <input type="checkbox" checked={item.show_on_report !== false} onChange={(e) => onPatch(item.key, { show_on_report: e.target.checked })} />
+            On report
+          </label>
+        )}
         {item.source !== 'standard' && (
           <button type="button" className="insp__flag" onClick={() => onRemove(item.key)} aria-label="Remove item" title="Remove item">
             <Trash2 size={14} aria-hidden="true" />

@@ -45,6 +45,10 @@ const FAQ = [
     a: 'Open an inspection and tap “Logbook audit”, then “Scan a logbook.” Pick what it is — airframe, engine, propeller (and which engine/prop on a twin) — and snap the pages in order. When you tap “Save & read,” compiling the PDF and reading the pages happens in the background — so you can start scanning the next logbook right away instead of waiting. A progress strip at the top (and a badge on each logbook card) shows what’s still processing on phone and desktop. We read the dates, times and notable events (ADs, 337s, overhauls, prop strikes, damage) right off the pages, then reconcile the times across books and flag gaps (a possible missing logbook) or overlaps (possibly duplicated time). Because logs are handwritten, always double-check the read-back — every time and event stays editable, and you can add an event by hand.',
   },
   {
+    q: 'Can I choose which events / parts / timed items show on the report?',
+    a: 'Yes. On the Logbook audit, each notable event and each part/component has an “on report” toggle (the little document icon). Events show on the report by default — tap to hold one back until you’ve verified it. Parts/components are opt-in: tap to include one, and it’s added to a “Components & parts” section on the report. Timed items (compliance) have an “On report” checkbox on the Timed-items tool. Since publishing freezes a revision, you can hold an item back, finish it, then publish the next revision to include it.',
+  },
+  {
     q: 'How does AD compliance tracking work?',
     a: 'As we read your scans, every AD (Airworthiness Directive) we find is compiled into an “AD compliance” list on the Logbook audit — de-duplicated by AD number, with the latest compliance date/time and whether it recurs. If you also scan a standalone AD compliance report (pick “AD compliance report” when you scan a logbook), we cross-check it against the logbooks: any AD on the report we can’t find a logbook entry for is flagged “unverified,” and any AD in the logbooks that isn’t on the report is flagged too. It’s a starting cross-check, not a legal sign-off — always confirm against the actual records.',
   },

@@ -263,10 +263,21 @@ export function mergeSpan(a, b) {
 export async function listEvents(inspectionId) {
   const { data, error } = await supabase
     .from('logbook_events')
-    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page, next_due_date, next_due_hours')
+    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page, next_due_date, next_due_hours, show_on_report')
     .eq('inspection_id', inspectionId)
     .order('event_date', { ascending: true })
   return { data: data ?? [], error }
+}
+
+/** Update a logbook event (e.g. toggle show_on_report). */
+export async function updateLogbookEvent(id, patch) {
+  const { data, error } = await supabase
+    .from('logbook_events')
+    .update(patch)
+    .eq('id', id)
+    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page, next_due_date, next_due_hours, show_on_report')
+    .single()
+  return { data, error }
 }
 
 export async function addEvent(inspection, draft) {
@@ -291,7 +302,7 @@ export async function addEvent(inspection, draft) {
   const { data, error } = await supabase
     .from('logbook_events')
     .insert(row)
-    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page, next_due_date, next_due_hours')
+    .select('id, logbook_id, position, event_date, tach, category, title, description, source_page, next_due_date, next_due_hours, show_on_report')
     .single()
   return { data, error }
 }
@@ -305,10 +316,21 @@ export async function deleteEvent(id) {
 export async function listParts(inspectionId) {
   const { data, error } = await supabase
     .from('logbook_parts')
-    .select('id, logbook_id, part_number, description, event_date, tach, source_page')
+    .select('id, logbook_id, part_number, description, event_date, tach, source_page, show_on_report')
     .eq('inspection_id', inspectionId)
     .order('event_date', { ascending: false, nullsFirst: false })
   return { data: data ?? [], error }
+}
+
+/** Update a logbook part (e.g. toggle show_on_report). */
+export async function updatePart(id, patch) {
+  const { data, error } = await supabase
+    .from('logbook_parts')
+    .update(patch)
+    .eq('id', id)
+    .select('id, logbook_id, part_number, description, event_date, tach, source_page, show_on_report')
+    .single()
+  return { data, error }
 }
 
 /** Insert extracted parts for an aircraft. Ignores empties. */
@@ -329,7 +351,7 @@ export async function addParts(inspection, logbookId, parts) {
     })
     .filter((r) => r.part_number || r.description)
   if (!rows.length) return { data: [], error: null }
-  const { data, error } = await supabase.from('logbook_parts').insert(rows).select('id, logbook_id, part_number, description, event_date, tach, source_page')
+  const { data, error } = await supabase.from('logbook_parts').insert(rows).select('id, logbook_id, part_number, description, event_date, tach, source_page, show_on_report')
   return { data: data ?? [], error }
 }
 

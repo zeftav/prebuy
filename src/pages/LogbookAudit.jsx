@@ -18,7 +18,7 @@ import {
   reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
   extractLogbooksBatched, spanFromDrafts, mergeSpan, reassignLogbookEvents,
   listParts, addParts, deletePart, searchRecords, orderLogbooks, duplicateEvents,
-  deleteScanRecordsForLogbook,
+  deleteScanRecordsForLogbook, updateLogbookEvent, updatePart,
   EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { compileAdCompliance, adStats } from '../lib/ad.js'
@@ -275,6 +275,17 @@ export default function LogbookAudit() {
     setParts((p) => p.filter((x) => x.id !== pt.id))
     await deletePart(pt.id)
   }
+  // Report visibility: events show by default (hold to hide); parts are opt-in.
+  async function onToggleEventReport(ev) {
+    const next = ev.show_on_report === false
+    setEvents((p) => p.map((e) => (e.id === ev.id ? { ...e, show_on_report: next } : e)))
+    await updateLogbookEvent(ev.id, { show_on_report: next })
+  }
+  async function onTogglePartReport(pt) {
+    const next = pt.show_on_report !== true
+    setParts((p) => p.map((x) => (x.id === pt.id ? { ...x, show_on_report: next } : x)))
+    await updatePart(pt.id, { show_on_report: next })
+  }
 
   if (state === 'loading') {
     return <main className="auth-pending" aria-busy="true"><p>Loading…</p></main>
@@ -343,10 +354,10 @@ export default function LogbookAudit() {
               ) : (
                 <ul className="insp__list">
                   {filtered.events.map((e) => (
-                    <EventRow key={e.id} e={e} posLabel={posLabel} pdfUrl={pdfByLogbook.get(e.logbook_id)} onDelete={onDeleteEvent} />
+                    <EventRow key={e.id} e={e} posLabel={posLabel} pdfUrl={pdfByLogbook.get(e.logbook_id)} onDelete={onDeleteEvent} onToggleReport={onToggleEventReport} />
                   ))}
                   {filtered.parts.map((p) => (
-                    <PartRow key={p.id} p={p} pdfUrl={pdfByLogbook.get(p.logbook_id)} onDelete={onDeletePart} />
+                    <PartRow key={p.id} p={p} pdfUrl={pdfByLogbook.get(p.logbook_id)} onDelete={onDeletePart} onToggleReport={onTogglePartReport} />
                   ))}
                 </ul>
               )}
@@ -438,7 +449,7 @@ export default function LogbookAudit() {
         {events.length > 0 && (
           <ul className="insp__list">
             {events.map((e) => (
-              <EventRow key={e.id} e={e} posLabel={posLabel} pdfUrl={pdfByLogbook.get(e.logbook_id)} onDelete={onDeleteEvent} />
+              <EventRow key={e.id} e={e} posLabel={posLabel} pdfUrl={pdfByLogbook.get(e.logbook_id)} onDelete={onDeleteEvent} onToggleReport={onToggleEventReport} />
             ))}
           </ul>
         )}
@@ -451,7 +462,7 @@ export default function LogbookAudit() {
           <div className="insp__sectionhead"><h2><Package size={18} aria-hidden="true" /> Parts &amp; components</h2></div>
           <ul className="insp__list">
             {parts.map((p) => (
-              <PartRow key={p.id} p={p} pdfUrl={pdfByLogbook.get(p.logbook_id)} onDelete={onDeletePart} />
+              <PartRow key={p.id} p={p} pdfUrl={pdfByLogbook.get(p.logbook_id)} onDelete={onDeletePart} onToggleReport={onTogglePartReport} />
             ))}
           </ul>
         </section>
@@ -460,8 +471,23 @@ export default function LogbookAudit() {
   )
 }
 
+// Report visibility toggle used on events/parts. `on` = appears on the report.
+function ReportToggle({ on, onToggle }) {
+  return (
+    <button
+      type="button"
+      className={`insp__flag ${on ? 'is-on' : ''}`}
+      onClick={onToggle}
+      aria-pressed={on}
+      title={on ? 'On the customer report — tap to hold back' : 'Held from the report — tap to include'}
+    >
+      <FileText size={14} aria-hidden="true" />
+    </button>
+  )
+}
+
 // A notable event row (used in search results + the full list).
-function EventRow({ e, posLabel, pdfUrl, onDelete }) {
+function EventRow({ e, posLabel, pdfUrl, onDelete, onToggleReport }) {
   return (
     <li className="insp__row">
       <span className="insp__main">
@@ -475,6 +501,7 @@ function EventRow({ e, posLabel, pdfUrl, onDelete }) {
         </span>
       </span>
       <PageLink url={pdfUrl} page={e.source_page} />
+      {onToggleReport && <ReportToggle on={e.show_on_report !== false} onToggle={() => onToggleReport(e)} />}
       <ConfirmButton title="Delete event" onConfirm={() => onDelete(e)}>
         <Trash2 size={15} aria-hidden="true" />
       </ConfirmButton>
@@ -483,7 +510,7 @@ function EventRow({ e, posLabel, pdfUrl, onDelete }) {
 }
 
 // A part / component row (used in search results + the full list).
-function PartRow({ p, pdfUrl, onDelete }) {
+function PartRow({ p, pdfUrl, onDelete, onToggleReport }) {
   return (
     <li className="insp__row">
       <span className="insp__main">
@@ -491,6 +518,7 @@ function PartRow({ p, pdfUrl, onDelete }) {
         <span className="insp__sub">{[p.part_number ? p.description : null, p.event_date, p.tach != null ? `tach ${fmtTach(p.tach)}` : null].filter(Boolean).join(' · ')}</span>
       </span>
       <PageLink url={pdfUrl} page={p.source_page} />
+      {onToggleReport && <ReportToggle on={p.show_on_report === true} onToggle={() => onToggleReport(p)} />}
       <ConfirmButton title="Delete part" onConfirm={() => onDelete(p)}>
         <Trash2 size={15} aria-hidden="true" />
       </ConfirmButton>

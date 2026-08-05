@@ -67,6 +67,8 @@ Run in order. All are idempotent (safe to re-run).
       (AD next-due on the AD compliance chart). Idempotent. (v0.47.0, 2026-08-03)
 - [x] ✅ `031_report_revisions.sql` — `report_revisions` table + `inspections.current_revision`
       (published report versioning). Org-scoped RLS. Idempotent. (v0.49.0, 2026-08-03)
+- [ ] ⬜ `032_report_visibility.sql` — `show_on_report` on `logbook_events` (default true) + `logbook_parts`
+      (default false) — per-record report curation. Idempotent. (v0.53.0, 2026-08-03)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 
@@ -98,6 +100,8 @@ Run in order. All are idempotent (safe to re-run).
       run. Stays JWT OFF (publish self-verifies the Bearer).
 - [x] ✅ **REDEPLOYED `report` (JWT OFF) for v0.51.0** (2026-08-03) — returns `caption` on item photos so
       **borescope images group per cylinder** on the report. No migration.
+- [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.53.0** — filters held notable events, returns opted-in
+      **parts/components** ("Components & parts" section). Needs migration 032. (2026-08-03)
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile

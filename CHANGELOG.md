@@ -3,6 +3,22 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.53.0] — 2026-08-03
+
+### Added
+- **Per-record report visibility** for scanned records — notable events, parts/components, and timed
+  items. Migration `032` adds `show_on_report` to `logbook_events` (default **true** — timeline stays a
+  feature) and `logbook_parts` (default **false** — parts are opt-in). Timed-items visibility rides
+  `attributes.compliance` (`show_on_report` per item, no column). `report` edge fn filters held events,
+  returns opted-in parts as a new **"Components & parts"** report section, and `ReportView`'s compliance
+  table skips held items. UI toggles: an "on report" flag on each event + part in `LogbookAudit`
+  (shared `ReportToggle`), and an "On report" checkbox per item on the Compliance page. `logbooks.js`
+  `updateLogbookEvent`/`updatePart`; `compliance.js` carries/persists `show_on_report`.
+
+### Deploy
+- **Run migration `032_report_visibility.sql`** and **REDEPLOY `report` (Verify JWT OFF)** (filters events,
+  returns opted-in parts). No new secret.
+
 ## [0.52.0] — 2026-08-03
 
 ### Added

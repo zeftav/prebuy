@@ -33,12 +33,14 @@ type Admin = any
 // expects, except media entries carry `path` instead of `url` (signPayload fills url).
 async function assemble(admin: Admin, insp: Record<string, unknown>) {
   const inspId = insp.id as string
-  const [{ data: org }, { data: items }, { data: media }, { data: events }, { data: followups }] = await Promise.all([
+  const [{ data: org }, { data: items }, { data: media }, { data: events }, { data: followups }, { data: parts }] = await Promise.all([
     admin.from('orgs').select('name').eq('id', insp.org_id).maybeSingle(),
     admin.from('inspection_items').select('id, category, title, description, status, severity, findings, risk_weight, owner_priority, sort_order').eq('inspection_id', inspId),
     admin.from('media').select('storage_path, kind, purpose, caption, inspection_item_id, show_on_report').eq('inspection_id', inspId),
-    admin.from('logbook_events').select('event_date, tach, category, title, description, position').eq('inspection_id', inspId),
+    // Notable events show unless held back; parts/components are opt-in.
+    admin.from('logbook_events').select('event_date, tach, category, title, description, position, show_on_report').eq('inspection_id', inspId).neq('show_on_report', false),
     admin.from('inspection_followups').select('note, reason, status, created_at').eq('inspection_id', inspId).eq('show_on_report', true).neq('status', 'dismissed'),
+    admin.from('logbook_parts').select('part_number, description, event_date, tach').eq('inspection_id', inspId).eq('show_on_report', true).order('event_date', { ascending: false, nullsFirst: false }),
   ])
 
   const overview = (media ?? [])
@@ -87,6 +89,8 @@ async function assemble(admin: Admin, insp: Record<string, unknown>) {
     overview,
     documents,
     followups: (followups ?? []).map((f: Record<string, unknown>) => ({ note: f.note, reason: f.reason, status: f.status })),
+    // Opted-in parts / components (broker-style "what's been replaced").
+    parts: (parts ?? []).map((p: Record<string, unknown>) => ({ part_number: p.part_number, description: p.description, event_date: p.event_date, tach: p.tach })),
   }
 }
 
