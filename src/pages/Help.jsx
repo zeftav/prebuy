@@ -97,6 +97,10 @@ const FAQ = [
     a: 'Yes. On the Aircraft profile, tap “Write with AI” and we’ll draft a balanced, professional overview from your profile, logbook events, and inspection findings — original prose grounded only in your own data, never copied from a listing. It lands in the Summary box for you to edit; always review before saving.',
   },
   {
+    q: 'How do I record a compression test?',
+    a: 'Open the compression-check item on the inspection. It shows a compression form: enter the day’s master orifice reading and a value for each cylinder (XX/80), and set the cylinder count for the engine (defaults to 6). Any cylinder reading below the master orifice is highlighted so a weak jug stands out. Add notes (staking, borescope, where the air’s going), and it all prints as a per-cylinder table on the customer report. On a twin, each engine’s compression item has its own set of readings.',
+  },
+  {
     q: 'Can I customize the checklist for a job?',
     a: 'Yes. On an inspection, tap “Add item” to add your own checks (with a High/Medium/Low priority). Use the flag button on any item to mark it an owner-requested priority — those float to the top of the list so you hit them first. Customizations apply to that inspection only; the starter checklist stays intact.',
   },

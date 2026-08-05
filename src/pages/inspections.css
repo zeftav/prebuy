@@ -420,6 +420,34 @@
   padding: 14px;
 }
 
+/* Differential compression form */
+.insp__compression {
+  border: 1px solid var(--accent-border, rgba(107,70,193,0.25));
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.insp__comprow { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.insp__comphint { flex: 1; min-width: 140px; }
+.insp__compcyls { display: flex; flex-wrap: wrap; gap: 8px; }
+.insp__compcyl {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+.insp__compcyl > span:first-child { font-weight: 700; color: var(--muted, #667); }
+.insp__compcyl input { width: 44px; text-align: right; border: none; padding: 2px; }
+.insp__compdenom { color: var(--muted, #889); }
+.insp__compcyl--low { border-color: #c81e4a; background: rgba(200,30,74,0.06); }
+.insp__compcyl--low input { color: #c81e4a; font-weight: 700; }
+
 .insp__revlist { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .insp__revrow { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
 .insp__revnum { font-weight: 700; white-space: nowrap; }
@@ -1649,6 +1677,8 @@
 .report__compstatus--overdue { color: #c81e4a; }
 .report__compstatus--due-soon { color: #b26a00; }
 .report__compstatus--ok { color: #1a7f37; }
+.report__comp { margin-bottom: 12px; }
+.report__complow { color: #c81e4a; font-weight: 700; }
 
 /* Timed items / compliance page */
 .comp__tach { max-width: 320px; }

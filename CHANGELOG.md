@@ -3,6 +3,23 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.50.0] — 2026-08-03
+
+### Added
+- **Differential compression test entry** on the compression checklist item. New `lib/compression.js`
+  (pure + tested, 10): `isCompressionItem` (title match), `normalizeCompression`, `cylinderStatus`
+  (below master orifice → 'low'), `compressionStats`, `isCompressionEmpty`, `saveItemCompression`.
+  `InspectionDetail` renders a `CompressionForm` on any compression item — the day's **master orifice**
+  reading + a value per cylinder (XX/80) + adjustable cylinder count (default 6) + notes; cylinders below
+  the master orifice are flagged. Stored on **`inspections.attributes.compression`** keyed by item id
+  (**no migration**, and no change to the items query — safe before the pending DB deploys).
+- **Report compression table.** `report` edge fn returns `inspection.compression`; `ReportView`
+  `CompressionSection` prints a per-cylinder table (low readings flagged) for any item with data.
+
+### Deploy
+- Capture side is frontend-only (attributes). The report table needs the **pending `report` redeploy**
+  (already required for v0.48.0/0.49.0) — one redeploy covers all three. No migration.
+
 ## [0.49.0] — 2026-08-03
 
 ### Added

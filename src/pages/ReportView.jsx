@@ -14,6 +14,7 @@ import { fetchReport, reportSummary } from '../lib/report.js'
 import { reasonLabel } from '../lib/followups.js'
 import { normalizeGearRig, isGearRigEmpty, gearRigStats, GEAR_RIG_GROUPS } from '../lib/gearrig.js'
 import { normalizeCompliance, complianceRows, statusLabel } from '../lib/compliance.js'
+import { normalizeCompression, cylinderStatus, isCompressionEmpty } from '../lib/compression.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
   normalizeProfile,
@@ -298,6 +299,8 @@ export default function ReportView() {
       {discrepancies.length > 0 && <ReportSection title="Discrepancies" items={discrepancies} showPhotos />}
       {monitors.length > 0 && <ReportSection title="Items to monitor" items={monitors} showPhotos />}
 
+      {inspection.compression && <CompressionSection items={items} compression={inspection.compression} />}
+
       {cleared.length > 0 && (
         <section className="report__section">
           <h2>Items checked — no findings</h2>
@@ -469,6 +472,43 @@ function Stat({ n, label, tone, icon }) {
       <span className="report__statn">{n}</span>
       <span className="report__statlabel">{label}</span>
     </div>
+  )
+}
+
+function CompressionSection({ items, compression }) {
+  const rows = (items ?? [])
+    .map((i) => ({ item: i, rec: compression?.[i.id] }))
+    .filter((r) => r.rec && !isCompressionEmpty(r.rec))
+  if (!rows.length) return null
+  return (
+    <section className="report__section">
+      <h2>Compression test</h2>
+      {rows.map(({ item, rec }) => {
+        const n = normalizeCompression(rec)
+        return (
+          <div key={item.id} className="report__comp">
+            <p className="report__sectionnote">
+              {item.title}{n.master_orifice ? ` · master orifice ${n.master_orifice}/80` : ''}
+            </p>
+            <div className="report__tablewrap" style={{ overflowX: 'auto' }}>
+              <table className="report__grtable">
+                <thead><tr>{n.cylinders.map((_, i) => <th key={i}>#{i + 1}</th>)}</tr></thead>
+                <tbody>
+                  <tr>
+                    {n.cylinders.map((c, i) => (
+                      <td key={i} className={cylinderStatus(c.value, n.master_orifice) === 'low' ? 'report__complow' : ''}>
+                        {c.value ? `${c.value}/80` : '—'}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            {n.notes && <p className="report__findingtext">{n.notes}</p>}
+          </div>
+        )
+      })}
+    </section>
   )
 }
 

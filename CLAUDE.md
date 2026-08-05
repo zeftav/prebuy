@@ -598,6 +598,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `ReportView` footer "Revision N". ⚠️ **Run migration 031 + REDEPLOY `report` (JWT OFF)** (covers v0.48.0
   video too). Stays JWT OFF (publish self-verifies Bearer). Chosen: one link → latest revision (per-revision
   permalinks = possible follow-up). Lint + 263 tests + build green.
+- Session 4 cont. — **Differential compression test entry** (v0.50.0). `lib/compression.js` (pure+tested,
+  10): `isCompressionItem` (title `/compress/i`), `normalizeCompression`, `cylinderStatus` (below master
+  orifice → 'low'), `compressionStats`, `saveItemCompression`. `InspectionDetail` `CompressionForm` on any
+  compression item — master-orifice reading + per-cylinder XX/80 + adjustable count (default 6) + notes;
+  low cylinders flagged. Stored on **`inspections.attributes.compression`** keyed by item id (**no
+  migration**; deliberately NOT a new inspection_items column, which would break the items query before the
+  DB is migrated). `report` fn returns `inspection.compression`; `ReportView` `CompressionSection` prints a
+  per-cylinder table. Capture side frontend-only; report table rides the pending `report` redeploy
+  (v0.48/0.49/0.50 = one redeploy). Lint + 273 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

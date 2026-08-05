@@ -30,6 +30,7 @@ import { publishInspection, unpublishInspection, reportUrl, listRevisions } from
 import { listFollowups, addFollowup, updateFollowup, deleteFollowup, openCount, groupByStatus, reasonLabel, FOLLOWUP_REASONS } from '../lib/followups.js'
 import { hasPhases, PHASES } from '../lib/templates.js'
 import { isBeech } from '../lib/gearrig.js'
+import { isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, saveItemCompression } from '../lib/compression.js'
 import './auth.css'
 import './inspections.css'
 
@@ -190,6 +191,13 @@ export default function InspectionDetail() {
     setFollowups((prev) => prev.filter((f) => f.id !== fu.id))
     const { error } = await deleteFollowup(fu.id)
     if (error) setFollowups((prev) => [fu, ...prev])
+  }
+
+  // Save a compression-test item's structured readings (stored on attributes).
+  async function saveCompression(itemId, rec) {
+    const { data, error } = await saveItemCompression(inspection, itemId, rec)
+    if (!error && data) setInspection((p) => ({ ...p, attributes: data.attributes }))
+    return error
   }
 
   // One-tap "flag for follow-up" from a checklist item.
@@ -403,11 +411,13 @@ export default function InspectionDetail() {
                 item={item}
                 media={media.filter((m) => m.inspection_item_id === item.id)}
                 inspection={inspection}
+                compression={inspection.attributes?.compression?.[item.id] ?? null}
                 onStatus={setItemStatus}
                 onPatch={patchItem}
                 onRemove={removeItem}
                 onMediaChange={refreshMedia}
                 onFlagFollowup={flagFollowup}
+                onSaveCompression={saveCompression}
               />
             ))}
           </ol>
@@ -487,8 +497,9 @@ function DangerZone({ inspection, noun = 'inspection', onDelete }) {
   )
 }
 
-function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup }) {
+function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup, onSaveCompression }) {
   const [open, setOpen] = useState(false)
+  const isCompression = isCompressionItem(item)
   const [findings, setFindings] = useState(item.findings ?? '')
   const [aiBusy, setAiBusy] = useState(false)
   const [aiError, setAiError] = useState(null)
@@ -625,9 +636,13 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
         ))}
       </div>
 
-      {(open || isDiscrepancy || item.findings) && (
+      {(open || isDiscrepancy || item.findings || isCompression) && (
         <div className="insp__itembody">
           {item.description && <p className="insp__itemdesc">{item.description}</p>}
+
+          {isCompression && (
+            <CompressionForm rec={compression} onSave={(r) => onSaveCompression(item.id, r)} />
+          )}
 
           <div className="insp__capture">
             {dict.supported && (
@@ -713,6 +728,72 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
         </div>
       )}
     </li>
+  )
+}
+
+// Differential compression test: the day's master-orifice reading + a value per
+// cylinder (XX/80). A cylinder below the master orifice is flagged for a look.
+function CompressionForm({ rec, onSave }) {
+  const [data, setData] = useState(() => normalizeCompression(rec))
+  const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const stats = compressionStats(data)
+
+  function setMaster(v) { setData((d) => ({ ...d, master_orifice: v })); setSaved(false) }
+  function setNotes(v) { setData((d) => ({ ...d, notes: v })); setSaved(false) }
+  function setCyl(i, v) {
+    setData((d) => ({ ...d, cylinders: d.cylinders.map((c, j) => (j === i ? { value: v } : c)) }))
+    setSaved(false)
+  }
+  function setCount(n) {
+    const count = Math.max(1, Math.min(12, Number(n) || 1))
+    setData((d) => ({
+      ...d,
+      cylinders: Array.from({ length: count }, (_, i) => d.cylinders[i] ?? { value: '' }),
+    }))
+    setSaved(false)
+  }
+  async function save() {
+    setBusy(true)
+    const err = await onSave(data)
+    setBusy(false)
+    if (!err) setSaved(true)
+  }
+
+  return (
+    <div className="insp__compression">
+      <div className="insp__comprow">
+        <div className="auth__field insp__year">
+          <label>Master orifice</label>
+          <input type="number" inputMode="decimal" placeholder="e.g. 42" value={data.master_orifice} onChange={(e) => setMaster(e.target.value)} />
+        </div>
+        <div className="auth__field insp__year">
+          <label>Cylinders</label>
+          <input type="number" inputMode="numeric" min="1" max="12" value={data.cylinders.length} onChange={(e) => setCount(e.target.value)} />
+        </div>
+        <span className="auth__hint insp__comphint">
+          Readings are /{80}. {stats.low > 0 ? `${stats.low} below the master orifice` : stats.entered ? 'all above the master orifice' : 'enter each cylinder'}.
+        </span>
+      </div>
+      <div className="insp__compcyls">
+        {data.cylinders.map((c, i) => {
+          const st = cylinderStatus(c.value, data.master_orifice)
+          return (
+            <label key={i} className={`insp__compcyl insp__compcyl--${st}`}>
+              <span>#{i + 1}</span>
+              <input type="number" inputMode="decimal" placeholder="—" value={c.value} onChange={(e) => setCyl(i, e.target.value)} />
+              <span className="insp__compdenom">/80</span>
+            </label>
+          )
+        })}
+      </div>
+      <textarea className="insp__findings" rows={2} placeholder="Compression notes (staking, borescope, wet/dry, where the air is going…)" value={data.notes} onChange={(e) => setNotes(e.target.value)} />
+      <div className="insp__capture">
+        <button type="button" className="auth__btn" onClick={save} disabled={busy}>
+          <Check size={15} aria-hidden="true" /> {busy ? 'Saving…' : saved ? 'Saved' : 'Save compression'}
+        </button>
+      </div>
+    </div>
   )
 }
 

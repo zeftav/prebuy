@@ -1,0 +1,65 @@
+import { describe, it, expect } from 'vitest'
+import {
+  isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, isCompressionEmpty,
+} from './compression.js'
+
+describe('isCompressionItem', () => {
+  it('matches compression-test items', () => {
+    expect(isCompressionItem({ title: 'Differential compression check' })).toBe(true)
+    expect(isCompressionItem({ title: 'Compression check — Engine #1 (Left)' })).toBe(true)
+    expect(isCompressionItem({ title: 'Oil filter cut open' })).toBe(false)
+  })
+})
+
+describe('normalizeCompression', () => {
+  it('defaults to six blank cylinders', () => {
+    const n = normalizeCompression(null)
+    expect(n.cylinders).toHaveLength(6)
+    expect(n.master_orifice).toBe('')
+    expect(n.cylinders.every((c) => c.value === '')).toBe(true)
+  })
+  it('preserves stored values and count', () => {
+    const n = normalizeCompression({ master_orifice: '42', cylinders: [{ value: '78' }, { value: '76' }], notes: 'ok' })
+    expect(n.cylinders).toHaveLength(2)
+    expect(n.cylinders[0].value).toBe('78')
+    expect(n.master_orifice).toBe('42')
+    expect(n.notes).toBe('ok')
+  })
+  it('honors a fallback count override', () => {
+    expect(normalizeCompression(null, 4).cylinders).toHaveLength(4)
+  })
+})
+
+describe('cylinderStatus', () => {
+  it('flags a cylinder below the master orifice', () => {
+    expect(cylinderStatus('40', '42')).toBe('low')
+    expect(cylinderStatus('78', '42')).toBe('ok')
+  })
+  it('is ok when no master orifice is set', () => {
+    expect(cylinderStatus('50', '')).toBe('ok')
+  })
+  it('is unknown with no value', () => {
+    expect(cylinderStatus('', '42')).toBe('unknown')
+  })
+})
+
+describe('compressionStats', () => {
+  it('summarizes entered, lowest and low counts', () => {
+    const s = compressionStats({ master_orifice: '42', cylinders: [{ value: '78' }, { value: '40' }, { value: '' }, { value: '76' }] })
+    expect(s.entered).toBe(3)
+    expect(s.total).toBe(4)
+    expect(s.lowest).toBe(40)
+    expect(s.low).toBe(1)
+  })
+})
+
+describe('isCompressionEmpty', () => {
+  it('true when nothing entered', () => {
+    expect(isCompressionEmpty(null)).toBe(true)
+    expect(isCompressionEmpty({ cylinders: [{ value: '' }] })).toBe(true)
+  })
+  it('false once a value exists', () => {
+    expect(isCompressionEmpty({ cylinders: [{ value: '78' }] })).toBe(false)
+    expect(isCompressionEmpty({ master_orifice: '42' })).toBe(false)
+  })
+})

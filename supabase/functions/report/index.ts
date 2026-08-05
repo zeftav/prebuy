@@ -73,6 +73,8 @@ async function assemble(admin: Admin, insp: Record<string, unknown>) {
       customer_name: insp.customer_name, inspector_name: insp.inspector_name, location: insp.location,
       inspection_date: insp.inspection_date, published_at: insp.published_at,
       profile: attrs?.profile ?? null, gear_rigging: attrs?.gear_rigging ?? null, compliance: attrs?.compliance ?? null,
+      // Per-item compression-test readings, keyed by inspection_item id.
+      compression: attrs?.compression ?? null,
     },
     items: (items ?? []).map((i: Record<string, unknown>) => ({
       id: i.id, category: i.category, title: i.title, description: i.description, status: i.status,
