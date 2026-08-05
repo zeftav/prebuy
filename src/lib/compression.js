@@ -16,6 +16,20 @@ export function isCompressionItem(item) {
   return /\bcompress/i.test(String(item?.title ?? ''))
 }
 
+/**
+ * Data-entry order for the cylinders: odds first, then evens (1-3-5-2-4-6 on a six,
+ * 1-3-2-4 on a four) — how a tech goes around a horizontally-opposed engine, so the
+ * fields match the workflow. Returns 0-based indices; cylinders are still labeled
+ * and stored by their true number. Pure.
+ */
+export function cylinderOrder(count) {
+  const n = Math.max(0, Math.floor(Number(count) || 0))
+  const odds = []
+  const evens = []
+  for (let c = 1; c <= n; c++) (c % 2 ? odds : evens).push(c - 1)
+  return [...odds, ...evens]
+}
+
 function num(v) {
   if (v === '' || v == null) return null
   const n = Number(v)

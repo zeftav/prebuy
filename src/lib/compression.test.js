@@ -1,7 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import {
-  isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, isCompressionEmpty,
+  isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, isCompressionEmpty, cylinderOrder,
 } from './compression.js'
+
+describe('cylinderOrder', () => {
+  it('orders odds then evens (1-3-5-2-4-6 on a six)', () => {
+    expect(cylinderOrder(6).map((i) => i + 1)).toEqual([1, 3, 5, 2, 4, 6])
+  })
+  it('handles a four (1-3-2-4)', () => {
+    expect(cylinderOrder(4).map((i) => i + 1)).toEqual([1, 3, 2, 4])
+  })
+  it('handles odd counts and edge cases', () => {
+    expect(cylinderOrder(1)).toEqual([0])
+    expect(cylinderOrder(0)).toEqual([])
+  })
+})
 
 describe('isCompressionItem', () => {
   it('matches compression-test items', () => {

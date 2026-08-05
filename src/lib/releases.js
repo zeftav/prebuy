@@ -10,7 +10,7 @@ export const releases = [
     date: '2026-08-03',
     title: 'Compression test — per-cylinder readings',
     items: [
-      'The compression-check item now has a proper form: enter the day’s master orifice reading and a value for each cylinder (XX/80). Set the cylinder count for the engine (defaults to 6).',
+      'The compression-check item now has a proper form: enter the day’s master orifice reading and a value for each cylinder (XX/80). Set the cylinder count for the engine (defaults to 6). Fields are ordered the way you go around the engine — 1-3-5-2-4-6.',
       'Any cylinder below the master orifice is highlighted so a weak jug stands out, and the readings print as a table on the customer report.',
     ],
   },

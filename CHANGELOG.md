@@ -11,7 +11,9 @@ User-facing entries are also summarized in-app (see `src/lib/releases.js`).
   (below master orifice → 'low'), `compressionStats`, `isCompressionEmpty`, `saveItemCompression`.
   `InspectionDetail` renders a `CompressionForm` on any compression item — the day's **master orifice**
   reading + a value per cylinder (XX/80) + adjustable cylinder count (default 6) + notes; cylinders below
-  the master orifice are flagged. Stored on **`inspections.attributes.compression`** keyed by item id
+  the master orifice are flagged. Entry fields are ordered **1-3-5-2-4-6** (`cylinderOrder`, odds-then-evens,
+  how a tech goes around the engine) but each is labeled/stored by its true cylinder number; the report
+  table stays numeric 1→N. Stored on **`inspections.attributes.compression`** keyed by item id
   (**no migration**, and no change to the items query — safe before the pending DB deploys).
 - **Report compression table.** `report` edge fn returns `inspection.compression`; `ReportView`
   `CompressionSection` prints a per-cylinder table (low readings flagged) for any item with data.

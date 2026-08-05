@@ -30,7 +30,7 @@ import { publishInspection, unpublishInspection, reportUrl, listRevisions } from
 import { listFollowups, addFollowup, updateFollowup, deleteFollowup, openCount, groupByStatus, reasonLabel, FOLLOWUP_REASONS } from '../lib/followups.js'
 import { hasPhases, PHASES } from '../lib/templates.js'
 import { isBeech } from '../lib/gearrig.js'
-import { isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, saveItemCompression } from '../lib/compression.js'
+import { isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, cylinderOrder, saveItemCompression } from '../lib/compression.js'
 import './auth.css'
 import './inspections.css'
 
@@ -772,11 +772,12 @@ function CompressionForm({ rec, onSave }) {
           <input type="number" inputMode="numeric" min="1" max="12" value={data.cylinders.length} onChange={(e) => setCount(e.target.value)} />
         </div>
         <span className="auth__hint insp__comphint">
-          Readings are /{80}. {stats.low > 0 ? `${stats.low} below the master orifice` : stats.entered ? 'all above the master orifice' : 'enter each cylinder'}.
+          Readings are /80, in test order (1-3-5-2-4-6). {stats.low > 0 ? `${stats.low} below the master orifice` : stats.entered ? 'all above the master orifice' : 'enter each cylinder'}.
         </span>
       </div>
       <div className="insp__compcyls">
-        {data.cylinders.map((c, i) => {
+        {cylinderOrder(data.cylinders.length).map((i) => {
+          const c = data.cylinders[i]
           const st = cylinderStatus(c.value, data.master_orifice)
           return (
             <label key={i} className={`insp__compcyl insp__compcyl--${st}`}>
