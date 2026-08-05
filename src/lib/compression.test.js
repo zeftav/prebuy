@@ -22,6 +22,10 @@ describe('isCompressionItem', () => {
     expect(isCompressionItem({ title: 'Compression check — Engine #1 (Left)' })).toBe(true)
     expect(isCompressionItem({ title: 'Oil filter cut open' })).toBe(false)
   })
+  it('does NOT match "compressor" (turbo / A-C compressor)', () => {
+    expect(isCompressionItem({ title: 'Check turbo and compressor rotation' })).toBe(false)
+    expect(isCompressionItem({ title: 'A/C compressor belt tension' })).toBe(false)
+  })
 })
 
 describe('normalizeCompression', () => {

@@ -3,6 +3,16 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.50.2] — 2026-08-03
+
+### Fixed
+- **Compression form no longer attaches to "compressor" items.** `isCompressionItem` matched any title
+  containing "compress", so "Check turbo and compressor rotation" (and A/C-compressor items) got the
+  compression form + report table. Tightened to `/\bcompression\b/i` (matches the test, not "compressor").
+  `ReportView` compression section now also gates on `isCompressionItem`, so any stray data saved on a
+  non-compression item is hidden (including on already-published report snapshots, filtered at render).
+  Frontend only. (+tests)
+
 ## [0.50.1] — 2026-08-03
 
 ### Added

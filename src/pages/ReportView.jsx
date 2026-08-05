@@ -14,7 +14,7 @@ import { fetchReport, reportSummary } from '../lib/report.js'
 import { reasonLabel } from '../lib/followups.js'
 import { normalizeGearRig, isGearRigEmpty, gearRigStats, GEAR_RIG_GROUPS } from '../lib/gearrig.js'
 import { normalizeCompliance, complianceRows, statusLabel } from '../lib/compliance.js'
-import { normalizeCompression, cylinderStatus, isCompressionEmpty } from '../lib/compression.js'
+import { normalizeCompression, cylinderStatus, isCompressionEmpty, isCompressionItem } from '../lib/compression.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
   normalizeProfile,
@@ -478,7 +478,7 @@ function Stat({ n, label, tone, icon }) {
 function CompressionSection({ items, compression }) {
   const rows = (items ?? [])
     .map((i) => ({ item: i, rec: compression?.[i.id] }))
-    .filter((r) => r.rec && !isCompressionEmpty(r.rec))
+    .filter((r) => r.rec && isCompressionItem(r.item) && !isCompressionEmpty(r.rec))
   if (!rows.length) return null
   return (
     <section className="report__section">

@@ -11,9 +11,13 @@ import { supabase } from './supabase.js'
 export const COMPRESSION_BASE = 80 // differential-test input pressure (readings are XX/80)
 const DEFAULT_CYLINDERS = 6 // Continental/Lycoming sixes are the common case (A36 etc.)
 
-/** Is this checklist item the differential compression test? Pure. */
+/**
+ * Is this checklist item the differential compression test? Matches "compression"
+ * specifically — NOT "compressor" (turbo / A/C compressor), which is a different
+ * check. Pure.
+ */
 export function isCompressionItem(item) {
-  return /\bcompress/i.test(String(item?.title ?? ''))
+  return /\bcompression\b/i.test(String(item?.title ?? ''))
 }
 
 /**
