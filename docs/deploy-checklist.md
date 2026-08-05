@@ -96,6 +96,9 @@ Run in order. All are idempotent (safe to re-run).
   - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.47.0** (2026-08-03) — AD events now carry
         `next_due_date` / `next_due_hours` (AD next-due on the chart). Migration 030 also run. Reuses
         `ANTHROPIC_API_KEY`.
+  - [ ] 🔁 **REDEPLOY `structure-logbook` (JWT ON) for v0.55.0** — accepts an optional `pdf_url` and reads
+        it as a document input (the MM life-limited scan now takes a **PDF** upload, not just photos). No
+        migration; reuses `ANTHROPIC_API_KEY`.
 - [x] ✅ **REDEPLOYED `report` (JWT OFF) for v0.48.0 + v0.49.0 + v0.50.0** (2026-08-03) — **report
       revisions** (serve latest frozen snapshot + self-verifying `publish` action), `kind` on media
       (**video** on the report), and `inspection.compression` (**compression table**). Migration 031 also

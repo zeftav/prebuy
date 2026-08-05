@@ -286,17 +286,32 @@ function MmScan({ inspection, onAdd }) {
     if (!list.length) return
     setError(null)
     setPhase('working')
-    const paths = []
+    // MM limits pages usually arrive as a PDF export; photos still work too.
+    const imagePaths = []
+    const pdfPaths = []
     for (const f of list) {
       const { data, error: upErr } = await uploadMedia({ orgId: inspection.org_id, inspectionId: inspection.id, purpose: 'logbook', file: f })
-      if (!upErr && data) paths.push(data.storage_path)
+      if (upErr || !data) continue
+      ;(f.type === 'application/pdf' ? pdfPaths : imagePaths).push(data.storage_path)
     }
-    const urls = await signedUrlsFor(paths)
-    if (!urls.length) { setError('Couldn’t upload the photos. Try again.'); return setPhase('idle') }
-    const { data, error: exErr } = await extractLogbooks(urls, inspection.org_id, { kind: 'mm_limits' })
-    if (exErr) { setError(exErr.message); return setPhase('idle') }
-    const items = limitsToComplianceItems(data?.limits)
-    if (!items.length) { setError('No life-limited items found on those pages — try clearer photos of the limits table.'); return setPhase('idle') }
+    if (!imagePaths.length && !pdfPaths.length) { setError('Couldn’t upload the file. Try again.'); return setPhase('idle') }
+
+    const limits = []
+    let lastError = null
+    const collect = ({ data, error: exErr }) => { if (exErr) lastError = exErr; else if (Array.isArray(data?.limits)) limits.push(...data.limits) }
+    // One call per PDF (each is a document input); one batched call for any photos.
+    for (const pdfPath of pdfPaths) {
+      const [pdfUrl] = await signedUrlsFor([pdfPath])
+      if (pdfUrl) collect(await extractLogbooks([], inspection.org_id, { kind: 'mm_limits' }, pdfUrl))
+    }
+    if (imagePaths.length) {
+      const urls = await signedUrlsFor(imagePaths)
+      if (urls.length) collect(await extractLogbooks(urls, inspection.org_id, { kind: 'mm_limits' }))
+    }
+    if (!limits.length && lastError) { setError(lastError.message); return setPhase('idle') }
+
+    const items = limitsToComplianceItems(limits)
+    if (!items.length) { setError('No life-limited items found — try a clearer scan of the limits table.'); return setPhase('idle') }
     setDrafts(items)
     setPick(new Set(items.map((_, i) => i)))
     setPhase('review')
@@ -319,9 +334,9 @@ function MmScan({ inspection, onAdd }) {
 
       {phase === 'idle' && (
         <>
-          <p className="auth__hint">Photograph the Maintenance Manual’s life-limited / airworthiness-limitations table and we’ll pull each item and its limit (hours / cycles / calendar) in for you to review.</p>
+          <p className="auth__hint">Upload the Maintenance Manual’s life-limited / airworthiness-limitations table (PDF or photos) and we’ll pull each item and its limit (hours / cycles / calendar) in for you to review.</p>
           {error && <div className="auth__error" role="alert">{error}</div>}
-          <PhotoPicker onPick={onPick} multiple takeLabel="Scan MM pages" takeIcon={ScanLine} uploadLabel="Upload pages" className="auth__btn auth__btn--ghost insp__walkthrough" />
+          <PhotoPicker onPick={onPick} multiple pdf takeLabel="Scan MM pages" takeIcon={ScanLine} uploadLabel="Upload PDF / pages" className="auth__btn auth__btn--ghost insp__walkthrough" />
         </>
       )}
 

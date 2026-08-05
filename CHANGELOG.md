@@ -3,6 +3,24 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.55.0] — 2026-08-05
+
+### Added
+- **PDF upload for the MM life-limited scan.** MM airworthiness-limitations sections almost always come
+  out of the manual as a PDF, so the "Scan MM life-limited pages" tool now accepts a PDF directly instead
+  of forcing you to photograph each page. `structure-logbook` accepts an optional `pdf_url` in the payload
+  and, when present, sends the file to the model as a document input (`{ type: 'document', source: { type:
+  'url', url } }`) rather than requiring images (the no-pages guard now allows a PDF-only request).
+  `extractLogbooks(imageUrls, orgId, context, pdfUrl=null)` grew a 4th `pdfUrl` param. `PhotoPicker` gained
+  a `pdf` flag that adds `application/pdf` to the **Upload** picker's accept (the camera/capture input stays
+  image-only — you can't photograph a PDF). `Compliance.jsx` `MmScan.onPick` partitions PDFs vs images:
+  each PDF is uploaded (purpose `logbook`), signed, and read as a document; any photos still go through the
+  batched image path; the `limits` from every call are merged before `limitsToComplianceItems`.
+
+### Deploy
+- ⚠️ **Redeploy `structure-logbook` (JWT ON)** — no migration, reuses `ANTHROPIC_API_KEY`. Frontend
+  (PhotoPicker / Compliance / extractLogbooks) ships with `main`.
+
 ## [0.54.0] — 2026-08-03
 
 ### Added

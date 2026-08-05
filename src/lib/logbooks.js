@@ -529,10 +529,11 @@ export async function extractLogbooksBatched(imageUrls, orgId, { onProgress, con
  * Extract draft logbooks + events from photographed pages (signed image URLs).
  * Optional `context` ({ kind, position }) tells the model which logbook these
  * pages are, so it reports that component's own time (TSN/TSO) and tailors
- * extraction for AD reports / 337s.
+ * extraction for AD reports / 337s. Optional `pdfUrl` sends a records PDF (e.g.
+ * an MM limits export) straight to the model as a document instead of images.
  */
-export async function extractLogbooks(imageUrls, orgId, context = null) {
-  if (!imageUrls?.length) return { data: null, error: new Error('No images to read.') }
+export async function extractLogbooks(imageUrls, orgId, context = null, pdfUrl = null) {
+  if (!imageUrls?.length && !pdfUrl) return { data: null, error: new Error('No pages to read.') }
   const { data: sessionData } = await supabase.auth.getSession()
   const token = sessionData.session?.access_token
   if (!token) return { data: null, error: new Error('You must be signed in.') }
@@ -542,7 +543,7 @@ export async function extractLogbooks(imageUrls, orgId, context = null) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ images: imageUrls, org_id: orgId || null, context: context || null }),
+      body: JSON.stringify({ images: imageUrls ?? [], org_id: orgId || null, context: context || null, pdf_url: pdfUrl || null }),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) return { data: null, error: new Error(body.error || `Request failed (${res.status})`) }

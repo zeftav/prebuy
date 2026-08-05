@@ -16,6 +16,7 @@ export default function PhotoPicker({
   disabled = false,
   uploadOnly = false,
   video = false, // when true, also accept video files (photo capture points only)
+  pdf = false, // when true, the Upload picker also accepts PDFs (records scans)
   takeLabel = 'Take photo',
   uploadLabel = 'Choose photo',
   busyLabel = 'Uploading…',
@@ -23,8 +24,10 @@ export default function PhotoPicker({
   className = 'insp__capturebtn',
 }) {
   // Scan/OCR callers keep images only (they feed Claude vision); capture callers
-  // opt into video too.
+  // opt into video too. The camera (capture) input stays image-only — you can't
+  // photograph a PDF — so PDFs are offered on the Upload picker only.
   const accept = video ? 'image/*,video/*' : 'image/*'
+  const uploadAccept = pdf ? `${accept},application/pdf` : accept
   if (busy) {
     return (
       <span className="photopick">
@@ -54,7 +57,7 @@ export default function PhotoPicker({
         <Upload size={15} aria-hidden="true" /> {uploadLabel}
         <input
           type="file"
-          accept={accept}
+          accept={uploadAccept}
           multiple={multiple}
           hidden
           disabled={disabled}

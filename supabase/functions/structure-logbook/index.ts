@@ -243,7 +243,7 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) return json({ error: 'AI is not configured.' }, 500)
 
-  let payload: { images?: unknown; org_id?: unknown; context?: unknown }
+  let payload: { images?: unknown; org_id?: unknown; context?: unknown; pdf_url?: unknown }
   try {
     payload = await req.json()
   } catch {
@@ -254,7 +254,10 @@ Deno.serve(async (req: Request) => {
   const images = Array.isArray(payload.images)
     ? payload.images.filter((u) => typeof u === 'string').slice(0, MAX_IMAGES)
     : []
-  if (!images.length) return json({ error: 'No images to read.' }, 400)
+  // A records PDF (commonly the whole book or an MM limits section) can be sent
+  // straight to the model as a document instead of photographing every page.
+  const pdfUrl = typeof payload.pdf_url === 'string' && payload.pdf_url ? payload.pdf_url : ''
+  if (!images.length && !pdfUrl) return json({ error: 'No pages to read.' }, 400)
 
   // Optional: the scan flow tells us which logbook these pages are. When set, we
   // tell the model to report THIS component's own accumulated time (time since
@@ -325,6 +328,7 @@ Deno.serve(async (req: Request) => {
         'read, and add it to "unclear". This is a draft a human will review.' +
         contextLine,
     },
+    ...(pdfUrl ? [{ type: 'document', source: { type: 'url', url: pdfUrl } }] : []),
     ...images.map((url) => ({ type: 'image', source: { type: 'url', url } })),
   ]
 

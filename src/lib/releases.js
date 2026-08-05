@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.55.0',
+    date: '2026-08-05',
+    title: 'Upload a PDF of the MM life-limited list',
+    items: [
+      'The “Scan MM life-limited pages” tool now takes a PDF directly — most Maintenance Manual limits sections come out of the manual as a PDF, so you can upload the file instead of photographing each page.',
+      'Photos still work too, and you can mix a PDF and photos in one go. We read the limits table the same way either way.',
+    ],
+  },
+  {
     version: '0.54.0',
     date: '2026-08-03',
     title: 'MM life-limited items fill their last-done from the logbooks',

@@ -645,6 +645,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   newer (standard set skipped — fills from `compliance[]`). `LogbookAudit.processBook` merges scan `parts[]`
   into compliance alongside `compliance[]`; `Compliance.addMmItems` pre-fills new MM items from `listParts`
   (works whichever scanned first). Chart + report reflect it (attributes-driven). Lint + 284 tests + build green.
+- Session 4 cont. — **PDF upload for the MM life-limited scan** (v0.55.0). MM airworthiness-limitations
+  sections almost always export as a **PDF**, so the "Scan MM life-limited pages" tool now takes a PDF
+  directly. `structure-logbook` accepts an optional `pdf_url`; when set it sends the file as a **document
+  input** (`{type:'document',source:{type:'url',url}}`) instead of requiring images (no-pages guard now
+  allows PDF-only). `extractLogbooks(imageUrls, orgId, context, pdfUrl=null)` grew a 4th param.
+  `PhotoPicker` `pdf` flag adds `application/pdf` to the **Upload** picker only (camera stays image-only).
+  `Compliance.jsx` `MmScan.onPick` partitions PDFs vs images (each PDF uploaded→signed→read as a document;
+  photos still batched), merges all `limits` before `limitsToComplianceItems`. ⚠️ **Redeploy
+  `structure-logbook` (JWT ON)** — no migration. Lint + 284 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
