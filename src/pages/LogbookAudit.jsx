@@ -128,7 +128,8 @@ export default function LogbookAudit() {
         { onProgress: (pr) => setJob({ label: 'Building PDF', ...pr }) },
       )
       if (cErr) {
-        setJob({ error: 'Couldn’t build the PDF. Open the logbook and tap “Re-compile PDF”.', label: null })
+        const detail = cErr?.message ? ` (${cErr.message})` : ''
+        setJob({ error: `Couldn’t build the PDF${detail}. Open the logbook and tap “Re-compile PDF”.`, label: null })
         return
       }
       const keepOnReport = existingPdf?.show_on_report ?? false

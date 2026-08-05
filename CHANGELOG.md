@@ -3,6 +3,18 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.55.1] — 2026-08-05
+
+### Fixed
+- **Logbook PDF compile more robust + self-diagnosing.** Several books were failing background processing
+  at the "Building PDF" step with a generic "Couldn't build the PDF" and no clue why. `compileLogbookPdf`'s
+  image loader (`loadDrawable`, formerly `loadBitmap`) now falls back to an `<img>` decode when
+  `createImageBitmap` is unavailable or throws (Safari/iOS is flaky with it and can't decode HEIC library
+  photos that way but decodes them natively in an `<img>`), and throws a specific message on a failed page
+  fetch / decode / encode. `processBook` now appends the real error to the banner (e.g. "Couldn't build
+  the PDF (Couldn't fetch a page (400)). …") so the actual cause is visible instead of hidden. Frontend
+  only — no migration, no redeploy.
+
 ## [0.55.0] — 2026-08-05
 
 ### Added
