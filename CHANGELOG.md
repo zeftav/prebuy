@@ -3,6 +3,14 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.50.1] — 2026-08-03
+
+### Added
+- **Auto-save status on the item notes field.** The findings/notes textarea now debounce-saves as you
+  type (1.2s) in addition to on blur, and shows a live status: **Unsaved… → Saving… → Saved ✓**, with a
+  **tap-to-retry** on failure. `patchItem` returns its error so the row can reflect the result; the
+  debounce pauses during live dictation (which saves on stop). Frontend only.
+
 ## [0.50.0] — 2026-08-03
 
 ### Added

@@ -420,6 +420,23 @@
   padding: 14px;
 }
 
+/* Notes auto-save status */
+.insp__savestatus { min-height: 16px; margin-top: 2px; }
+.insp__savestate {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--muted, #667);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+}
+.insp__savestate.is-ok { color: #1a7f37; }
+.insp__savestate.is-dirty { color: var(--muted, #889); }
+.insp__savestate.is-err { color: #c81e4a; cursor: pointer; text-decoration: underline; }
+
 /* Differential compression form */
 .insp__compression {
   border: 1px solid var(--accent-border, rgba(107,70,193,0.25));

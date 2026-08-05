@@ -131,11 +131,13 @@ export default function InspectionDetail() {
   const reviewed = usesPhases ? phaseReviewed(phaseFilter) : items.filter((i) => i.status && i.status !== 'pending').length
   const shownTotal = usesPhases ? phaseTotal(phaseFilter) : items.length
 
-  // Optimistic patch with revert-on-failure.
+  // Optimistic patch with revert-on-failure. Returns the error (or null) so callers
+  // (e.g. the notes auto-save indicator) can reflect the result.
   async function patchItem(item, patch) {
     setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, ...patch } : i)))
     const { error } = await updateInspectionItem(item.id, patch)
     if (error) setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)))
+    return error ?? null
   }
 
   function setItemStatus(item, status) {
@@ -501,6 +503,7 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
   const [open, setOpen] = useState(false)
   const isCompression = isCompressionItem(item)
   const [findings, setFindings] = useState(item.findings ?? '')
+  const [saveState, setSaveState] = useState('idle') // idle | saving | saved | error
   const [aiBusy, setAiBusy] = useState(false)
   const [aiError, setAiError] = useState(null)
   const [photoBusy, setPhotoBusy] = useState(false)
@@ -580,11 +583,30 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
     })
   }
 
-  function saveFindings() {
-    const v = findings.trim()
-    if (v === (item.findings ?? '')) return
-    onPatch(item, { findings: v || null })
+  const findingsDirty = findings.trim() !== (item.findings ?? '')
+
+  async function saveFindings() {
+    if (!findingsDirty) return
+    setSaveState('saving')
+    const err = await onPatch(item, { findings: findings.trim() || null })
+    setSaveState(err ? 'error' : 'saved')
   }
+
+  // Auto-save the note as you type (debounced) — but not while live dictation is
+  // streaming into the field (that saves when you stop). Also saves on blur.
+  useEffect(() => {
+    if (dict.listening || !findingsDirty) return
+    const t = setTimeout(() => { saveFindings() }, 1200)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [findings, dict.listening, item.findings])
+
+  // Let the "Saved ✓" flash fade.
+  useEffect(() => {
+    if (saveState !== 'saved') return
+    const t = setTimeout(() => setSaveState('idle'), 2000)
+    return () => clearTimeout(t)
+  }, [saveState])
 
   return (
     <li className={`insp__item insp__item--${item.status || 'pending'}`}>
@@ -721,6 +743,18 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
             onBlur={saveFindings}
             rows={isDiscrepancy ? 3 : 2}
           />
+
+          <div className="insp__savestatus" aria-live="polite">
+            {saveState === 'saving' ? (
+              <span className="insp__savestate">Saving…</span>
+            ) : saveState === 'error' ? (
+              <button type="button" className="insp__savestate is-err" onClick={saveFindings}>Couldn’t save — tap to retry</button>
+            ) : findingsDirty ? (
+              <span className="insp__savestate is-dirty">Unsaved…</span>
+            ) : saveState === 'saved' ? (
+              <span className="insp__savestate is-ok"><Check size={12} aria-hidden="true" /> Saved</span>
+            ) : null}
+          </div>
 
           {isDiscrepancy && typeof item.severity === 'number' && (
             <span className="auth__hint">AI severity estimate: {item.severity}/100</span>

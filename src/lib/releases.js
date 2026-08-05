@@ -6,6 +6,14 @@
 
 export const releases = [
   {
+    version: '0.50.1',
+    date: '2026-08-03',
+    title: 'You can see your notes saving',
+    items: [
+      'Item notes now show a clear save status — “Unsaved… → Saving… → Saved ✓” — instead of quietly auto-saving with no feedback. They also save as you type (not only when you tap away), and if a save ever fails you get a tap-to-retry.',
+    ],
+  },
+  {
     version: '0.50.0',
     date: '2026-08-03',
     title: 'Compression test — per-cylinder readings',
