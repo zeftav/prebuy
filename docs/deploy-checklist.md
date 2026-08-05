@@ -65,7 +65,7 @@ Run in order. All are idempotent (safe to re-run).
       each record to its logbook PDF page). Idempotent. (v0.46.0, 2026-08-03)
 - [x] ✅ `030_logbook_event_next_due.sql` — `next_due_date` / `next_due_hours` on `logbook_events`
       (AD next-due on the AD compliance chart). Idempotent. (v0.47.0, 2026-08-03)
-- [ ] ⬜ `031_report_revisions.sql` — `report_revisions` table + `inspections.current_revision`
+- [x] ✅ `031_report_revisions.sql` — `report_revisions` table + `inspections.current_revision`
       (published report versioning). Org-scoped RLS. Idempotent. (v0.49.0, 2026-08-03)
 
 ## 2. Edge functions (Supabase → Edge Functions)
@@ -92,11 +92,10 @@ Run in order. All are idempotent (safe to re-run).
   - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.47.0** (2026-08-03) — AD events now carry
         `next_due_date` / `next_due_hours` (AD next-due on the chart). Migration 030 also run. Reuses
         `ANTHROPIC_API_KEY`.
-- [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.48.0 + v0.49.0 + v0.50.0** — v0.49.0 rewrites the fn for
-      **report revisions** (serve latest frozen snapshot + a self-verifying `publish` action), v0.48.0 adds
-      `kind` on media (**video** on the report), v0.50.0 returns `inspection.compression` (**compression
-      table**). One redeploy covers all three. Needs migration 031. Stays JWT OFF (publish self-verifies
-      the Bearer). (2026-08-03)
+- [x] ✅ **REDEPLOYED `report` (JWT OFF) for v0.48.0 + v0.49.0 + v0.50.0** (2026-08-03) — **report
+      revisions** (serve latest frozen snapshot + self-verifying `publish` action), `kind` on media
+      (**video** on the report), and `inspection.compression` (**compression table**). Migration 031 also
+      run. Stays JWT OFF (publish self-verifies the Bearer).
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile
