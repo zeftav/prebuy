@@ -634,6 +634,10 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `ReportToggle` on each event/part (`updateLogbookEvent`/`updatePart`); Compliance page "On report"
   checkbox per item; `compliance.js` carries/persists `show_on_report`. ⚠️ **Run migration 032 + REDEPLOY
   `report` (JWT OFF)**. Chosen (Brett): per-item hold toggle. Lint + 280 tests + build green.
+  - v0.53.1: **events opt-in by default** (Brett) — migration `033` flips `logbook_events.show_on_report`
+    default→false + resets existing to hidden; report fn filter already correct → **no report redeploy**.
+    **Bulk "On report: All/None"** on events + parts (`setAllEventsReport`/`setAllPartsReport`, `ReportBulk`)
+    and the Compliance list (`setAllReport`).
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

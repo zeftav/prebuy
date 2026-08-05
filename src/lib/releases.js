@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.53.1',
+    date: '2026-08-03',
+    title: 'Select-all for report items + events opt-in',
+    items: [
+      'Each section — notable events, parts/components, and timed items — now has an “On report: All / None” control, so you can include or hide the whole list at once instead of one at a time.',
+      'Notable events are now off the report by default (opt-in, like parts), so a logbook full of routine entries doesn’t flood the report — turn on just the ones worth showing.',
+    ],
+  },
+  {
     version: '0.53.0',
     date: '2026-08-03',
     title: 'Choose what shows on the report',

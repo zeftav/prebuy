@@ -69,6 +69,8 @@ Run in order. All are idempotent (safe to re-run).
       (published report versioning). Org-scoped RLS. Idempotent. (v0.49.0, 2026-08-03)
 - [x] ✅ `032_report_visibility.sql` — `show_on_report` on `logbook_events` (default true) + `logbook_parts`
       (default false) — per-record report curation. Idempotent. (v0.53.0, 2026-08-03)
+- [ ] ⬜ `033_events_report_default_off.sql` — flip `logbook_events.show_on_report` default → false + reset
+      existing to hidden (events now opt-in on the report). Idempotent. **No report redeploy.** (v0.53.1, 2026-08-03)
 
 ## 2. Edge functions (Supabase → Edge Functions)
 

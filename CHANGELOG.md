@@ -3,6 +3,20 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.53.1] — 2026-08-03
+
+### Changed
+- **Notable events now opt-IN on the report** (like parts). Migration `033` flips
+  `logbook_events.show_on_report` default to `false` and resets existing events to hidden. The `report`
+  fn filter (`show_on_report != false`) already yields only opted-in records — **no report redeploy**.
+  `EventRow` toggle reads `=== true`.
+- **Bulk "On report: All / None"** controls on the Notable events + Parts sections (`LogbookAudit`,
+  `setAllEventsReport`/`setAllPartsReport` — one query each) and on the Timed-items list (Compliance
+  page `setAllReport`), so you don't toggle every record individually.
+
+### Deploy
+- **Run migration `033_events_report_default_off.sql`.** No report redeploy, no new secret.
+
 ## [0.53.0] — 2026-08-03
 
 ### Added

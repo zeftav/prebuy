@@ -1801,6 +1801,10 @@
 }
 .lb__pagelink:hover { background: var(--accent-soft, rgba(107,70,193,0.08)); }
 
+/* Bulk "on report" control (events / parts / timed items) */
+.lb__bulk { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted, #667); }
+.lb__bulk .auth__toggle { font-size: 12px; }
+
 /* AD compliance chips / tags */
 .lb__adsources { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .lb__adchip {

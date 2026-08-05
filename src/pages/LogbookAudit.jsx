@@ -18,7 +18,7 @@ import {
   reconcileLogbooks, kindLabel, categoryLabel, groupLabel, cleanDraftValue,
   extractLogbooksBatched, spanFromDrafts, mergeSpan, reassignLogbookEvents,
   listParts, addParts, deletePart, searchRecords, orderLogbooks, duplicateEvents,
-  deleteScanRecordsForLogbook, updateLogbookEvent, updatePart,
+  deleteScanRecordsForLogbook, updateLogbookEvent, updatePart, setAllEventsReport, setAllPartsReport,
   EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { compileAdCompliance, adStats } from '../lib/ad.js'
@@ -286,6 +286,14 @@ export default function LogbookAudit() {
     setParts((p) => p.map((x) => (x.id === pt.id ? { ...x, show_on_report: next } : x)))
     await updatePart(pt.id, { show_on_report: next })
   }
+  async function setAllEvents(show) {
+    setEvents((p) => p.map((e) => ({ ...e, show_on_report: show })))
+    await setAllEventsReport(inspection.id, show)
+  }
+  async function setAllParts(show) {
+    setParts((p) => p.map((x) => ({ ...x, show_on_report: show })))
+    await setAllPartsReport(inspection.id, show)
+  }
 
   if (state === 'loading') {
     return <main className="auth-pending" aria-busy="true"><p>Loading…</p></main>
@@ -445,7 +453,10 @@ export default function LogbookAudit() {
 
       {/* Notable events (full list; search is up top) */}
       <section className="insp__section">
-        <div className="insp__sectionhead"><h2>Notable events</h2></div>
+        <div className="insp__sectionhead">
+          <h2>Notable events</h2>
+          {events.length > 1 && <ReportBulk onAll={() => setAllEvents(true)} onNone={() => setAllEvents(false)} />}
+        </div>
         {events.length > 0 && (
           <ul className="insp__list">
             {events.map((e) => (
@@ -459,7 +470,10 @@ export default function LogbookAudit() {
       {/* Parts / components (full list) */}
       {parts.length > 0 && (
         <section className="insp__section">
-          <div className="insp__sectionhead"><h2><Package size={18} aria-hidden="true" /> Parts &amp; components</h2></div>
+          <div className="insp__sectionhead">
+            <h2><Package size={18} aria-hidden="true" /> Parts &amp; components</h2>
+            {parts.length > 1 && <ReportBulk onAll={() => setAllParts(true)} onNone={() => setAllParts(false)} />}
+          </div>
           <ul className="insp__list">
             {parts.map((p) => (
               <PartRow key={p.id} p={p} pdfUrl={pdfByLogbook.get(p.logbook_id)} onDelete={onDeletePart} onToggleReport={onTogglePartReport} />
@@ -468,6 +482,18 @@ export default function LogbookAudit() {
         </section>
       )}
     </main>
+  )
+}
+
+// Bulk "on report" control for a whole section (events / parts).
+function ReportBulk({ onAll, onNone }) {
+  return (
+    <span className="lb__bulk">
+      On report:
+      <button type="button" className="auth__toggle" onClick={onAll}>All</button>
+      <span aria-hidden="true">·</span>
+      <button type="button" className="auth__toggle" onClick={onNone}>None</button>
+    </span>
   )
 }
 
@@ -501,7 +527,7 @@ function EventRow({ e, posLabel, pdfUrl, onDelete, onToggleReport }) {
         </span>
       </span>
       <PageLink url={pdfUrl} page={e.source_page} />
-      {onToggleReport && <ReportToggle on={e.show_on_report !== false} onToggle={() => onToggleReport(e)} />}
+      {onToggleReport && <ReportToggle on={e.show_on_report === true} onToggle={() => onToggleReport(e)} />}
       <ConfirmButton title="Delete event" onConfirm={() => onDelete(e)}>
         <Trash2 size={15} aria-hidden="true" />
       </ConfirmButton>

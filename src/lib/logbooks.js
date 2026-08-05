@@ -322,6 +322,18 @@ export async function listParts(inspectionId) {
   return { data: data ?? [], error }
 }
 
+/** Set report visibility on ALL of an inspection's events at once. */
+export async function setAllEventsReport(inspectionId, show) {
+  const { error } = await supabase.from('logbook_events').update({ show_on_report: !!show }).eq('inspection_id', inspectionId)
+  return { error }
+}
+
+/** Set report visibility on ALL of an inspection's parts at once. */
+export async function setAllPartsReport(inspectionId, show) {
+  const { error } = await supabase.from('logbook_parts').update({ show_on_report: !!show }).eq('inspection_id', inspectionId)
+  return { error }
+}
+
 /** Update a logbook part (e.g. toggle show_on_report). */
 export async function updatePart(id, patch) {
   const { data, error } = await supabase

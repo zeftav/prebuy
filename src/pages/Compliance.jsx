@@ -56,6 +56,10 @@ export default function Compliance() {
     setItems((prev) => prev.map((i) => (i.key === key ? { ...i, ...p } : i)))
     setSaved(false)
   }
+  function setAllReport(show) {
+    setItems((prev) => prev.map((i) => ({ ...i, show_on_report: show })))
+    setSaved(false)
+  }
   function removeItem(key) {
     setItems((prev) => prev.filter((i) => i.key !== key))
     setSaved(false)
@@ -118,6 +122,17 @@ export default function Compliance() {
       </section>
 
       <section className="insp__section">
+        {rows.length > 1 && (
+          <div className="insp__sectionhead">
+            <span className="auth__hint">Timed items</span>
+            <span className="lb__bulk">
+              On report:
+              <button type="button" className="auth__toggle" onClick={() => setAllReport(true)}>All</button>
+              <span aria-hidden="true">·</span>
+              <button type="button" className="auth__toggle" onClick={() => setAllReport(false)}>None</button>
+            </span>
+          </div>
+        )}
         <ul className="comp__list">
           {rows.map((it) => (
             <ComplianceRow key={it.key} item={it} onPatch={patch} onRemove={removeItem} />
