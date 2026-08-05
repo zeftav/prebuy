@@ -23,7 +23,7 @@ import {
 } from '../lib/logbooks.js'
 import { compileAdCompliance, adStats } from '../lib/ad.js'
 import { normalizeCompliance, mergeScanCompliance, saveCompliance } from '../lib/compliance.js'
-import { normalizeProfile, engineLabel } from '../lib/profile.js'
+import { normalizeProfile, engineLabel, draftFromExtraction, mergeProfileDraft, saveProfile } from '../lib/profile.js'
 import { uploadMedia, listMediaByLogbook, listMediaByPurpose, updateMedia, deleteMedia } from '../lib/media.js'
 import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
 import PhotoPicker from '../components/PhotoPicker.jsx'
@@ -32,6 +32,14 @@ import './auth.css'
 import './inspections.css'
 
 const fmtTach = (v) => (v == null ? '—' : Number(v).toFixed(1))
+
+// Did the scan read anything worth suggesting to the Aircraft Profile?
+function draftHasProfileContent(draft) {
+  const s = draft?.specs || {}
+  const c = draft?.currency || {}
+  const e = draft?.equipment || {}
+  return Object.values(s).some(Boolean) || Object.values(c).some(Boolean) || (e.avionics?.length || e.additional?.length)
+}
 const fmtRange = (b) => {
   const hasSpan = b.start_date || b.end_date || b.start_tach != null || b.end_tach != null
   if (!hasSpan) return 'No times read yet'
@@ -179,6 +187,17 @@ export default function LogbookAudit() {
               const norm = normalizeCompliance(fresh.attributes, { vertical: fresh.vertical, make: fresh.make })
               const merged = mergeScanCompliance(norm.items, draft.compliance)
               if (merged.filled) await saveCompliance(fresh, { items: merged.items, currentTach: norm.current_tach })
+            }
+          }
+          // Suggest the Aircraft Profile from the same scan (specs/currency/equipment
+          // the model read). Fill-blanks only — never clobbers what you've entered —
+          // so no second "Scan to pre-fill" is needed for records in the logbooks.
+          if (inspection.vertical === 'aviation' && draftHasProfileContent(draft)) {
+            const { data: fresh } = await getInspection(inspection.id)
+            if (fresh) {
+              const pdraft = draftFromExtraction(draft)
+              const mergedProfile = mergeProfileDraft(fresh.attributes?.profile, pdraft)
+              await saveProfile(inspection.id, fresh.attributes ?? {}, mergedProfile)
             }
           }
         }

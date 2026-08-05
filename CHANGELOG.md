@@ -3,6 +3,18 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.52.0] — 2026-08-03
+
+### Added
+- **Aircraft profile auto-suggested from logbook scans.** `structure-logbook` already returns
+  `specs`/`currency`/`equipment` (same fn the profile scan uses), but the logbook-scan client path
+  discarded them. Now `extractLogbooks` carries them and `mergeExtractDrafts` merges them across batches
+  (specs/currency fill-blanks, equipment concatenates). `LogbookAudit.processBook` builds a profile draft
+  (`draftFromExtraction`) and `mergeProfileDraft`s it into `attributes.profile` (fill-blanks only, never
+  clobbering) at scan time — so no separate scan is needed for records already in the logbooks. The
+  profile page's "Scan to pre-fill" copy reframed for records *not* in the logbooks. **No deploy** (edge
+  fn already returns these fields since v0.14.0). (+tests)
+
 ## [0.51.1] — 2026-08-03
 
 ### Fixed

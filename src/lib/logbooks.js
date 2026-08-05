@@ -405,7 +405,10 @@ export function offsetDraftPages(draft, offset) {
  * them. Pure. Tolerates null/missing arrays.
  */
 export function mergeExtractDrafts(drafts) {
-  const out = { logbooks: [], events: [], unclear: [], parts: [], compliance: [], limits: [] }
+  const out = { logbooks: [], events: [], unclear: [], parts: [], compliance: [], limits: [], specs: {}, currency: {}, equipment: { avionics: [], additional: [] } }
+  const fillBlanks = (into, from) => {
+    if (from && typeof from === 'object') for (const [k, v] of Object.entries(from)) if (v && !into[k]) into[k] = v
+  }
   for (const d of drafts ?? []) {
     if (Array.isArray(d?.logbooks)) out.logbooks.push(...d.logbooks)
     if (Array.isArray(d?.events)) out.events.push(...d.events)
@@ -413,6 +416,11 @@ export function mergeExtractDrafts(drafts) {
     if (Array.isArray(d?.parts)) out.parts.push(...d.parts)
     if (Array.isArray(d?.compliance)) out.compliance.push(...d.compliance)
     if (Array.isArray(d?.limits)) out.limits.push(...d.limits)
+    // Profile fields: fill blanks across batches (first legible value wins); equipment concatenates.
+    fillBlanks(out.specs, d?.specs)
+    fillBlanks(out.currency, d?.currency)
+    if (Array.isArray(d?.equipment?.avionics)) out.equipment.avionics.push(...d.equipment.avionics)
+    if (Array.isArray(d?.equipment?.additional)) out.equipment.additional.push(...d.equipment.additional)
   }
   return out
 }
@@ -508,6 +516,10 @@ export async function extractLogbooks(imageUrls, orgId, context = null) {
       data: {
         logbooks: body.logbooks ?? [], events: body.events ?? [], unclear: body.unclear ?? [],
         parts: body.parts ?? [], compliance: body.compliance ?? [], limits: body.limits ?? [],
+        // Aircraft-profile fields the same scan reads (specs/currency/equipment) —
+        // used to suggest the profile from the logbook scans (fill-blanks only).
+        specs: body.specs ?? {}, currency: body.currency ?? {},
+        equipment: body.equipment ?? { avionics: [], additional: [] },
       },
       error: null,
     }

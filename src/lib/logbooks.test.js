@@ -232,8 +232,20 @@ describe('mergeExtractDrafts', () => {
     expect(merged.unclear).toEqual(['SMOH smudged', 'last date unreadable'])
   })
   it('tolerates missing/null arrays and nullish input', () => {
-    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual({ logbooks: [], events: [], unclear: [], parts: [], compliance: [], limits: [] })
-    expect(mergeExtractDrafts(null)).toEqual({ logbooks: [], events: [], unclear: [], parts: [], compliance: [], limits: [] })
+    const empty = { logbooks: [], events: [], unclear: [], parts: [], compliance: [], limits: [], specs: {}, currency: {}, equipment: { avionics: [], additional: [] } }
+    expect(mergeExtractDrafts([{ logbooks: null }, {}, null])).toEqual(empty)
+    expect(mergeExtractDrafts(null)).toEqual(empty)
+  })
+  it('fills profile specs/currency across batches (first value wins) and concatenates equipment', () => {
+    const merged = mergeExtractDrafts([
+      { specs: { total_time: 4200, engine_smoh: 0 }, currency: { annual_due: '2026-03' }, equipment: { avionics: [{ name: 'GTN 750' }], additional: [] } },
+      { specs: { total_time: 9999, engine_smoh: 640 }, currency: { annual_due: 'ignored', transponder_due: '2027-01' }, equipment: { avionics: [{ name: 'GFC 500' }], additional: [{ name: 'Known-ice' }] } },
+    ])
+    expect(merged.specs.total_time).toBe(4200) // first legible value kept
+    expect(merged.specs.engine_smoh).toBe(640) // filled from the second batch (first was 0/blank)
+    expect(merged.currency.annual_due).toBe('2026-03')
+    expect(merged.currency.transponder_due).toBe('2027-01')
+    expect(merged.equipment.avionics.map((r) => r.name)).toEqual(['GTN 750', 'GFC 500'])
   })
 })
 

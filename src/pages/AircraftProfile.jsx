@@ -586,8 +586,9 @@ function ScanPrefill({ inspection, onApply }) {
       {phase === 'idle' && (
         <>
           <p className="auth__hint">
-            Photograph records — a weight &amp; balance / equipment list, avionics placard, or logbook
-            pages — and we’ll propose specs, currency, and equipment for you to review. We never
+            Your logbook scans already fill this profile in automatically (blanks only). Use this to add
+            records that <em>aren’t</em> in the logbooks — a weight &amp; balance / equipment list or an
+            avionics placard — and we’ll propose specs, currency, and equipment to review. We never
             overwrite anything you’ve already filled in.
           </p>
           <PhotoPicker

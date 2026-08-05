@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.52.0',
+    date: '2026-08-03',
+    title: 'Aircraft profile fills in from your logbook scans',
+    items: [
+      'When you scan the logbooks, the same read now also pre-fills the Aircraft Profile — specs, currency dates, and equipment — automatically (blanks only, never overwriting what you’ve entered). No separate scan needed for records that are already in the books.',
+      '“Scan to pre-fill” on the profile is now just for records that aren’t in the logbooks (a weight & balance sheet, an equipment list, an avionics placard).',
+    ],
+  },
+  {
     version: '0.51.1',
     date: '2026-08-03',
     title: 'Compression fix + clearer item dots',

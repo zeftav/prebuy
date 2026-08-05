@@ -617,6 +617,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   on item photos; `ReportView` `CompressionSection` groups borescope under each cylinder, generic gallery
   excludes tagged. ⚠️ **REDEPLOY `report` (JWT OFF)** for per-cylinder grouping (capture side frontend-only;
   degrades to the general gallery until redeployed). No migration. Lint + 279 tests + build green.
+  - v0.51.1: `isCompressionItem` loosened to `/\bcompression/i` (was `/\bcompression\b/` — missed plural/
+    combined titles, so the compression form + borescope uploader didn't render on those). Checklist item
+    **dot now reflects status** (hollow=not reviewed → green/amber/red/grey) not the static risk band.
+- Session 4 cont. — **Aircraft profile auto-suggested from logbook scans** (v0.52.0, frontend only — no
+  deploy). `structure-logbook` already returns `specs`/`currency`/`equipment`; `extractLogbooks` now
+  carries them + `mergeExtractDrafts` merges across batches (specs/currency fill-blanks, equipment concat).
+  `processBook` builds a profile draft (`draftFromExtraction`) + `mergeProfileDraft` into
+  `attributes.profile` (fill-blanks only) at scan time — no separate scan needed for records in the
+  logbooks. Profile "Scan to pre-fill" reframed for records not in the logbooks. Lint + 280 tests + build green.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
