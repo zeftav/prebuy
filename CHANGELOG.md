@@ -3,6 +3,21 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.48.0] — 2026-08-03
+
+### Added
+- **Video capture** at the inspection photo points. `PhotoPicker` gains a `video` flag →
+  `accept="image/*,video/*"` (scan/OCR pickers stay image-only). Enabled on per-item **discrepancy**
+  media (`InspectionDetail`) and the **photo walkthrough** (`OverviewCapture`); both render `<video>` for
+  `kind === 'video'`. The data layer already supported video (`media.kind` allows `'video'` since
+  `001_init.sql`; `mediaKind()` + `uploadMedia` tag it) — **no migration**. `report` edge fn now returns
+  `kind` on overview + item media; `ReportView` plays clips inline (`.report__figure video` styled).
+
+### Deploy
+- **REDEPLOY `report` (Verify JWT OFF)** so videos render on the customer report. The capture side is
+  frontend-only. No migration. (Storage note: Supabase's per-file size cap — default 50 MB — bounds clip
+  length; raise it in the bucket settings if longer clips are needed.)
+
 ## [0.47.1] — 2026-08-03
 
 ### Changed

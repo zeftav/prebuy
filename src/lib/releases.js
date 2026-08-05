@@ -6,6 +6,16 @@
 
 export const releases = [
   {
+    version: '0.48.0',
+    date: '2026-08-03',
+    title: 'Capture video, not just photos',
+    items: [
+      'You can now take or upload short video clips wherever you add inspection media — on a checklist item’s discrepancy and in the photo walkthrough. Handy for a running engine, a control sweep, a gear cycle, or a noise you want to document.',
+      'Clips play inline in the app and on the customer report alongside your photos.',
+      'Note: logbook / records scanning stays photo-only (those pages are read by AI). Very long clips may hit the storage size limit — keep field videos short.',
+    ],
+  },
+  {
     version: '0.47.0',
     date: '2026-08-03',
     title: 'Records search up top + an AD compliance chart',

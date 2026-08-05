@@ -84,7 +84,7 @@ Deno.serve(async (req: Request) => {
 
   const overview = (media ?? [])
     .filter((m) => m.purpose === 'overview')
-    .map((m) => ({ caption: m.caption, url: withUrl(m) }))
+    .map((m) => ({ caption: m.caption, url: withUrl(m), kind: m.kind }))
 
   // Inspection-level documents opted onto the report (e.g. the compiled logbook PDF).
   const documents = (media ?? [])
@@ -92,7 +92,7 @@ Deno.serve(async (req: Request) => {
     .map((m) => ({ name: m.caption || 'Document', url: withUrl(m) }))
     .filter((d) => d.url)
 
-  const photosByItem = new Map<string, string[]>()
+  const photosByItem = new Map<string, { url: string; kind: string }[]>()
   const filesByItem = new Map<string, { url: string; name: string }[]>()
   for (const m of media ?? []) {
     if (!m.inspection_item_id) continue
@@ -100,7 +100,7 @@ Deno.serve(async (req: Request) => {
     if (!u) continue
     if (m.purpose === 'discrepancy' && m.kind !== 'document') {
       const arr = photosByItem.get(m.inspection_item_id) ?? []
-      arr.push(u)
+      arr.push({ url: u, kind: m.kind })
       photosByItem.set(m.inspection_item_id, arr)
     } else if (m.purpose === 'attachment') {
       const arr = filesByItem.get(m.inspection_item_id) ?? []

@@ -90,6 +90,8 @@ Run in order. All are idempotent (safe to re-run).
   - [x] ✅ **REDEPLOYED `structure-logbook` (JWT ON) for v0.47.0** (2026-08-03) — AD events now carry
         `next_due_date` / `next_due_hours` (AD next-due on the chart). Migration 030 also run. Reuses
         `ANTHROPIC_API_KEY`.
+- [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.48.0** — returns `kind` on overview + item media so **video
+      clips** play on the customer report. No migration. (2026-08-03)
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile

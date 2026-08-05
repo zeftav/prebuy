@@ -581,6 +581,12 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
     `sort_order`) within each phase, not risk order — pure `orderByChecklist` in `risk.js` (+tests);
     `InspectionDetail` uses it when `usesPhases`, else the stable risk order. Display-only → retroactive
     to in-progress inspections. Frontend only.
+- Session 4 cont. — **Video capture** (v0.48.0). `PhotoPicker` `video` flag → `accept="image/*,video/*"`
+  (scan/OCR pickers stay image-only); enabled on per-item discrepancy media + the photo walkthrough, both
+  render `<video>` for `kind==='video'`. Data layer already supported video (`media.kind` allows it since
+  001; `mediaKind`/`uploadMedia` tag it) → **no migration**. `report` fn returns `kind` on overview + item
+  media; `ReportView` plays clips inline. ⚠️ **REDEPLOY `report` (JWT OFF)** for video on the report
+  (capture side is frontend-only). Storage: Supabase per-file cap (default 50MB) bounds clip length.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

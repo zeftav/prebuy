@@ -272,7 +272,9 @@ export default function ReportView() {
               <div className="report__gallery">
                 {overview.map((o, i) => (
                   <figure key={i} className="report__figure">
-                    {o.url && <img src={o.url} alt={o.caption || 'overview'} loading="lazy" />}
+                    {o.url && (o.kind === 'video'
+                      ? <video src={o.url} controls playsInline preload="metadata" />
+                      : <img src={o.url} alt={o.caption || 'overview'} loading="lazy" />)}
                     {o.caption && <figcaption>{o.caption}</figcaption>}
                   </figure>
                 ))}
@@ -494,9 +496,11 @@ function ReportSection({ title, items, showPhotos }) {
             )}
             {showPhotos && i.photos?.length > 0 && (
               <div className="report__gallery report__gallery--small">
-                {i.photos.map((url, idx) => (
+                {i.photos.map((ph, idx) => (
                   <figure key={idx} className="report__figure">
-                    <img src={url} alt={`${i.title} photo ${idx + 1}`} loading="lazy" />
+                    {ph.kind === 'video'
+                      ? <video src={ph.url} controls playsInline preload="metadata" />
+                      : <img src={ph.url} alt={`${i.title} photo ${idx + 1}`} loading="lazy" />}
                   </figure>
                 ))}
               </div>

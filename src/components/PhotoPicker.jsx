@@ -15,12 +15,16 @@ export default function PhotoPicker({
   busy = false,
   disabled = false,
   uploadOnly = false,
+  video = false, // when true, also accept video files (photo capture points only)
   takeLabel = 'Take photo',
   uploadLabel = 'Choose photo',
   busyLabel = 'Uploading…',
   takeIcon: TakeIcon = Camera,
   className = 'insp__capturebtn',
 }) {
+  // Scan/OCR callers keep images only (they feed Claude vision); capture callers
+  // opt into video too.
+  const accept = video ? 'image/*,video/*' : 'image/*'
   if (busy) {
     return (
       <span className="photopick">
@@ -37,7 +41,7 @@ export default function PhotoPicker({
           <TakeIcon size={15} aria-hidden="true" /> {takeLabel}
           <input
             type="file"
-            accept="image/*"
+            accept={accept}
             capture="environment"
             multiple={multiple}
             hidden
@@ -50,7 +54,7 @@ export default function PhotoPicker({
         <Upload size={15} aria-hidden="true" /> {uploadLabel}
         <input
           type="file"
-          accept="image/*"
+          accept={accept}
           multiple={multiple}
           hidden
           disabled={disabled}

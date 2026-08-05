@@ -648,7 +648,7 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
               <Sparkles size={15} aria-hidden="true" />
               {aiBusy ? 'Cleaning…' : 'Clean up with AI'}
             </button>
-            <PhotoPicker onPick={(files) => addPhoto(files?.[0])} busy={photoBusy} />
+            <PhotoPicker onPick={(files) => addPhoto(files?.[0])} busy={photoBusy} video takeLabel="Photo / video" uploadLabel="Photo / video" />
             <label className="insp__capturebtn">
               <Paperclip size={15} aria-hidden="true" />
               {docBusy ? 'Uploading…' : 'Attach file'}
@@ -666,8 +666,10 @@ function ItemRow({ item, media, inspection, onStatus, onPatch, onRemove, onMedia
             <div className="insp__thumbs">
               {photos.map((m) => (
                 <span key={m.id} className="insp__thumbwrap">
-                  {m.url && <img className="insp__thumb" src={m.url} alt="finding" loading="lazy" />}
-                  <button type="button" className="insp__thumbdel" onClick={() => removePhoto(m)} aria-label="Remove photo">
+                  {m.url && (m.kind === 'video'
+                    ? <video className="insp__thumb" src={m.url} controls playsInline preload="metadata" />
+                    : <img className="insp__thumb" src={m.url} alt="finding" loading="lazy" />)}
+                  <button type="button" className="insp__thumbdel" onClick={() => removePhoto(m)} aria-label="Remove">
                     <X size={12} aria-hidden="true" />
                   </button>
                 </span>

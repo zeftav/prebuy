@@ -183,15 +183,17 @@ export default function OverviewCapture() {
               <div className="insp__thumbs">
                 {currentPhotos.map((m) => (
                   <span key={m.id} className="insp__thumbwrap">
-                    {m.url && <img className="insp__thumb" src={m.url} alt={currentShot} loading="lazy" />}
-                    <button type="button" className="insp__thumbdel" onClick={() => deletePhoto(m)} aria-label="Remove photo">
+                    {m.url && (m.kind === 'video'
+                      ? <video className="insp__thumb" src={m.url} controls playsInline preload="metadata" />
+                      : <img className="insp__thumb" src={m.url} alt={currentShot} loading="lazy" />)}
+                    <button type="button" className="insp__thumbdel" onClick={() => deletePhoto(m)} aria-label="Remove">
                       <X size={12} aria-hidden="true" />
                     </button>
                   </span>
                 ))}
               </div>
               <p className="auth__hint">
-                <Check size={13} aria-hidden="true" /> {currentPhotos.length} photo{currentPhotos.length > 1 ? 's' : ''} saved for this shot.
+                <Check size={13} aria-hidden="true" /> {currentPhotos.length} item{currentPhotos.length > 1 ? 's' : ''} saved for this shot.
               </p>
             </>
           )}
@@ -201,7 +203,8 @@ export default function OverviewCapture() {
           ) : (
             <PhotoPicker
               onPick={(files) => captureRun(files?.[0])}
-              takeLabel={currentPhotos.length ? 'Take another' : 'Take photo'}
+              video
+              takeLabel={currentPhotos.length ? 'Add another' : 'Photo / video'}
               uploadLabel="Upload"
             />
           )}
@@ -251,8 +254,10 @@ export default function OverviewCapture() {
               <div className="insp__shotcaptured">
                 {photos.map((m) => (
                   <span key={m.id} className="insp__thumbwrap">
-                    {m.url && <img className="insp__thumb" src={m.url} alt={shot} loading="lazy" />}
-                    <button type="button" className="insp__thumbdel" onClick={() => deletePhoto(m)} aria-label="Remove photo">
+                    {m.url && (m.kind === 'video'
+                      ? <video className="insp__thumb" src={m.url} controls playsInline preload="metadata" />
+                      : <img className="insp__thumb" src={m.url} alt={shot} loading="lazy" />)}
+                    <button type="button" className="insp__thumbdel" onClick={() => deletePhoto(m)} aria-label="Remove">
                       <X size={12} aria-hidden="true" />
                     </button>
                   </span>
@@ -260,7 +265,8 @@ export default function OverviewCapture() {
                 <PhotoPicker
                   onPick={(files) => onPick(shot, files?.[0])}
                   busy={busyShot === shot}
-                  takeLabel={captured ? 'Add another' : 'Take photo'}
+                  video
+                  takeLabel={captured ? 'Add another' : 'Photo / video'}
                   uploadLabel="Upload"
                 />
               </div>
