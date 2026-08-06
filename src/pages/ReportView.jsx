@@ -260,8 +260,8 @@ export default function ReportView() {
             </section>
           )}
 
-          {/* Categorized equipment (group labels per vertical). */}
-          {(profile.equipment.avionics.length > 0 || profile.equipment.additional.length > 0) && (
+          {/* Categorized equipment (group labels per vertical). Suppressed items held back. */}
+          {(profile.equipment.avionics.some((r) => !r.hidden) || profile.equipment.additional.some((r) => !r.hidden)) && (
             <section className="report__section">
               <h2>Equipment</h2>
               {schema.equipmentGroups.map((g) => (
@@ -467,12 +467,13 @@ function PartHeader({ n, title }) {
 }
 
 function EquipmentGroup({ title, rows }) {
-  if (!rows.length) return null
+  const shown = (rows ?? []).filter((r) => !r.hidden)
+  if (!shown.length) return null
   return (
     <div className="report__eqgroup">
       <h3 className="report__eqtitle">{title}</h3>
       <ul className="report__eqlist">
-        {rows.map((r, i) => (
+        {shown.map((r, i) => (
           <li key={i}>
             <span className="report__eqname">{r.name}</span>
             {r.notes && <span className="report__eqnotes">{r.notes}</span>}

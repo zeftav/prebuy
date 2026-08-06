@@ -61,6 +61,13 @@ const rowList = (arr, fields) =>
     .map((r) => (r && typeof r === 'object' ? Object.fromEntries(fields.map((f) => [f, str(r[f]).trim()])) : null))
     .filter((r) => r && fields.some((f) => r[f]))
 
+// Equipment rows carry name + notes plus a `hidden` flag (suppress from the report).
+// Default shown; `hidden: true` holds it back. Pure.
+const equipList = (arr) =>
+  (Array.isArray(arr) ? arr : [])
+    .map((r) => (r && typeof r === 'object' ? { name: str(r.name).trim(), notes: str(r.notes).trim(), hidden: !!r.hidden } : null))
+    .filter((r) => r && (r.name || r.notes))
+
 /**
  * Coerce a stored/loose profile object into the canonical shape for its vertical.
  * Pure + defensive. Spec/currency/engine/prop keys come from the vertical schema;
@@ -114,8 +121,8 @@ export function normalizeProfile(raw, verticalKey = 'aviation') {
     currency: Object.fromEntries(curKeys.map((k) => [k, str(currency[k]).trim()])),
     damage: rowList(raw.damage, ['date', 'summary', 'affected']),
     equipment: {
-      avionics: rowList(eq.avionics, ['name', 'notes']),
-      additional: rowList(eq.additional, ['name', 'notes']),
+      avionics: equipList(eq.avionics),
+      additional: equipList(eq.additional),
     },
   }
 }
@@ -339,8 +346,11 @@ export function buildSummaryContext(inspection, profile, events, items) {
   if (props.length) ctx.props = props
   if (Object.keys(currency).length) ctx.currency = currency
   if (n.damage.length) ctx.damage = n.damage
-  if (n.equipment.avionics.length) ctx.avionics = n.equipment.avionics
-  if (n.equipment.additional.length) ctx.additional_equipment = n.equipment.additional
+  // Suppressed equipment is held off the report, so keep it out of the AI summary too.
+  const shownAvionics = n.equipment.avionics.filter((r) => !r.hidden)
+  const shownAdditional = n.equipment.additional.filter((r) => !r.hidden)
+  if (shownAvionics.length) ctx.avionics = shownAvionics
+  if (shownAdditional.length) ctx.additional_equipment = shownAdditional
   if ((events ?? []).length) {
     ctx.notable_maintenance = events.map((e) => ({
       date: str(e.event_date).trim() || undefined,

@@ -40,6 +40,13 @@ describe('normalizeProfile', () => {
     expect(n.equipment.avionics).toHaveLength(1)
     expect(n.equipment.avionics[0].name).toBe('GTN 750')
   })
+  it('carries the equipment hidden flag (suppress from report); defaults shown', () => {
+    const n = normalizeProfile({
+      equipment: { avionics: [{ name: 'GTN 750' }, { name: 'ADF', hidden: true }], additional: [] },
+    })
+    expect(n.equipment.avionics[0].hidden).toBe(false)
+    expect(n.equipment.avionics[1].hidden).toBe(true)
+  })
 })
 
 describe('isProfileEmpty', () => {

@@ -694,6 +694,12 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `unclear` note with `"p.N — …"`; `offsetDraftPages` shifts that inline ref absolute across batches
   (+test, 301). ⚠️ **Redeploy `structure-logbook` (JWT ON)** for the page numbers (frontend degrades
   gracefully without it). No migration. This closes Brett's earlier "edit items flagged in processing" ask.
+- Session 4 cont. — **Suppress equipment from the report** (v0.60.0, frontend only). Each equipment item
+  (avionics/additional) gets an **"On report"** checkbox in AircraftProfile + **All/None** bulk per group.
+  `profile.js`: new `equipList` normalizer preserves a `hidden` bool (defaults shown); `buildSummaryContext`
+  excludes hidden so the AI summary omits them. `RowEditor` gains optional `onToggleHidden` (per-row +
+  'all'); held rows dim. `ReportView` `EquipmentGroup` filters `hidden`, section hides if all held. Stored
+  in `attributes.profile` → **no migration**; report filters client-side → **no redeploy**. Tests 302.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

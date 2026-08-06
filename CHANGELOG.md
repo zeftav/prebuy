@@ -3,6 +3,18 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.60.0] — 2026-08-06
+
+### Added
+- **Suppress equipment from the customer report.** Each equipment item (avionics / additional, per the
+  vertical) now has an "On report" checkbox in the Aircraft Profile, plus **All / None** bulk toggles per
+  group — so you can hold back items you don't want on the report (installed-but-inop, personal gear,
+  duplicates) while keeping them in your working profile. Equipment rows carry a `hidden` flag
+  (`profile.js` new `equipList` normalizer preserves it; defaults shown); `ReportView` filters hidden rows
+  and drops a group/section that ends up empty; `buildSummaryContext` also excludes hidden items so the
+  AI-written summary doesn't mention them. Held rows show dimmed in the editor. Stored in the profile bag
+  (`attributes.profile`) — **no migration**; the report computes visibility client-side — **no redeploy**.
+
 ## [0.59.0] — 2026-08-05
 
 ### Added

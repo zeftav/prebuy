@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.60.0',
+    date: '2026-08-06',
+    title: 'Hold equipment off the report',
+    items: [
+      'Every equipment item in the Aircraft Profile now has an “On report” checkbox — untick anything you don’t want on the customer report (inop items, personal gear, duplicates) and it stays in your working profile but drops off the report.',
+      'There’s an All / None toggle for each equipment group too, so you can flip the whole list at once. Held items also stay out of the AI-written summary.',
+    ],
+  },
+  {
     version: '0.59.0',
     date: '2026-08-05',
     title: 'Review & fix the “hard to read” logbook entries',

@@ -306,9 +306,13 @@ export default function AircraftProfile() {
             { key: 'notes', label: 'Condition / notes', placeholder: g.notesPlaceholder },
           ]}
           addLabel={g.addLabel}
-          onAdd={() => edit((p) => p.equipment[g.key].push({ name: '', notes: '' }))}
+          onAdd={() => edit((p) => p.equipment[g.key].push({ name: '', notes: '', hidden: false }))}
           onChange={(i, k, v) => edit((p) => { p.equipment[g.key][i][k] = v })}
           onRemove={(i) => edit((p) => p.equipment[g.key].splice(i, 1))}
+          onToggleHidden={(i, val) => edit((p) => {
+            if (i === 'all') p.equipment[g.key].forEach((r) => { r.hidden = val })
+            else p.equipment[g.key][i].hidden = !p.equipment[g.key][i].hidden
+          })}
         />
       ))}
 
@@ -697,15 +701,23 @@ function ReviewGroup({ title, items, isOn, onToggle }) {
   )
 }
 
-function RowEditor({ title, info, rows, columns, addLabel, onAdd, onChange, onRemove }) {
+function RowEditor({ title, info, rows, columns, addLabel, onAdd, onChange, onRemove, onToggleHidden }) {
   return (
     <section className="insp__section">
       <div className="insp__sectionhead">
         <h2>{title} <InfoDot label={info} /></h2>
+        {onToggleHidden && rows.length > 1 && (
+          <span className="lb__bulk">
+            On report:
+            <button type="button" className="auth__toggle" onClick={() => onToggleHidden('all', false)}>All</button>
+            <span aria-hidden="true">·</span>
+            <button type="button" className="auth__toggle" onClick={() => onToggleHidden('all', true)}>None</button>
+          </span>
+        )}
       </div>
       {rows.length === 0 && <p className="auth__hint">None added.</p>}
       {rows.map((row, i) => (
-        <div className="insp__rowedit" key={i}>
+        <div className={`insp__rowedit${row.hidden ? ' insp__rowedit--held' : ''}`} key={i}>
           {columns.map((c) => (
             <div className={`auth__field${c.width === 'narrow' ? ' insp__rowedit--narrow' : ''}`} key={c.key}>
               <label>{c.label}</label>
@@ -717,6 +729,11 @@ function RowEditor({ title, info, rows, columns, addLabel, onAdd, onChange, onRe
               />
             </div>
           ))}
+          {onToggleHidden && (
+            <label className="insp__rowreport" title="Show this item on the customer report">
+              <input type="checkbox" checked={!row.hidden} onChange={() => onToggleHidden(i)} /> On report
+            </label>
+          )}
           <button
             type="button"
             className="insp__flag insp__rowdel"
