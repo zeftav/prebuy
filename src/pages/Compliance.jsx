@@ -7,11 +7,11 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, CalendarClock, Check, Plus, Trash2, ScanLine } from 'lucide-react'
+import { ChevronLeft, CalendarClock, Check, Plus, Trash2, ScanLine, AlertCircle } from 'lucide-react'
 import { getInspection } from '../lib/checklist.js'
 import {
   normalizeCompliance, complianceRows, complianceStats, statusLabel, saveCompliance, slugKey,
-  limitsToComplianceItems, mergeScanParts,
+  limitsToComplianceItems, mergeScanParts, pruneSuggestions,
 } from '../lib/compliance.js'
 import { extractLogbooks, listParts } from '../lib/logbooks.js'
 import { uploadMedia, signedUrlsFor } from '../lib/media.js'
@@ -26,6 +26,7 @@ export default function Compliance() {
   const { id } = useParams()
   const [inspection, setInspection] = useState(null)
   const [items, setItems] = useState([])
+  const [suggestions, setSuggestions] = useState([])
   const [currentTach, setCurrentTach] = useState('')
   const [state, setState] = useState('loading')
   const [saving, setSaving] = useState(false)
@@ -38,8 +39,9 @@ export default function Compliance() {
       if (!active) return
       if (error || !insp) return setState('error')
       setInspection(insp)
-      const { items: norm, current_tach } = normalizeCompliance(insp.attributes, { vertical: insp.vertical, make: insp.make })
+      const { items: norm, current_tach, suggestions: sugg } = normalizeCompliance(insp.attributes, { vertical: insp.vertical, make: insp.make })
       setItems(norm)
+      setSuggestions(pruneSuggestions(sugg, norm))
       // Prefill current airframe time: stored value, else the profile's total time.
       const prof = insp.attributes?.profile?.specs?.total_time
       setCurrentTach(current_tach != null ? String(current_tach) : prof != null ? String(prof) : '')
@@ -86,9 +88,25 @@ export default function Compliance() {
     setSaved(false)
   }
 
+  // Approve a held scan read: write the (possibly edited) date/tach onto the chosen
+  // item and drop the suggestion. Dismiss just drops it.
+  function approveSuggestion(id, { key, date, tach }) {
+    if (key) {
+      setItems((prev) => prev.map((i) => (i.key === key
+        ? { ...i, last_date: date || i.last_date, last_tach: tach != null ? tach : i.last_tach }
+        : i)))
+    }
+    setSuggestions((prev) => prev.filter((s) => s.id !== id))
+    setSaved(false)
+  }
+  function dismissSuggestion(id) {
+    setSuggestions((prev) => prev.filter((s) => s.id !== id))
+    setSaved(false)
+  }
+
   async function save() {
     setSaving(true)
-    const { error } = await saveCompliance(inspection, { items, currentTach })
+    const { error } = await saveCompliance(inspection, { items, currentTach, suggestions })
     setSaving(false)
     if (!error) setSaved(true)
   }
@@ -125,6 +143,15 @@ export default function Compliance() {
         </div>
       </section>
 
+      {suggestions.length > 0 && (
+        <SuggestionReview
+          suggestions={suggestions}
+          items={items}
+          onApprove={approveSuggestion}
+          onDismiss={dismissSuggestion}
+        />
+      )}
+
       <section className="insp__section">
         {rows.length > 1 && (
           <div className="insp__sectionhead">
@@ -158,6 +185,81 @@ export default function Compliance() {
         </button>
       </div>
     </main>
+  )
+}
+
+// Review queue for scan reads we couldn't confidently place. A mechanic assumes a
+// blank item means "never done" — so anything the scan read but didn't auto-apply
+// is surfaced here to assign to the right item (with the times editable) or dismiss,
+// rather than silently dropped.
+function SuggestionReview({ suggestions, items, onApprove, onDismiss }) {
+  return (
+    <section className="insp__section comp__review">
+      <div className="insp__sectionhead">
+        <h2><AlertCircle size={18} aria-hidden="true" /> Review from logbook scans</h2>
+      </div>
+      <p className="auth__hint">
+        We read these off the logbooks but weren’t sure which item they belong to. Assign each to the right
+        item (the times are editable) so nothing that’s actually in the books gets missed — or dismiss it.
+      </p>
+      <ul className="comp__list">
+        {suggestions.map((s) => (
+          <SuggestionRow key={s.id} suggestion={s} items={items} onApprove={onApprove} onDismiss={onDismiss} />
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+function SuggestionRow({ suggestion: s, items, onApprove, onDismiss }) {
+  const [key, setKey] = useState(s.suggested_key && items.some((i) => i.key === s.suggested_key) ? s.suggested_key : '')
+  const [date, setDate] = useState(s.scan_date ?? '')
+  const [tach, setTach] = useState(s.scan_tach != null ? String(s.scan_tach) : '')
+  const readBits = [
+    s.part_number ? `P/N ${s.part_number}` : null,
+    s.scan_date ? s.scan_date : null,
+    s.scan_tach != null ? `${s.scan_tach} hrs` : null,
+  ].filter(Boolean).join(' · ')
+
+  return (
+    <li className="comp__row comp__row--review">
+      <div className="comp__rowhead">
+        <div className="comp__rowid">
+          <span className="comp__label">{s.scan_label}</span>
+          <span className="comp__basis">{readBits || 'from a logbook scan'}{s.kind === 'part' ? ' · part/component' : ''}</span>
+        </div>
+      </div>
+      <div className="auth__field">
+        <label>Assign to</label>
+        <select value={key} onChange={(e) => setKey(e.target.value)}>
+          <option value="">— pick an item —</option>
+          {items.map((i) => (
+            <option key={i.key} value={i.key}>{i.label}</option>
+          ))}
+        </select>
+      </div>
+      <div className="insp__row2">
+        <div className="auth__field">
+          <label>Date</label>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div className="auth__field">
+          <label>Tach</label>
+          <input type="number" inputMode="decimal" step="0.1" value={tach} onChange={(e) => setTach(e.target.value)} />
+        </div>
+      </div>
+      <div className="comp__rowactions">
+        <button
+          type="button"
+          className="auth__btn auth__btn--ghost"
+          disabled={!key}
+          onClick={() => onApprove(s.id, { key, date: date || null, tach: tach === '' ? null : Number(tach) })}
+        >
+          <Check size={14} aria-hidden="true" /> Approve
+        </button>
+        <button type="button" className="auth__toggle" onClick={() => onDismiss(s.id)}>Dismiss</button>
+      </div>
+    </li>
   )
 }
 

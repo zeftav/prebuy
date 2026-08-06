@@ -1734,6 +1734,11 @@
 .comp__row--due-soon { border-left-color: #d68a00; }
 .comp__row--ok { border-left-color: #1a7f37; }
 .comp__row.is-disabled { opacity: 0.55; }
+.comp__row--review { border-left-color: #7c3aed; }
+.comp__review { border: 1px solid #e6dcfb; background: #faf7ff; border-radius: 12px; }
+@media (prefers-color-scheme: dark) {
+  .comp__review { border-color: #3a2f5c; background: #1b1630; }
+}
 .comp__rowhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .comp__label { font-weight: 700; display: block; }
 .comp__basis { font-size: 12px; color: var(--muted, #667); }

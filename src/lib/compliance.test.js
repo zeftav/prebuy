@@ -3,7 +3,53 @@ import {
   defaultComplianceItems, normalizeCompliance, addMonths, daysBetween, dueStatus,
   complianceStats, complianceRows, isComplianceEmpty, slugKey,
   mergeScanCompliance, limitsToComplianceItems, mergeScanParts,
+  suggestionId, mergeSuggestions, pruneSuggestions,
 } from './compliance.js'
+
+describe('scan-read suggestions (uncertain matches)', () => {
+  it('mergeScanCompliance surfaces an uncertain read as a suggestion, not a fill', () => {
+    const items = [{ key: 'pitot_static', label: 'Pitot-static system', source: 'standard', last_date: null, last_tach: null }]
+    const { filled, suggestions } = mergeScanCompliance(items, [{ label: 'Static system leak test', date: '2024-05-01' }])
+    expect(filled).toBe(0)
+    expect(suggestions).toHaveLength(1)
+    expect(suggestions[0].suggested_key).toBe('pitot_static') // best-guess by shared words
+    expect(suggestions[0].scan_date).toBe('2024-05-01')
+  })
+  it('a confident compliance match fills and makes no suggestion', () => {
+    const items = [{ key: 'pitot_static', label: 'Pitot-static system', source: 'standard', last_date: null, last_tach: null }]
+    const { filled, suggestions } = mergeScanCompliance(items, [{ label: 'Pitot-static system', date: '2024-05-01' }])
+    expect(filled).toBe(1)
+    expect(suggestions).toHaveLength(0)
+  })
+  it('mergeScanParts suggests a partial-affinity part but not a no-affinity one', () => {
+    const items = [
+      { key: 'custom_fuel_bladders', source: 'mm-scan', label: 'Fuel bladders', basis: 'MM life limit', last_date: null, last_tach: null },
+    ]
+    const partial = mergeScanParts(items, [{ description: 'Fuel cell inspected', event_date: '2023-03-03' }])
+    expect(partial.filled).toBe(0) // "fuel" overlaps but "bladder" absent → not confident
+    expect(partial.suggestions).toHaveLength(1)
+    expect(partial.suggestions[0].suggested_key).toBe('custom_fuel_bladders')
+
+    const none = mergeScanParts(items, [{ description: 'Nose tire replaced', event_date: '2023-03-03' }])
+    expect(none.suggestions).toHaveLength(0)
+  })
+  it('mergeSuggestions de-dupes by content id', () => {
+    const a = { kind: 'part', scan_label: 'Fuel cell', scan_date: '2023-03-03', scan_tach: null, part_number: null, suggested_key: 'x' }
+    const merged = mergeSuggestions([{ ...a, id: suggestionId(a) }], [a])
+    expect(merged).toHaveLength(1)
+  })
+  it('pruneSuggestions drops a suggestion the item already satisfies', () => {
+    const s = { id: 'z', kind: 'part', scan_label: 'Fuel cell', scan_date: '2021-01-01', scan_tach: null, suggested_key: 'k' }
+    const satisfied = [{ key: 'k', last_date: '2022-05-05', last_tach: null }]
+    const notYet = [{ key: 'k', last_date: null, last_tach: null }]
+    expect(pruneSuggestions([s], satisfied)).toHaveLength(0)
+    expect(pruneSuggestions([s], notYet)).toHaveLength(1)
+  })
+  it('keeps an unassigned suggestion until dismissed', () => {
+    const s = { id: 'u', kind: 'compliance', scan_label: '?', scan_date: '2021-01-01', scan_tach: null, suggested_key: null }
+    expect(pruneSuggestions([s], [])).toHaveLength(1)
+  })
+})
 
 describe('mergeScanParts', () => {
   const items = [

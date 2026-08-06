@@ -22,7 +22,7 @@ import {
   EVENT_CATEGORIES,
 } from '../lib/logbooks.js'
 import { compileAdCompliance, adStats } from '../lib/ad.js'
-import { normalizeCompliance, mergeScanCompliance, mergeScanParts, saveCompliance } from '../lib/compliance.js'
+import { normalizeCompliance, mergeScanCompliance, mergeScanParts, saveCompliance, mergeSuggestions, pruneSuggestions } from '../lib/compliance.js'
 import { normalizeProfile, engineLabel, draftFromExtraction, mergeProfileDraft, saveProfile } from '../lib/profile.js'
 import { uploadMedia, listMediaByLogbook, listMediaByPurpose, updateMedia, deleteMedia } from '../lib/media.js'
 import { compileLogbookPdf, rotateStep, reorderUpdates } from '../lib/logbookpdf.js'
@@ -191,9 +191,15 @@ export default function LogbookAudit() {
               const norm = normalizeCompliance(fresh.attributes, { vertical: fresh.vertical, make: fresh.make })
               let citems = norm.items
               let filled = 0
-              if (scanCompliance.length) { const m = mergeScanCompliance(citems, scanCompliance); citems = m.items; filled += m.filled }
-              if (scanParts.length) { const m = mergeScanParts(citems, scanParts); citems = m.items; filled += m.filled }
-              if (filled) await saveCompliance(fresh, { items: citems, currentTach: norm.current_tach })
+              const newSuggestions = []
+              if (scanCompliance.length) { const m = mergeScanCompliance(citems, scanCompliance); citems = m.items; filled += m.filled; newSuggestions.push(...m.suggestions) }
+              if (scanParts.length) { const m = mergeScanParts(citems, scanParts); citems = m.items; filled += m.filled; newSuggestions.push(...m.suggestions) }
+              // Anything read but not confidently placed is held for review (so a blank
+              // item means "not in the logs", not "we mis-read it").
+              const suggestions = pruneSuggestions(mergeSuggestions(norm.suggestions, newSuggestions), citems)
+              if (filled || suggestions.length !== norm.suggestions.length) {
+                await saveCompliance(fresh, { items: citems, currentTach: norm.current_tach, suggestions })
+              }
             }
           }
           // Suggest the Aircraft Profile from the same scan (specs/currency/equipment

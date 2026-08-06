@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.58.0',
+    date: '2026-08-05',
+    title: 'Review uncertain logbook-scan matches',
+    items: [
+      'When a scan reads something but isn’t sure which timed item it belongs to, it used to drop it — which made the item look like it was never done. Now those uncertain reads show up in a new “Review from logbook scans” box on the Timed items tool.',
+      'Assign each one to the right item (the date and tach are editable so you can fix a mis-read), then Approve — or Dismiss it. Confident matches still fill in automatically, and a blank item now genuinely means we didn’t find it in the books.',
+    ],
+  },
+  {
     version: '0.57.0',
     date: '2026-08-05',
     title: 'Life-limited items: “not yet due” instead of blank',

@@ -3,6 +3,24 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.58.0] — 2026-08-05
+
+### Added
+- **Review queue for uncertain scan matches (so nothing in the logbook is silently missed).** The
+  logbook-scan auto-fill was all-or-nothing: a confident match filled a timed/compliance item, and
+  anything the scan read but couldn't confidently place was dropped — making a blank item look like
+  "never done" when the entry might really be in the books, just mis-matched. Matching is now three-tier:
+  confident (exact key / full label / part-number) auto-fills as before; **uncertain** (partial word
+  overlap, or a part with partial affinity to a tracked life-limit item) is captured as a **suggestion**
+  instead of dropped; no-affinity reads stay out (they're already in the searchable parts list). Uncertain
+  suggestions surface in a new **"Review from logbook scans"** panel on the Timed-items tool: each shows
+  what the scan read, a best-guess "Assign to" item, and editable date/tach — Approve writes it onto the
+  chosen item, Dismiss drops it. `compliance.js`: `mergeScanCompliance` / `mergeScanParts` now also return
+  `suggestions`; new pure `suggestionId` / `mergeSuggestions` (dedupe across re-scans) / `pruneSuggestions`
+  (drop once the item is satisfied) (+tests). Stored on `attributes.compliance.suggestions` (JSONB — no
+  migration); `LogbookAudit.processBook` collects+persists them at scan time; `Compliance.jsx` renders the
+  review panel. Internal-only (not on the customer report). Frontend only — no migration, no redeploy.
+
 ## [0.57.0] — 2026-08-05
 
 ### Fixed

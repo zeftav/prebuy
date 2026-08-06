@@ -675,6 +675,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   further out). Standard recurring items with blank last-done stay `unknown` (not baselined). New
   `assumedNew` flag on the output; Compliance chart shows "since new" + "life X hrs" (vs "every"), report
   compliance table shows "Since new". Status is computed client-side → no report redeploy. Tests 294.
+- Session 4 cont. — **Review queue for uncertain scan matches** (v0.58.0, frontend only). Brett: a
+  mechanic reads a blank timed item as "never done" — but the entry might be in the books and just
+  mis-matched. Matching is now 3-tier: confident (key/full-label/PN) auto-fills; **uncertain** (partial
+  word overlap / partial part affinity to a tracked life-limit item) → captured as a **suggestion** not
+  dropped; no-affinity → skipped (already in the parts list). `compliance.js`: `mergeScanCompliance`/
+  `mergeScanParts` return `suggestions`; new pure `suggestionId`/`mergeSuggestions`(dedupe)/
+  `pruneSuggestions`(drop once satisfied) (+tests, 300). Stored on `attributes.compliance.suggestions`
+  (no migration); `normalizeCompliance`/`saveCompliance` carry them; `LogbookAudit.processBook` collects
+  +persists at scan time; `Compliance.jsx` **"Review from logbook scans"** panel (assign-to + editable
+  date/tach → Approve, or Dismiss). Internal only (not on report). No migration, no redeploy.
+  **Still open (Brett's earlier ask):** inline edit/correct of items flagged during scan processing.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

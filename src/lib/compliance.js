@@ -47,6 +47,15 @@ function num(v) {
   return Number.isFinite(n) ? n : null
 }
 
+/** Significant tokens of a label: >=4 chars, trailing plural 's' stripped so
+ * "bladders" ~ "bladder". Used for fuzzy match/affinity scoring. Pure. */
+function sigTokens(s) {
+  return String(s ?? '').trim().toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .map((t) => t.replace(/s$/, ''))
+    .filter((t) => t.length >= 4)
+}
+
 /**
  * Merge stored compliance values onto the default set (keyed by `key`), append any
  * custom items the shop added, and drop defaults the shop disabled. Returns
@@ -94,7 +103,10 @@ export function normalizeCompliance(attributes, { vertical = 'aviation', make = 
       show_on_report: i.show_on_report !== false,
     }))
 
-  return { items: [...defaults, ...custom], current_tach: num(stored.current_tach) }
+  const suggestions = Array.isArray(stored.suggestions)
+    ? stored.suggestions.map((s) => ({ ...s, id: s.id ?? suggestionId(s) }))
+    : []
+  return { items: [...defaults, ...custom], current_tach: num(stored.current_tach), suggestions }
 }
 
 /** Add calendar months to an ISO date (YYYY-MM-DD). Returns ISO date. Pure. */
@@ -211,7 +223,7 @@ export function statusLabel(status) {
  * should be the editable list (we store only the shop-set fields per item, keyed by
  * `key`, so defaults stay code-driven). Returns { data, error }.
  */
-export async function saveCompliance(inspection, { items, currentTach }) {
+export async function saveCompliance(inspection, { items, currentTach, suggestions }) {
   const compact = (items ?? [])
     .filter((i) => i?.key)
     .map((i) => {
@@ -233,6 +245,11 @@ export async function saveCompliance(inspection, { items, currentTach }) {
     })
   const compliance = { items: compact }
   if (num(currentTach) != null) compliance.current_tach = num(currentTach)
+  // Preserve stored suggestions unless the caller explicitly passes a new list.
+  const sugg = suggestions !== undefined ? suggestions : inspection.attributes?.compliance?.suggestions
+  if (Array.isArray(sugg) && sugg.length) {
+    compliance.suggestions = sugg.map((s) => ({ ...s, id: s.id ?? suggestionId(s) }))
+  }
   const attributes = { ...(inspection.attributes ?? {}), compliance }
   const { data, error } = await supabase
     .from('inspections')
@@ -255,26 +272,44 @@ export function mergeScanCompliance(items, scanCompliance) {
   const next = (items ?? []).map((i) => ({ ...i }))
   const norm = (s) => String(s ?? '').trim().toLowerCase()
   let filled = 0
+  const suggestions = []
   for (const sc of scans) {
     const key = String(sc?.key ?? '').trim()
-    let idx = key ? next.findIndex((it) => it.key === key) : -1
-    if (idx < 0) {
-      const lbl = norm(sc?.label)
-      if (lbl) idx = next.findIndex((it) => norm(it.label) && (norm(it.label).includes(lbl) || lbl.includes(norm(it.label))))
-    }
-    if (idx < 0) continue
-    const it = next[idx]
     const scDate = sc?.date ? String(sc.date).slice(0, 10) : null
     const scTach = Number.isFinite(Number(sc?.tach)) && Number(sc.tach) !== 0 ? Number(sc.tach) : null
-    const newer =
-      (scDate && (!it.last_date || scDate > it.last_date)) ||
-      (scTach != null && (it.last_tach == null || scTach > it.last_tach))
-    if (!newer) continue
-    if (scDate) it.last_date = scDate
-    if (scTach != null) it.last_tach = scTach
-    filled += 1
+    if (!scDate && scTach == null) continue // nothing to fill
+    const scLabel = String(sc?.label ?? '').trim()
+    // Confident match: exact key, or label substring either direction.
+    let idx = key ? next.findIndex((it) => it.key === key) : -1
+    if (idx < 0) {
+      const lbl = norm(scLabel)
+      if (lbl) idx = next.findIndex((it) => norm(it.label) && (norm(it.label).includes(lbl) || lbl.includes(norm(it.label))))
+    }
+    if (idx >= 0) {
+      const it = next[idx]
+      const newer =
+        (scDate && (!it.last_date || scDate > it.last_date)) ||
+        (scTach != null && (it.last_tach == null || scTach > it.last_tach))
+      if (newer) {
+        if (scDate) it.last_date = scDate
+        if (scTach != null) it.last_tach = scTach
+        filled += 1
+      }
+      continue // confident (applied or already-satisfied) — never a suggestion
+    }
+    // Uncertain: the scan read a compliance entry we couldn't confidently place.
+    // Don't drop it (that would look like "never done") — surface it for review,
+    // pre-pointed at the item sharing the most words, if any.
+    const scTokens = new Set([...sigTokens(scLabel), ...sigTokens(key)])
+    let bestKey = null
+    let bestScore = 0
+    for (const it of next) {
+      const overlap = sigTokens(it.label).filter((t) => scTokens.has(t)).length
+      if (overlap > bestScore) { bestScore = overlap; bestKey = it.key }
+    }
+    suggestions.push({ kind: 'compliance', scan_label: scLabel || key || 'Compliance entry', scan_date: scDate, scan_tach: scTach, part_number: null, suggested_key: bestKey })
   }
-  return { items: next, filled }
+  return { items: next, filled, suggestions }
 }
 
 /**
@@ -288,34 +323,95 @@ export function mergeScanParts(items, parts) {
   const list = Array.isArray(parts) ? parts : []
   const next = (items ?? []).map((i) => ({ ...i }))
   const norm = (s) => String(s ?? '').trim().toLowerCase()
-  // Significant tokens: >=4 chars, plural 's' stripped so "bladders"~"bladder".
-  const sig = (s) => norm(s).split(/[^a-z0-9]+/).map((t) => t.replace(/s$/, '')).filter((t) => t.length >= 4)
   let filled = 0
+  const suggestions = []
   for (const pt of list) {
     const pn = norm(pt?.part_number)
-    const descTokens = new Set(sig(pt?.description))
+    const descTokens = new Set(sigTokens(pt?.description))
     const ptDate = pt?.event_date ? String(pt.event_date).slice(0, 10) : null
     const ptTach = Number.isFinite(Number(pt?.tach)) && Number(pt.tach) !== 0 ? Number(pt.tach) : null
     if (!ptDate && ptTach == null) continue
     const idx = next.findIndex((it) => {
       if (it.source === 'standard') return false // standard set fills from compliance[]
-      const labelTokens = sig(it.label)
+      const labelTokens = sigTokens(it.label)
       // Every significant word of the item's label must appear in the part (precise).
       const labelMatch = labelTokens.length > 0 && labelTokens.every((t) => descTokens.has(t))
       const pnMatch = pn.length >= 3 && (norm(it.basis).includes(pn) || norm(it.label).includes(pn))
       return labelMatch || pnMatch
     })
-    if (idx < 0) continue
-    const it = next[idx]
-    const newer =
-      (ptDate && (!it.last_date || ptDate > it.last_date)) ||
-      (ptTach != null && (it.last_tach == null || ptTach > it.last_tach))
-    if (!newer) continue
-    if (ptDate) it.last_date = ptDate
-    if (ptTach != null) it.last_tach = ptTach
-    filled += 1
+    if (idx >= 0) {
+      const it = next[idx]
+      const newer =
+        (ptDate && (!it.last_date || ptDate > it.last_date)) ||
+        (ptTach != null && (it.last_tach == null || ptTach > it.last_tach))
+      if (newer) {
+        if (ptDate) it.last_date = ptDate
+        if (ptTach != null) it.last_tach = ptTach
+        filled += 1
+      }
+      continue
+    }
+    // Uncertain: partial affinity to a tracked (life-limit / custom) item — some
+    // words overlap, or the part number partly matches — but not a full match.
+    // Surface it for review rather than dropping it. (No affinity at all → skip:
+    // it's already in the searchable parts list, so it isn't "missing".)
+    let bestKey = null
+    let bestScore = 0
+    for (const it of next) {
+      if (it.source === 'standard') continue
+      const overlap = sigTokens(it.label).filter((t) => descTokens.has(t)).length
+      const pnPartial = pn.length >= 3 && (norm(it.basis).includes(pn) || norm(it.label).includes(pn)) ? 1 : 0
+      const score = overlap + pnPartial
+      if (score > bestScore) { bestScore = score; bestKey = it.key }
+    }
+    if (bestKey) {
+      suggestions.push({
+        kind: 'part',
+        scan_label: String(pt?.description ?? '').trim() || pn || 'Part',
+        scan_date: ptDate, scan_tach: ptTach,
+        part_number: String(pt?.part_number ?? '').trim() || null,
+        suggested_key: bestKey,
+      })
+    }
   }
-  return { items: next, filled }
+  return { items: next, filled, suggestions }
+}
+
+/** Deterministic id for a scan suggestion (dedup across re-scans). Pure. */
+export function suggestionId(s) {
+  const lc = (v) => String(v ?? '').trim().toLowerCase()
+  return ['s', lc(s?.kind), lc(s?.suggested_key), lc(s?.scan_label), s?.scan_date || '', s?.scan_tach ?? '', lc(s?.part_number)].join('|')
+}
+
+/** Merge freshly-read suggestions into the stored list, de-duped by id. Pure. */
+export function mergeSuggestions(existing, incoming) {
+  const out = (existing ?? []).map((s) => ({ ...s, id: s.id ?? suggestionId(s) }))
+  const seen = new Set(out.map((s) => s.id))
+  for (const s of incoming ?? []) {
+    const id = s.id ?? suggestionId(s)
+    if (seen.has(id)) continue
+    seen.add(id)
+    out.push({ ...s, id })
+  }
+  return out
+}
+
+/**
+ * Drop suggestions the item list already satisfies — i.e. the target item now
+ * carries a last-complied equal to or newer than the scan read (so it's no longer
+ * "possibly missing"). Unassigned suggestions (no target) are kept until dismissed. Pure.
+ */
+export function pruneSuggestions(suggestions, items) {
+  const byKey = new Map((items ?? []).map((i) => [i.key, i]))
+  return (suggestions ?? []).filter((s) => {
+    if (!s) return false
+    if (!s.suggested_key) return true
+    const it = byKey.get(s.suggested_key)
+    if (!it) return true
+    const unsatDate = !!s.scan_date && !(it.last_date && it.last_date >= s.scan_date)
+    const unsatTach = s.scan_tach != null && !(it.last_tach != null && it.last_tach >= s.scan_tach)
+    return unsatDate || unsatTach
+  })
 }
 
 /**
