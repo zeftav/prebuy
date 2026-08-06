@@ -3,6 +3,27 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.59.0] — 2026-08-05
+
+### Added
+- **"Hard to read" advisory is now an actionable review — see each flagged item and correct it.** The
+  illegible-entry flag (`logbooks.review_note`, fed by the scan's `unclear[]`) used to be one blob of text
+  with a single "Mark reviewed" button. It's now a `ReviewFlag` component you expand to see **each flagged
+  item on its own line**, each with a **PDF page hotlink** (jump to the exact page to verify) and its own
+  **Resolve** (clear items one at a time) plus "Mark all reviewed." New pure `parseReviewNotes` splits the
+  stored note and pulls a leading `p.N` page ref out of each line.
+- **Inline event editing.** Scanned/added logbook events were delete-only, so a mis-read date/tach/figure
+  had no correction path. `EventRow` gains a pencil → an `EditEvent` form (type / title / date / tach /
+  description) that saves via `updateLogbookEvent` (new `onUpdateEvent` handler). This is the "fix it" step
+  for the illegible-review workflow, and useful on its own.
+- **Scan tags each unclear note with its page.** `structure-logbook` now prefixes each `unclear` note with
+  `"p.N — …"`; `offsetDraftPages` shifts that inline page ref to absolute across multi-batch reads (so the
+  page link is correct on big books). Frontend degrades gracefully (no page link) if not yet redeployed.
+
+### Deploy
+- ⚠️ **Redeploy `structure-logbook` (JWT ON)** — for the per-item page numbers on the review flag. No
+  migration; reuses `ANTHROPIC_API_KEY`. The review panel, resolve, and event editing all work without it.
+
 ## [0.58.0] — 2026-08-05
 
 ### Added

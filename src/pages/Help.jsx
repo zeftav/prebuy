@@ -70,7 +70,7 @@ const FAQ = [
   },
   {
     q: 'What happens if the scan can’t read part of a logbook?',
-    a: 'It tells you. When a figure or entry is too smudged or faded to read confidently, the AI leaves it blank rather than guessing, and the logbook shows a “Some entries were hard to read — verify against the PDF” note listing what was unclear. The full-resolution PDF of every page is always kept, so you can read the original yourself and fill in or correct anything — the scan is a starting draft, not the source of truth. Tap “Mark reviewed” once you’ve checked it.',
+    a: 'It tells you. When a figure or entry is too smudged or faded to read confidently, the AI leaves it blank rather than guessing, and the logbook shows a “N entries were hard to read” flag. Click it open to see each flagged item on its own line, tap the page link to jump straight to that page of the logbook PDF and read the original, then correct the data — edit the book’s times, or tap the pencil on the event to fix a mis-read date/tach/figure — and Resolve each item (or “Mark all reviewed”). The full-resolution PDF of every page is always kept, so the scan is a starting draft, not the source of truth.',
   },
   {
     q: 'How do I capture a whole logbook quickly?',

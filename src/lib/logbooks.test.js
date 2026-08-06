@@ -96,8 +96,12 @@ describe('offsetDraftPages', () => {
     const out = offsetDraftPages({ events: [{ title: 'A', page: 0 }, { title: 'B' }], parts: [] }, 12)
     expect(out.events.map((e) => e.page)).toEqual([0, 0])
   })
+  it('shifts the inline p.N prefix on unclear notes', () => {
+    const out = offsetDraftPages({ unclear: ['p.3 — SMOH smudged', 'no page ref here'] }, 12)
+    expect(out.unclear).toEqual(['p.15 — SMOH smudged', 'no page ref here'])
+  })
   it('tolerates nullish drafts', () => {
-    expect(offsetDraftPages(null, 5)).toEqual({ events: [], parts: [] })
+    expect(offsetDraftPages(null, 5)).toEqual({ events: [], parts: [], unclear: [] })
   })
 })
 

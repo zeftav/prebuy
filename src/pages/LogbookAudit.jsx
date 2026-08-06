@@ -284,6 +284,12 @@ export default function LogbookAudit() {
     const { error } = await deleteEvent(ev.id)
     if (error) setEvents((p) => [...p, ev])
   }
+  // Correct a mis-read event (e.g. an illegible date/tach flagged on the scan).
+  async function onUpdateEvent(ev, patch) {
+    const { data } = await updateLogbookEvent(ev.id, patch)
+    if (data) setEvents((p) => p.map((e) => (e.id === ev.id ? data : e)))
+    return { data }
+  }
   async function onDeletePart(pt) {
     setParts((p) => p.filter((x) => x.id !== pt.id))
     await deletePart(pt.id)
@@ -375,7 +381,7 @@ export default function LogbookAudit() {
               ) : (
                 <ul className="insp__list">
                   {filtered.events.map((e) => (
-                    <EventRow key={e.id} e={e} posLabel={posLabel} pdfUrl={pdfByLogbook.get(e.logbook_id)} onDelete={onDeleteEvent} onToggleReport={onToggleEventReport} />
+                    <EventRow key={e.id} e={e} posLabel={posLabel} pdfUrl={pdfByLogbook.get(e.logbook_id)} onDelete={onDeleteEvent} onToggleReport={onToggleEventReport} onSave={onUpdateEvent} />
                   ))}
                   {filtered.parts.map((p) => (
                     <PartRow key={p.id} p={p} pdfUrl={pdfByLogbook.get(p.logbook_id)} onDelete={onDeletePart} onToggleReport={onTogglePartReport} />
@@ -528,7 +534,11 @@ function ReportToggle({ on, onToggle }) {
 }
 
 // A notable event row (used in search results + the full list).
-function EventRow({ e, posLabel, pdfUrl, onDelete, onToggleReport }) {
+function EventRow({ e, posLabel, pdfUrl, onDelete, onToggleReport, onSave }) {
+  const [editing, setEditing] = useState(false)
+  if (editing && onSave) {
+    return <EditEvent e={e} onSave={onSave} onDone={() => setEditing(false)} />
+  }
   return (
     <li className="insp__row">
       <span className="insp__main">
@@ -542,10 +552,62 @@ function EventRow({ e, posLabel, pdfUrl, onDelete, onToggleReport }) {
         </span>
       </span>
       <PageLink url={pdfUrl} page={e.source_page} />
+      {onSave && (
+        <button type="button" className="insp__flag" title="Edit event" aria-label="Edit event" onClick={() => setEditing(true)}>
+          <Pencil size={15} aria-hidden="true" />
+        </button>
+      )}
       {onToggleReport && <ReportToggle on={e.show_on_report === true} onToggle={() => onToggleReport(e)} />}
       <ConfirmButton title="Delete event" onConfirm={() => onDelete(e)}>
         <Trash2 size={15} aria-hidden="true" />
       </ConfirmButton>
+    </li>
+  )
+}
+
+// Inline edit of a scanned/added event — the correction path for a mis-read entry.
+function EditEvent({ e, onSave, onDone }) {
+  const [f, setF] = useState({
+    category: e.category ?? 'other',
+    title: e.title ?? '',
+    event_date: e.event_date ?? '',
+    tach: e.tach ?? '',
+    description: e.description ?? '',
+  })
+  const [busy, setBusy] = useState(false)
+  const set = (k) => (ev) => setF((p) => ({ ...p, [k]: ev.target.value }))
+  async function save() {
+    setBusy(true)
+    await onSave(e, {
+      category: f.category,
+      title: f.title.trim() || 'Event',
+      event_date: f.event_date || null,
+      tach: f.tach === '' ? null : Number(f.tach),
+      description: f.description.trim() || null,
+    })
+    setBusy(false)
+    onDone()
+  }
+  return (
+    <li className="insp__row lb__eventedit">
+      <div className="insp__row2">
+        <div className="auth__field">
+          <label>Type</label>
+          <select value={f.category} onChange={set('category')}>
+            {EVENT_CATEGORIES.map((c) => <option key={c} value={c}>{categoryLabel(c)}</option>)}
+          </select>
+        </div>
+        <div className="auth__field"><label>Title</label><input type="text" value={f.title} onChange={set('title')} /></div>
+      </div>
+      <div className="insp__row2">
+        <div className="auth__field"><label>Date</label><input type="date" value={f.event_date} onChange={set('event_date')} /></div>
+        <div className="auth__field"><label>Tach</label><input type="number" inputMode="decimal" step="0.1" value={f.tach} onChange={set('tach')} /></div>
+      </div>
+      <div className="auth__field"><label>Description</label><input type="text" value={f.description} onChange={set('description')} /></div>
+      <div className="insp__capture">
+        <button type="button" className="auth__btn" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>
+        <button type="button" className="auth__btn auth__btn--ghost" onClick={onDone}>Cancel</button>
+      </div>
     </li>
   )
 }
@@ -910,14 +972,12 @@ function LogbookCard({ inspection, book, label, engineCount, layout, job, onAmen
       </div>
 
       {book.review_note && (
-        <div className="lb__review-flag">
-          <AlertTriangle size={15} aria-hidden="true" />
-          <div className="lb__review-main">
-            <strong>Some entries were hard to read — verify against the PDF.</strong>
-            <span className="auth__hint">{book.review_note}</span>
-          </div>
-          <button type="button" className="auth__toggle" onClick={() => onUpdate({ review_note: null })}>Mark reviewed</button>
-        </div>
+        <ReviewFlag
+          note={book.review_note}
+          pdfUrl={pdf?.url}
+          onResolveNote={(remaining) => onUpdate({ review_note: remaining })}
+          onEditTimes={() => setEditing(true)}
+        />
       )}
 
       {pdf && (
@@ -998,6 +1058,62 @@ function LogbookCard({ inspection, book, label, engineCount, layout, job, onAmen
           )}
         </>
       )}
+    </div>
+  )
+}
+
+// Parse a stored review_note (illegible-entry flags, joined with '; ') into lines,
+// pulling out a leading "p.N" page reference if the model included one.
+function parseReviewNotes(note) {
+  return String(note ?? '')
+    .split(/\s*;\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((text) => {
+      const m = text.match(/^p\.?\s*(\d+)\s*[—:-]\s*(.*)$/i)
+      return m ? { text: m[2].trim() || text, page: Number(m[1]) } : { text, page: null }
+    })
+}
+
+// The "some entries were hard to read" advisory, made actionable: expand to see
+// each flagged item on its own line, jump to its PDF page to verify, then fix the
+// data (edit the times / the event) and resolve items one at a time — or all at once.
+function ReviewFlag({ note, pdfUrl, onResolveNote, onEditTimes }) {
+  const [open, setOpen] = useState(false)
+  const notes = parseReviewNotes(note)
+  const resolveOne = (i) => {
+    const remaining = notes.filter((_, j) => j !== i).map((n) => (n.page ? `p.${n.page} — ${n.text}` : n.text))
+    onResolveNote(remaining.length ? remaining.join('; ') : null)
+  }
+  return (
+    <div className="lb__review-flag">
+      <AlertTriangle size={15} aria-hidden="true" />
+      <div className="lb__review-main">
+        <button type="button" className="lb__review-head" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+          <strong>{notes.length} {notes.length === 1 ? 'entry was' : 'entries were'} hard to read</strong>
+          <span className="auth__hint">{open ? 'Hide' : 'Review & correct'}</span>
+        </button>
+        {open && (
+          <>
+            <ul className="lb__review-list">
+              {notes.map((n, i) => (
+                <li key={i}>
+                  <span className="lb__review-text">{n.text}</span>
+                  <span className="lb__review-actions">
+                    <PageLink url={pdfUrl} page={n.page} />
+                    <button type="button" className="auth__toggle" onClick={() => resolveOne(i)}>Resolve</button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="auth__hint">Open the page to verify, then fix it below — edit the times, or edit the event in the list — and resolve it.</p>
+            <div className="insp__capture">
+              <button type="button" className="auth__btn auth__btn--ghost" onClick={onEditTimes}>Edit times</button>
+              <button type="button" className="auth__toggle" onClick={() => onResolveNote(null)}>Mark all reviewed</button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }

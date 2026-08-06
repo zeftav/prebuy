@@ -1587,9 +1587,34 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
   min-width: 0;
 }
+.lb__review-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+.lb__review-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.lb__review-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(224, 160, 0, 0.25);
+}
+.lb__review-text { min-width: 0; }
+.lb__review-actions { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.lb__eventedit { flex-direction: column; align-items: stretch; gap: 8px; }
 
 /* Account-type picker (CreateShop: inspector / broker / both) */
 .insp__accounttypes {

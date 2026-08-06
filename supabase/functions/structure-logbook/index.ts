@@ -315,7 +315,8 @@ Deno.serve(async (req: Request) => {
         '(4) currency due-dates (annual, IFR pitot/static 91.411, transponder 91.413, ELT battery, O2 hydro); ' +
         '(5) installed equipment, split into avionics vs additional, with short condition notes; ' +
         '(6) "unclear" — short notes on anything PRESENT on the pages you could not confidently read ' +
-        '(smudged/faded figures, illegible handwriting), so a human knows to verify it; ' +
+        '(smudged/faded figures, illegible handwriting), so a human knows to verify it. Start EACH note ' +
+        'with the page it is on, formatted exactly like "p.3 — <what is unclear>"; ' +
         '(7) "parts" — notable part numbers / components installed or replaced (mag, alternator, cylinder, ' +
         'avionics, pump, tire) with their part number + a short description; ' +
         '(8) "compliance" — the most recent recurring inspection / airworthiness compliance you can see ' +

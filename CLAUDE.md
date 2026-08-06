@@ -685,7 +685,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   (no migration); `normalizeCompliance`/`saveCompliance` carry them; `LogbookAudit.processBook` collects
   +persists at scan time; `Compliance.jsx` **"Review from logbook scans"** panel (assign-to + editable
   date/tach → Approve, or Dismiss). Internal only (not on report). No migration, no redeploy.
-  **Still open (Brett's earlier ask):** inline edit/correct of items flagged during scan processing.
+- Session 4 cont. — **"Hard to read" flag → actionable review + inline event edit** (v0.59.0). The
+  illegible advisory (`logbooks.review_note` ← scan `unclear[]`) was one text blob + "Mark reviewed". Now
+  `ReviewFlag` expands to **per-item lines**, each with a **PDF page hotlink** + own **Resolve** (+ "Mark
+  all reviewed"); pure `parseReviewNotes` splits the note + pulls a leading `p.N`. **Inline event editing:**
+  `EventRow` pencil → `EditEvent` (type/title/date/tach/description → `updateLogbookEvent` via new
+  `onUpdateEvent`) — the correction path (events were delete-only). `structure-logbook` now prefixes each
+  `unclear` note with `"p.N — …"`; `offsetDraftPages` shifts that inline ref absolute across batches
+  (+test, 301). ⚠️ **Redeploy `structure-logbook` (JWT ON)** for the page numbers (frontend degrades
+  gracefully without it). No migration. This closes Brett's earlier "edit items flagged in processing" ask.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

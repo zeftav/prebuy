@@ -452,7 +452,13 @@ export function offsetDraftPages(draft, offset) {
           return { ...x, page: Number.isFinite(p) && p > 0 ? p + off : 0 }
         })
       : []
-  return { ...(draft ?? {}), events: bump(draft?.events), parts: bump(draft?.parts) }
+  // "unclear" notes carry their page inline as a "p.N — …" prefix; shift it too so
+  // the page reference is absolute across the whole read set (not batch-relative).
+  const bumpUnclear = (arr) =>
+    Array.isArray(arr)
+      ? arr.map((s) => String(s ?? '').replace(/^p\.?\s*(\d+)/i, (_m, n) => `p.${Number(n) + off}`))
+      : []
+  return { ...(draft ?? {}), events: bump(draft?.events), parts: bump(draft?.parts), unclear: bumpUnclear(draft?.unclear) }
 }
 
 /**

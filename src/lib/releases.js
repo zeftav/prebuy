@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.59.0',
+    date: '2026-08-05',
+    title: 'Review & fix the “hard to read” logbook entries',
+    items: [
+      'When a scan flags that some entries were hard to read, you can now click it open to see each one on its own line, jump straight to that page of the logbook PDF to check it, and resolve them one at a time (or all at once) — instead of one lump of text with a single “reviewed” button.',
+      'And you can now edit a logbook event inline (tap the pencil) — so if the scan mis-read a date, tach or figure, you fix it right there and the record is correct.',
+    ],
+  },
+  {
     version: '0.58.0',
     date: '2026-08-05',
     title: 'Review uncertain logbook-scan matches',
