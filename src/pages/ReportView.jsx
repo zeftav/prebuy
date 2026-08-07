@@ -15,6 +15,7 @@ import { reasonLabel } from '../lib/followups.js'
 import { normalizeGearRig, isGearRigEmpty, gearRigStats, GEAR_RIG_GROUPS } from '../lib/gearrig.js'
 import { normalizeCompliance, complianceRows, statusLabel } from '../lib/compliance.js'
 import { normalizeCompression, cylinderStatus, isCompressionEmpty, isCompressionItem, cylTag } from '../lib/compression.js'
+import { normalizeEstimate, normalizeItemEstimate, hasEstimate, lineTotal, estimateStats, formatUsd } from '../lib/estimate.js'
 import { orderByFinancialRisk, riskBand } from '../lib/risk.js'
 import {
   normalizeProfile,
@@ -316,6 +317,8 @@ export default function ReportView() {
       {discrepancies.length > 0 && <ReportSection title="Discrepancies" items={discrepancies} showPhotos />}
       {monitors.length > 0 && <ReportSection title="Items to monitor" items={monitors} showPhotos />}
 
+      {inspection.estimate?.show_on_report && <EstimateSection items={items} estimate={inspection.estimate} />}
+
       {inspection.compression && <CompressionSection items={items} compression={inspection.compression} />}
 
       {cleared.length > 0 && (
@@ -491,6 +494,53 @@ function Stat({ n, label, tone, icon }) {
       <span className="report__statn">{n}</span>
       <span className="report__statlabel">{label}</span>
     </div>
+  )
+}
+
+// Estimated repairs: each priced discrepancy with labor + parts, and a grand total.
+function EstimateSection({ items, estimate }) {
+  const est = normalizeEstimate({ estimate })
+  const rows = (items ?? [])
+    .filter((i) => i.status === 'discrepancy' && est.items[i.id] && hasEstimate(est.items[i.id]))
+    .map((i) => ({ item: i, rec: est.items[i.id] }))
+  if (!rows.length) return null
+  const stats = estimateStats(rows.map((r) => r.item), est.items, est.labor_rate)
+  return (
+    <section className="report__section">
+      <h2>Estimated repairs</h2>
+      <p className="report__sectionnote">
+        Preliminary estimate to address the discrepancies below{est.labor_rate != null ? ` (labor at ${formatUsd(est.labor_rate)}/hr)` : ''}.
+        Actual cost depends on findings on teardown, parts availability, and shop rates.
+      </p>
+      <div className="report__tablewrap" style={{ overflowX: 'auto' }}>
+        <table className="report__grtable">
+          <thead>
+            <tr><th>Item</th><th>Labor</th><th>Parts</th><th>Estimate</th></tr>
+          </thead>
+          <tbody>
+            {rows.map(({ item, rec }) => {
+              const n = normalizeItemEstimate(rec)
+              return (
+                <tr key={item.id}>
+                  <td>{item.title}{n.note ? <span className="report__estnote"> — {n.note}</span> : ''}</td>
+                  <td>{n.labor_hours != null ? `${n.labor_hours} hr` : '—'}</td>
+                  <td>{n.parts_cost != null ? formatUsd(n.parts_cost) : '—'}</td>
+                  <td>{formatUsd(lineTotal(rec, est.labor_rate))}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td><strong>Total</strong></td>
+              <td>{stats.laborHours} hr</td>
+              <td>{formatUsd(stats.partsCost)}</td>
+              <td><strong>{formatUsd(stats.total)}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
   )
 }
 

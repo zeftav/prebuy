@@ -700,6 +700,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   excludes hidden so the AI summary omits them. `RowEditor` gains optional `onToggleHidden` (per-row +
   'all'); held rows dim. `ReportView` `EquipmentGroup` filters `hidden`, section hides if all held. Stored
   in `attributes.profile` → **no migration**; report filters client-side → **no redeploy**. Tests 302.
+- Session 4 cont. — **Per-discrepancy repair estimates** (v0.61.0, 2 features asked; this is #2 of 2).
+  New `lib/estimate.js` (pure+tested, 8): `normalizeEstimate`/`normalizeItemEstimate`/`hasEstimate`/
+  `lineTotal`/`estimateStats`/`formatUsd` + `saveItemEstimate`/`saveEstimateSettings`. Stored on
+  `inspections.attributes.estimate = { labor_rate, show_on_report(default off), items:{itemId:{labor_hours,
+  parts_cost,note}} }` (JSONB, no migration). InspectionDetail: `EstimateForm` on each **discrepancy** item
+  (labor hrs + parts$ + note → line total at the rate) + `EstimateSummary` panel (labor-rate input, rollup
+  labor/parts/total across discrepancies, on-report toggle). `report` fn returns `inspection.estimate`;
+  ReportView `EstimateSection` = opt-in "Estimated repairs" table (per-item + grand total + caveat). ⚠️
+  **REDEPLOY `report` (JWT OFF)** for the report table (capture + rollup are frontend-only). Tests 310.
+  **Feature #1 still to build (Brett):** export the discrepancies (+ these estimates) as a **QuantumMX work
+  order** (import/export) to estimate repairs there.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

@@ -77,6 +77,9 @@ async function assemble(admin: Admin, insp: Record<string, unknown>) {
       profile: attrs?.profile ?? null, gear_rigging: attrs?.gear_rigging ?? null, compliance: attrs?.compliance ?? null,
       // Per-item compression-test readings, keyed by inspection_item id.
       compression: attrs?.compression ?? null,
+      // Repair estimate (labor rate + per-item labor/parts). Only surfaced on the
+      // report when the shop opts in (estimate.show_on_report); ReportView gates it.
+      estimate: attrs?.estimate ?? null,
     },
     items: (items ?? []).map((i: Record<string, unknown>) => ({
       id: i.id, category: i.category, title: i.title, description: i.description, status: i.status,

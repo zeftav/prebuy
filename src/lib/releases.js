@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.61.0',
+    date: '2026-08-06',
+    title: 'Repair estimates on each discrepancy',
+    items: [
+      'Each discrepancy now has a “Repair estimate” block — enter labor hours and parts cost (plus a note) and we price the hours at your shop labor rate.',
+      'A “Repairs estimate” summary at the bottom of the inspection sets your labor rate and totals up labor, parts, and the grand total across all discrepancies. Flip on “Show on the customer report” to add an Estimated repairs table to the report — off by default.',
+    ],
+  },
+  {
     version: '0.60.0',
     date: '2026-08-06',
     title: 'Hold equipment off the report',

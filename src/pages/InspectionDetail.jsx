@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check, Wrench, CalendarClock } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check, Wrench, CalendarClock, DollarSign } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import {
@@ -31,6 +31,7 @@ import { listFollowups, addFollowup, updateFollowup, deleteFollowup, openCount, 
 import { hasPhases, PHASES } from '../lib/templates.js'
 import { isBeech } from '../lib/gearrig.js'
 import { isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, cylinderOrder, cylCaption, cylTag, saveItemCompression } from '../lib/compression.js'
+import { normalizeEstimate, normalizeItemEstimate, hasEstimate, lineTotal, estimateStats, formatUsd, saveItemEstimate, saveEstimateSettings } from '../lib/estimate.js'
 import './auth.css'
 import './inspections.css'
 
@@ -208,6 +209,18 @@ export default function InspectionDetail() {
   // Save a compression-test item's structured readings (stored on attributes).
   async function saveCompression(itemId, rec) {
     const { data, error } = await saveItemCompression(inspection, itemId, rec)
+    if (!error && data) setInspection((p) => ({ ...p, attributes: data.attributes }))
+    return error
+  }
+
+  // Repair estimate: per-discrepancy labor/parts + inspection-level rate/on-report.
+  async function saveEstimate(itemId, rec) {
+    const { data, error } = await saveItemEstimate(inspection, itemId, rec)
+    if (!error && data) setInspection((p) => ({ ...p, attributes: data.attributes }))
+    return error
+  }
+  async function saveEstimatePrefs(patch) {
+    const { data, error } = await saveEstimateSettings(inspection, patch)
     if (!error && data) setInspection((p) => ({ ...p, attributes: data.attributes }))
     return error
   }
@@ -424,17 +437,22 @@ export default function InspectionDetail() {
                 media={media.filter((m) => m.inspection_item_id === item.id)}
                 inspection={inspection}
                 compression={inspection.attributes?.compression?.[item.id] ?? null}
+                estimate={inspection.attributes?.estimate?.items?.[item.id] ?? null}
+                laborRate={inspection.attributes?.estimate?.labor_rate ?? null}
                 onStatus={setItemStatus}
                 onPatch={patchItem}
                 onRemove={removeItem}
                 onMediaChange={refreshMedia}
                 onFlagFollowup={flagFollowup}
                 onSaveCompression={saveCompression}
+                onSaveEstimate={saveEstimate}
               />
             ))}
           </ol>
 
           <AddItem onAdd={addItem} />
+
+          <EstimateSummary inspection={inspection} items={ordered} onSavePrefs={saveEstimatePrefs} />
 
           <FollowupsPanel followups={followups} onAdd={addFu} onPatch={patchFu} onRemove={removeFu} />
         </>
@@ -509,7 +527,7 @@ function DangerZone({ inspection, noun = 'inspection', onDelete }) {
   )
 }
 
-function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup, onSaveCompression }) {
+function ItemRow({ item, media, inspection, compression, estimate, laborRate, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup, onSaveCompression, onSaveEstimate }) {
   const [open, setOpen] = useState(false)
   const isCompression = isCompressionItem(item)
   const [findings, setFindings] = useState(item.findings ?? '')
@@ -688,6 +706,10 @@ function ItemRow({ item, media, inspection, compression, onStatus, onPatch, onRe
               media={media}
               onMediaChange={onMediaChange}
             />
+          )}
+
+          {isDiscrepancy && (
+            <EstimateForm rec={estimate} rate={laborRate} onSave={(r) => onSaveEstimate(item.id, r)} />
           )}
 
           <div className="insp__capture">
@@ -909,6 +931,99 @@ function CompressionForm({ rec, onSave, inspection, itemId, media = [], onMediaC
         </button>
       </div>
     </div>
+  )
+}
+
+// Per-discrepancy repair estimate: labor hours + parts cost (+ optional note).
+// The line total uses the inspection's labor rate (set on the Estimate summary).
+function EstimateForm({ rec, rate, onSave }) {
+  const [f, setF] = useState(() => {
+    const n = normalizeItemEstimate(rec)
+    return { labor_hours: n.labor_hours ?? '', parts_cost: n.parts_cost ?? '', note: n.note }
+  })
+  const [saveState, setSaveState] = useState('idle') // idle | saving | saved
+  const set = (k) => (e) => { setF((p) => ({ ...p, [k]: e.target.value })); setSaveState('idle') }
+  const total = lineTotal(f, rate)
+  async function save() {
+    setSaveState('saving')
+    const err = await onSave(f)
+    setSaveState(err ? 'idle' : 'saved')
+  }
+  return (
+    <div className="insp__estimate">
+      <div className="insp__estimatehead">
+        <DollarSign size={15} aria-hidden="true" /> <strong>Repair estimate</strong>
+        {hasEstimate(f) && <span className="insp__estimatetotal">{formatUsd(total)}</span>}
+      </div>
+      <div className="insp__row2">
+        <div className="auth__field">
+          <label>Labor (hours)</label>
+          <input type="number" inputMode="decimal" step="0.1" placeholder="e.g. 2.5" value={f.labor_hours} onChange={set('labor_hours')} />
+        </div>
+        <div className="auth__field">
+          <label>Parts ($)</label>
+          <input type="number" inputMode="decimal" step="1" placeholder="e.g. 400" value={f.parts_cost} onChange={set('parts_cost')} />
+        </div>
+      </div>
+      <input className="insp__findings" type="text" placeholder="Estimate note (part number, sublet, assumptions…)" value={f.note} onChange={set('note')} />
+      <div className="insp__capture">
+        <button type="button" className="auth__btn auth__btn--ghost" onClick={save} disabled={saveState === 'saving'}>
+          <Check size={15} aria-hidden="true" /> {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Save estimate'}
+        </button>
+        {rate == null && <span className="auth__hint">Set a labor rate below to price the hours.</span>}
+      </div>
+    </div>
+  )
+}
+
+// Estimate rollup for the whole inspection: labor rate, totals across all
+// discrepancies, and whether the estimate prints on the customer report.
+function EstimateSummary({ inspection, items, onSavePrefs }) {
+  const est = normalizeEstimate(inspection.attributes)
+  const discrepancies = (items ?? []).filter((i) => i.status === 'discrepancy')
+  const priced = discrepancies.filter((i) => est.items[i.id] && hasEstimate(est.items[i.id]))
+  const [rate, setRate] = useState(est.labor_rate != null ? String(est.labor_rate) : '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const stats = estimateStats(discrepancies, est.items, est.labor_rate)
+
+  if (!discrepancies.length) return null
+
+  async function saveRate() {
+    setSaving(true)
+    const err = await onSavePrefs({ labor_rate: rate === '' ? null : Number(rate) })
+    setSaving(false)
+    if (!err) { setSaved(true); setTimeout(() => setSaved(false), 1500) }
+  }
+
+  return (
+    <section className="insp__section insp__estsummary">
+      <div className="insp__sectionhead">
+        <h2><DollarSign size={18} aria-hidden="true" /> Repairs estimate</h2>
+      </div>
+      <p className="auth__hint">
+        {priced.length} of {discrepancies.length} discrepanc{discrepancies.length === 1 ? 'y' : 'ies'} estimated.
+        Enter labor hours and parts on each discrepancy above; set your shop labor rate here to price it.
+      </p>
+      <div className="insp__estsummarygrid">
+        <div className="auth__field insp__esrate">
+          <label htmlFor="labor-rate">Labor rate ($/hr)</label>
+          <input id="labor-rate" type="number" inputMode="decimal" step="1" placeholder="e.g. 95" value={rate}
+            onChange={(e) => { setRate(e.target.value); setSaved(false) }} onBlur={saveRate} />
+        </div>
+        <dl className="insp__esttotals">
+          <div><dt>Labor</dt><dd>{stats.laborHours} hr · {formatUsd(stats.laborCost)}</dd></div>
+          <div><dt>Parts</dt><dd>{formatUsd(stats.partsCost)}</dd></div>
+          <div className="insp__esttotal"><dt>Total estimate</dt><dd>{formatUsd(stats.total)}</dd></div>
+        </dl>
+      </div>
+      <label className="insp__estreport">
+        <input type="checkbox" checked={est.show_on_report}
+          onChange={(e) => onSavePrefs({ show_on_report: e.target.checked })} />
+        Show this estimate on the customer report
+      </label>
+      {(saving || saved) && <span className="auth__hint" role="status">{saving ? 'Saving…' : 'Saved'}</span>}
+    </section>
   )
 }
 

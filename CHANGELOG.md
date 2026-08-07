@@ -3,6 +3,25 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.61.0] — 2026-08-06
+
+### Added
+- **Per-discrepancy repair estimates (labor + parts) with a rollup — for shops that don't use an external
+  work-order system.** Each discrepancy item in the inspection gets an "Repair estimate" block: labor
+  hours + parts cost (+ an optional note for a part number / sublet / assumption); the line total prices
+  the hours at the inspection's labor rate. A new **"Repairs estimate"** summary panel at the bottom of the
+  inspection sets the shop labor rate and rolls up labor hours, labor $, parts $, and a grand total across
+  every priced discrepancy — and has a **"Show this estimate on the customer report"** toggle (default
+  **off**, since dollar figures are opt-in). When on, the report gets an **"Estimated repairs"** table
+  (each discrepancy with labor / parts / line total + a grand total and a "preliminary estimate" caveat).
+  New `lib/estimate.js` (pure + tested): `normalizeEstimate` / `normalizeItemEstimate` / `hasEstimate` /
+  `lineTotal` / `estimateStats` / `formatUsd` + `saveItemEstimate` / `saveEstimateSettings`. Stored on
+  `inspections.attributes.estimate` (JSONB — no migration).
+
+### Deploy
+- ⚠️ **REDEPLOY `report` (JWT OFF)** — returns `inspection.estimate` so the opt-in "Estimated repairs"
+  table can render. No migration. (Capture + rollup are frontend-only; the report table needs this.)
+
 ## [0.60.0] — 2026-08-06
 
 ### Added
