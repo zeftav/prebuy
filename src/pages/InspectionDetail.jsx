@@ -474,6 +474,7 @@ export default function InspectionDetail() {
                 compression={inspection.attributes?.compression?.[item.id] ?? null}
                 estimate={inspection.attributes?.estimate?.items?.[item.id] ?? null}
                 laborRate={inspection.attributes?.estimate?.labor_rate ?? null}
+                estimateEnabled={normalizeEstimate(inspection.attributes).enabled}
                 airworthy={inspection.attributes?.airworthiness?.[item.id] === true}
                 onStatus={setItemStatus}
                 onPatch={patchItem}
@@ -603,7 +604,7 @@ function ItemFilterBar({ filter, sort, onFilter, onSort, shown, total }) {
   )
 }
 
-function ItemRow({ item, media, inspection, compression, estimate, laborRate, airworthy, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup, onSaveCompression, onSaveEstimate, onSaveAirworthy }) {
+function ItemRow({ item, media, inspection, compression, estimate, laborRate, estimateEnabled, airworthy, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup, onSaveCompression, onSaveEstimate, onSaveAirworthy }) {
   const [open, setOpen] = useState(false)
   const isCompression = isCompressionItem(item)
   const [findings, setFindings] = useState(item.findings ?? '')
@@ -792,7 +793,7 @@ function ItemRow({ item, media, inspection, compression, estimate, laborRate, ai
             </label>
           )}
 
-          {isDiscrepancy && (
+          {isDiscrepancy && estimateEnabled && (
             <EstimateForm rec={estimate} rate={laborRate} onSave={(r) => onSaveEstimate(item.id, r)} />
           )}
 
@@ -1110,7 +1111,18 @@ function EstimateSummary({ inspection, items, onSavePrefs }) {
     <section className="insp__section insp__estsummary">
       <div className="insp__sectionhead">
         <h2><DollarSign size={18} aria-hidden="true" /> Repairs estimate</h2>
+        <label className="insp__estenable" title="Turn repair estimates on/off for this inspection (entered values are kept)">
+          <input type="checkbox" checked={est.enabled} onChange={(e) => onSavePrefs({ enabled: e.target.checked })} />
+          Enabled
+        </label>
       </div>
+      {!est.enabled ? (
+        <p className="auth__hint">
+          Repair estimates are off for this inspection. Turn them on to add a labor + parts estimate to each
+          discrepancy.{priced.length > 0 ? ` Your entered values (${priced.length} item${priced.length === 1 ? '' : 's'}) are kept.` : ''}
+        </p>
+      ) : (
+      <>
       <p className="auth__hint">
         {priced.length} of {discrepancies.length} discrepanc{discrepancies.length === 1 ? 'y' : 'ies'} estimated.
         Enter labor hours and parts on each discrepancy above; set your shop labor rate here to price it.
@@ -1133,6 +1145,8 @@ function EstimateSummary({ inspection, items, onSavePrefs }) {
         Show this estimate on the customer report
       </label>
       {(saving || saved) && <span className="auth__hint" role="status">{saving ? 'Saving…' : 'Saved'}</span>}
+      </>
+      )}
     </section>
   )
 }

@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.64.0',
+    date: '2026-08-06',
+    title: 'Turn repair estimates on or off per inspection',
+    items: [
+      'Repair estimates now have an “Enabled” switch on the Repairs estimate panel — turn the whole feature off for a job where you don’t want it, and the estimate blocks and totals disappear from the inspection and the report.',
+      'Anything you already entered is kept — flip it back on and your labor/parts numbers are all still there. New inspections start with it off; jobs that already had estimates stay on.',
+    ],
+  },
+  {
     version: '0.63.0',
     date: '2026-08-06',
     title: 'Filter & sort the checklist items',

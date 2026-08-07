@@ -3,6 +3,18 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.64.0] — 2026-08-06
+
+### Added
+- **Repair estimates are a per-inspection on/off toggle.** An "Enabled" checkbox on the Repairs estimate
+  panel turns the whole estimate feature on or off for the inspection — when off, the per-discrepancy
+  estimate blocks and the summary body are hidden, but **entered values are retained** (toggle back on and
+  they're all there). The report's "Estimated repairs" section is also suppressed when the feature is off.
+  `estimate.enabled` (new field) defaults ON for inspections that already have estimate data / a rate / the
+  report toggle set (so nothing hides retroactively) and OFF for a fresh inspection. `normalizeEstimate` /
+  `saveEstimateSettings` / `saveItemEstimate` carry it (+tests). Stored in `attributes.estimate` — no
+  migration; the report reads it from the existing estimate passthrough — no redeploy.
+
 ## [0.63.1] — 2026-08-06
 
 ### Changed

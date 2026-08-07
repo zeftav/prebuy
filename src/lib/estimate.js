@@ -33,7 +33,12 @@ export function normalizeEstimate(attributes) {
   if (stored.items && typeof stored.items === 'object') {
     for (const [id, rec] of Object.entries(stored.items)) items[id] = normalizeItemEstimate(rec)
   }
+  // The estimate feature is a per-inspection on/off. When not explicitly set,
+  // default to ON if the shop has already used it (any data / rate / report toggle),
+  // else OFF — so it's opt-in for new jobs but never hides existing work.
+  const anyData = Object.values(items).some((r) => hasEstimate(r)) || num(stored.labor_rate) != null || stored.show_on_report === true
   return {
+    enabled: typeof stored.enabled === 'boolean' ? stored.enabled : anyData,
     labor_rate: num(stored.labor_rate),
     show_on_report: stored.show_on_report === true, // default OFF (dollar figures are opt-in)
     items,
@@ -102,14 +107,15 @@ export async function saveItemEstimate(inspection, itemId, patch) {
   const items = { ...cur.items }
   if (rec.labor_hours == null && rec.parts_cost == null && !rec.note) delete items[itemId]
   else items[itemId] = rec
-  const estimate = { labor_rate: cur.labor_rate, show_on_report: cur.show_on_report, items }
+  const estimate = { enabled: cur.enabled, labor_rate: cur.labor_rate, show_on_report: cur.show_on_report, items }
   return writeAttrs(inspection, estimate)
 }
 
-/** Persist the estimate settings (labor rate, on-report). Returns { data, error }. */
-export async function saveEstimateSettings(inspection, { labor_rate, show_on_report }) {
+/** Persist the estimate settings (enabled, labor rate, on-report). Returns { data, error }. */
+export async function saveEstimateSettings(inspection, { enabled, labor_rate, show_on_report }) {
   const cur = normalizeEstimate(inspection.attributes)
   const estimate = {
+    enabled: enabled !== undefined ? !!enabled : cur.enabled,
     labor_rate: labor_rate !== undefined ? num(labor_rate) : cur.labor_rate,
     show_on_report: show_on_report !== undefined ? !!show_on_report : cur.show_on_report,
     items: cur.items,

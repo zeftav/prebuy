@@ -725,6 +725,13 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   Risk(default)/Severity/Est.cost/Airworthiness-first. `displayed` useMemo applies filter+sort to `ordered`
   reading `item.severity` + `attributes.estimate` (via `lineTotal`) + `attributes.airworthiness`; default
   preserves risk/checklist order (stable sort). "shown of total" count when narrowed. No migration/redeploy.
+- Session 4 cont. — **Estimate feature per-inspection on/off** (v0.63.1 auto-save + v0.64.0 toggle,
+  frontend only). v0.63.1: `EstimateForm` auto-saves (debounced + on-blur, notes-style status) — dropped
+  the Save button. v0.64.0: `estimate.enabled` flag — "Enabled" checkbox on the Repairs-estimate panel;
+  off hides per-item estimate blocks + summary body + report section, **values retained**.
+  `normalizeEstimate` derives default (ON if any data/rate/report-toggle, else OFF); `saveEstimateSettings`/
+  `saveItemEstimate` carry `enabled` (+tests, 316). ReportView `EstimateSection` early-returns when
+  disabled. Rides existing `estimate` passthrough → no migration, no redeploy.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

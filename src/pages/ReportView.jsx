@@ -511,6 +511,7 @@ function Stat({ n, label, tone, icon }) {
 // Estimated repairs: each priced discrepancy with labor + parts, and a grand total.
 function EstimateSection({ items, estimate }) {
   const est = normalizeEstimate({ estimate })
+  if (!est.enabled) return null // feature turned off for this inspection
   const rows = (items ?? [])
     .filter((i) => i.status === 'discrepancy' && est.items[i.id] && hasEstimate(est.items[i.id]))
     .map((i) => ({ item: i, rec: est.items[i.id] }))

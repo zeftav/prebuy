@@ -20,7 +20,17 @@ describe('normalizeEstimate', () => {
     expect(n.items.a.labor_hours).toBe(1)
   })
   it('is empty-safe', () => {
-    expect(normalizeEstimate(null)).toEqual({ labor_rate: null, show_on_report: false, items: {} })
+    expect(normalizeEstimate(null)).toEqual({ enabled: false, labor_rate: null, show_on_report: false, items: {} })
+  })
+  it('enabled defaults ON when there is existing data, OFF for a fresh inspection', () => {
+    expect(normalizeEstimate({ estimate: { items: { a: { labor_hours: 2 } } } }).enabled).toBe(true)
+    expect(normalizeEstimate({ estimate: { labor_rate: 95 } }).enabled).toBe(true)
+    expect(normalizeEstimate({ estimate: { items: { a: { note: 'x' } } } }).enabled).toBe(false)
+    expect(normalizeEstimate({}).enabled).toBe(false)
+  })
+  it('respects an explicit enabled flag either way', () => {
+    expect(normalizeEstimate({ estimate: { enabled: false, items: { a: { labor_hours: 2 } } } }).enabled).toBe(false)
+    expect(normalizeEstimate({ estimate: { enabled: true } }).enabled).toBe(true)
   })
 })
 

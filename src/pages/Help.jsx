@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: 'Can I estimate repair costs for the discrepancies?',
-    a: 'Yes. Every discrepancy has a “Repair estimate” block — enter the labor hours and the parts cost (and a note for a part number, sublet, or assumption). Set your shop labor rate once in the “Repairs estimate” summary at the bottom of the inspection, and we price each line (labor hours × rate + parts) and total up labor, parts, and a grand total across all the discrepancies. It’s internal by default; flip on “Show this estimate on the customer report” to add an “Estimated repairs” table to the report (with a preliminary-estimate caveat). Handy if you don’t run the repairs through a separate shop-management system.',
+    a: 'Yes. The whole feature has an “Enabled” switch on the “Repairs estimate” panel at the bottom of the inspection — turn it off for a job where you don’t want estimates (your entered values are kept and come back when you turn it on again). When on, every discrepancy has a “Repair estimate” block — enter the labor hours and the parts cost (and a note for a part number, sublet, or assumption). Set your shop labor rate once in the summary, and we price each line (labor hours × rate + parts) and total up labor, parts, and a grand total across all the discrepancies. It’s internal by default; flip on “Show this estimate on the customer report” to add an “Estimated repairs” table to the report (with a preliminary-estimate caveat). Handy if you don’t run the repairs through a separate shop-management system.',
   },
   {
     q: 'Can I choose which events / parts / timed items / equipment show on the report?',
