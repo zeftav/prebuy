@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.63.0',
+    date: '2026-08-06',
+    title: 'Filter & sort the checklist items',
+    items: [
+      'A bar over the items list lets you filter to just Discrepancies, Airworthiness items, Monitors, or Not-inspected — with a count of how many match.',
+      'And sort by Risk (the default), Severity, estimated repair cost, or Airworthiness-first, so you can zero in on what matters. Leave it on the defaults and nothing changes.',
+    ],
+  },
+  {
     version: '0.62.0',
     date: '2026-08-06',
     title: 'Airworthiness flag on discrepancies',

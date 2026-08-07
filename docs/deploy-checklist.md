@@ -110,9 +110,9 @@ Run in order. All are idempotent (safe to re-run).
       **borescope images group per cylinder** on the report. No migration.
 - [x] ✅ **REDEPLOYED `report` (JWT OFF) for v0.53.0** (2026-08-03) — filters held notable events, returns
       opted-in **parts/components** ("Components & parts" section). Migration 032 also run.
-- [ ] 🔁 **REDEPLOY `report` (JWT OFF) for v0.61.0 + v0.62.0** — returns `inspection.estimate` (opt-in
-      **"Estimated repairs"** table) and `inspection.airworthiness` (**airworthiness** badges + count on
-      discrepancies). One redeploy covers both. No migration.
+- [x] ✅ **REDEPLOYED `report` (JWT OFF) for v0.61.0 + v0.62.0** (2026-08-06) — returns
+      `inspection.estimate` (opt-in **"Estimated repairs"** table) and `inspection.airworthiness`
+      (**airworthiness** badges + count on discrepancies). One redeploy covered both. No migration.
 - [x] ✅ **`generate-summary`** (new, v0.15.0) — Verify JWT **ON**. "Write with AI" broker narrative.
       Reuses `ANTHROPIC_API_KEY`. (2026-06-27)
 - [x] ✅ **`research-asset`** (new, v0.30.0) — Verify JWT **ON**. "Research with AI" — drafts the profile

@@ -286,6 +286,27 @@
   letter-spacing: 0;
   text-transform: none;
 }
+.insp__filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+.insp__filterchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.insp__chip {
+  border: 1px solid var(--border);
+  background: var(--surface, #fff);
+  color: var(--text, #111827);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.insp__chip.is-on { background: var(--accent, #2563eb); border-color: var(--accent, #2563eb); color: #fff; }
+.insp__sortsel { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted, #6b7280); }
+.insp__sortsel select { padding: 5px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface, #fff); color: var(--text, #111827); }
+.insp__filtercount { margin-left: auto; }
 .insp__airworthy {
   display: inline-flex;
   align-items: center;

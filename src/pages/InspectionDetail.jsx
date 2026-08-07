@@ -138,6 +138,27 @@ export default function InspectionDetail() {
     () => (usesPhases ? orderedAll.filter((i) => Number(i.phase) === phaseFilter) : orderedAll),
     [orderedAll, usesPhases, phaseFilter],
   )
+
+  // Optional filter + re-sort of the items list (default keeps the risk/checklist
+  // order). Sorts read data already on the page: AI severity, estimate cost, the
+  // airworthiness flag; filters narrow to discrepancies / airworthiness / etc.
+  const [itemFilter, setItemFilter] = useState('all') // all | discrepancy | airworthy | monitor | open
+  const [itemSort, setItemSort] = useState('default') // default | severity | cost | airworthy
+  const displayed = useMemo(() => {
+    const attrs = inspection?.attributes ?? {}
+    const est = attrs.estimate?.items ?? {}
+    const rate = attrs.estimate?.labor_rate ?? null
+    const aw = attrs.airworthiness ?? {}
+    let list = ordered
+    if (itemFilter === 'discrepancy') list = list.filter((i) => i.status === 'discrepancy')
+    else if (itemFilter === 'airworthy') list = list.filter((i) => aw[i.id])
+    else if (itemFilter === 'monitor') list = list.filter((i) => i.status === 'monitor')
+    else if (itemFilter === 'open') list = list.filter((i) => !i.status || i.status === 'pending')
+    if (itemSort === 'severity') list = [...list].sort((a, b) => (Number(b.severity) || 0) - (Number(a.severity) || 0))
+    else if (itemSort === 'cost') list = [...list].sort((a, b) => lineTotal(est[b.id], rate) - lineTotal(est[a.id], rate))
+    else if (itemSort === 'airworthy') list = [...list].sort((a, b) => (aw[b.id] ? 1 : 0) - (aw[a.id] ? 1 : 0))
+    return list
+  }, [ordered, itemFilter, itemSort, inspection?.attributes])
   const phaseReviewed = (p) => items.filter((i) => Number(i.phase) === p).filter((i) => i.status && i.status !== 'pending').length
   const phaseTotal = (p) => items.filter((i) => Number(i.phase) === p).length
   const reviewed = usesPhases ? phaseReviewed(phaseFilter) : items.filter((i) => i.status && i.status !== 'pending').length
@@ -437,8 +458,14 @@ export default function InspectionDetail() {
             </div>
           )}
 
+          <ItemFilterBar
+            filter={itemFilter} sort={itemSort}
+            onFilter={setItemFilter} onSort={setItemSort}
+            shown={displayed.length} total={ordered.length}
+          />
+
           <ol className="insp__items">
-            {ordered.map((item) => (
+            {displayed.map((item) => (
               <ItemRow
                 key={item.id}
                 item={item}
@@ -534,6 +561,45 @@ function DangerZone({ inspection, noun = 'inspection', onDelete }) {
         </div>
       )}
     </section>
+  )
+}
+
+// Filter + sort control over the items list. Default keeps the risk/checklist
+// order; sorts read data already on the page (severity, estimate cost, airworthy).
+const ITEM_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'discrepancy', label: 'Discrepancies' },
+  { key: 'airworthy', label: 'Airworthiness' },
+  { key: 'monitor', label: 'Monitor' },
+  { key: 'open', label: 'Not inspected' },
+]
+function ItemFilterBar({ filter, sort, onFilter, onSort, shown, total }) {
+  return (
+    <div className="insp__filterbar">
+      <div className="insp__filterchips" role="group" aria-label="Filter items">
+        {ITEM_FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            className={`insp__chip ${filter === f.key ? 'is-on' : ''}`}
+            aria-pressed={filter === f.key}
+            onClick={() => onFilter(f.key)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      <label className="insp__sortsel">
+        <span>Sort</span>
+        <select value={sort} onChange={(e) => onSort(e.target.value)}>
+          <option value="default">Risk (default)</option>
+          <option value="severity">Severity</option>
+          <option value="cost">Est. cost</option>
+          <option value="airworthy">Airworthiness first</option>
+        </select>
+      </label>
+      {shown !== total && <span className="auth__hint insp__filtercount">{shown} of {total}</span>}
+    </div>
   )
 }
 

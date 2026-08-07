@@ -3,6 +3,16 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.63.0] — 2026-08-06
+
+### Added
+- **Filter + sort the inspection items list.** A control bar over the items list filters to All /
+  Discrepancies / Airworthiness / Monitor / Not-inspected, and sorts by Risk (default), Severity (AI
+  estimate, high→low), Est. cost (repair-estimate line total, high→low), or Airworthiness-first. Default
+  keeps the existing risk/checklist order, so nothing changes unless you use it; a "shown of total" count
+  appears when a filter narrows the list. Sorts read data already on the page (item `severity`, the repair
+  estimate, the airworthiness flag) — frontend only, no migration, no redeploy.
+
 ## [0.62.0] — 2026-08-06
 
 ### Added

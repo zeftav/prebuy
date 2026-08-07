@@ -719,6 +719,12 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   toggle on each discrepancy + red ✈ header badge. `report` fn returns `inspection.airworthiness`;
   ReportView badges airworthiness discrepancies + leads the section with a count. ⚠️ **REDEPLOY `report`
   (JWT OFF)** — one redeploy covers **v0.61.0 (estimate) + v0.62.0 (airworthiness)**. Tests 314.
+  **Deployed by Brett (2026-08-06): report redeploy (covers v0.61.0 + v0.62.0).**
+- Session 4 cont. — **Filter + sort the items list** (v0.63.0, frontend only). `InspectionDetail`
+  `ItemFilterBar` over the items list: filter All/Discrepancies/Airworthiness/Monitor/Not-inspected + sort
+  Risk(default)/Severity/Est.cost/Airworthiness-first. `displayed` useMemo applies filter+sort to `ordered`
+  reading `item.severity` + `attributes.estimate` (via `lineTotal`) + `attributes.airworthiness`; default
+  preserves risk/checklist order (stable sort). "shown of total" count when narrowed. No migration/redeploy.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
