@@ -3,6 +3,13 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.63.1] — 2026-08-06
+
+### Changed
+- **Repair estimate auto-saves** like the rest of the inspection fields. Dropped the "Save estimate"
+  button on each discrepancy's estimate block; labor hours / parts / note now auto-save (debounced as you
+  type + on blur) with the same Unsaved… / Saving… / Saved ✓ / retry status indicator the notes use.
+
 ## [0.63.0] — 2026-08-06
 
 ### Added

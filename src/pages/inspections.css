@@ -1134,6 +1134,7 @@
 }
 .insp__estimatehead { display: flex; align-items: center; gap: 6px; }
 .insp__estimatetotal { margin-left: auto; font-weight: 700; }
+.insp__estimatefoot { display: flex; align-items: center; gap: 12px; min-height: 18px; }
 .insp__estsummary .insp__estsummarygrid {
   display: flex;
   flex-wrap: wrap;

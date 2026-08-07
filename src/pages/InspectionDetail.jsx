@@ -1025,14 +1025,34 @@ function EstimateForm({ rec, rate, onSave }) {
     const n = normalizeItemEstimate(rec)
     return { labor_hours: n.labor_hours ?? '', parts_cost: n.parts_cost ?? '', note: n.note }
   })
-  const [saveState, setSaveState] = useState('idle') // idle | saving | saved
+  const [saveState, setSaveState] = useState('idle') // idle | saving | saved | error
   const set = (k) => (e) => { setF((p) => ({ ...p, [k]: e.target.value })); setSaveState('idle') }
   const total = lineTotal(f, rate)
+
+  // Auto-save like the rest of the inspection fields: dirty vs the stored record,
+  // debounced save as you type, plus save-on-blur, with a status flash.
+  const stored = normalizeItemEstimate(rec)
+  const cur = normalizeItemEstimate(f)
+  const dirty = cur.labor_hours !== stored.labor_hours || cur.parts_cost !== stored.parts_cost || cur.note !== stored.note
+
   async function save() {
+    if (!dirty) return
     setSaveState('saving')
     const err = await onSave(f)
-    setSaveState(err ? 'idle' : 'saved')
+    setSaveState(err ? 'error' : 'saved')
   }
+  useEffect(() => {
+    if (!dirty) return
+    const t = setTimeout(() => { save() }, 1200)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [f.labor_hours, f.parts_cost, f.note])
+  useEffect(() => {
+    if (saveState !== 'saved') return
+    const t = setTimeout(() => setSaveState('idle'), 2000)
+    return () => clearTimeout(t)
+  }, [saveState])
+
   return (
     <div className="insp__estimate">
       <div className="insp__estimatehead">
@@ -1042,19 +1062,25 @@ function EstimateForm({ rec, rate, onSave }) {
       <div className="insp__row2">
         <div className="auth__field">
           <label>Labor (hours)</label>
-          <input type="number" inputMode="decimal" step="0.1" placeholder="e.g. 2.5" value={f.labor_hours} onChange={set('labor_hours')} />
+          <input type="number" inputMode="decimal" step="0.1" placeholder="e.g. 2.5" value={f.labor_hours} onChange={set('labor_hours')} onBlur={save} />
         </div>
         <div className="auth__field">
           <label>Parts ($)</label>
-          <input type="number" inputMode="decimal" step="1" placeholder="e.g. 400" value={f.parts_cost} onChange={set('parts_cost')} />
+          <input type="number" inputMode="decimal" step="1" placeholder="e.g. 400" value={f.parts_cost} onChange={set('parts_cost')} onBlur={save} />
         </div>
       </div>
-      <input className="insp__findings" type="text" placeholder="Estimate note (part number, sublet, assumptions…)" value={f.note} onChange={set('note')} />
-      <div className="insp__capture">
-        <button type="button" className="auth__btn auth__btn--ghost" onClick={save} disabled={saveState === 'saving'}>
-          <Check size={15} aria-hidden="true" /> {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Save estimate'}
-        </button>
-        {rate == null && <span className="auth__hint">Set a labor rate below to price the hours.</span>}
+      <input className="insp__findings" type="text" placeholder="Estimate note (part number, sublet, assumptions…)" value={f.note} onChange={set('note')} onBlur={save} />
+      <div className="insp__estimatefoot">
+        {saveState === 'saving' ? (
+          <span className="insp__savestate">Saving…</span>
+        ) : saveState === 'error' ? (
+          <button type="button" className="insp__savestate is-err" onClick={save}>Couldn’t save — tap to retry</button>
+        ) : dirty ? (
+          <span className="insp__savestate is-dirty">Unsaved…</span>
+        ) : saveState === 'saved' ? (
+          <span className="insp__savestate is-ok"><Check size={12} aria-hidden="true" /> Saved</span>
+        ) : <span />}
+        {rate == null && hasEstimate(f) && <span className="auth__hint">Set a labor rate below to price the hours.</span>}
       </div>
     </div>
   )
