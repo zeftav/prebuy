@@ -32,6 +32,7 @@ import { hasPhases, PHASES } from '../lib/templates.js'
 import { isBeech } from '../lib/gearrig.js'
 import { isCompressionItem, normalizeCompression, cylinderStatus, compressionStats, cylinderOrder, cylCaption, cylTag, saveItemCompression } from '../lib/compression.js'
 import { normalizeEstimate, normalizeItemEstimate, hasEstimate, lineTotal, estimateStats, formatUsd, saveItemEstimate, saveEstimateSettings } from '../lib/estimate.js'
+import { saveItemAirworthiness } from '../lib/airworthiness.js'
 import './auth.css'
 import './inspections.css'
 
@@ -221,6 +222,13 @@ export default function InspectionDetail() {
   }
   async function saveEstimatePrefs(patch) {
     const { data, error } = await saveEstimateSettings(inspection, patch)
+    if (!error && data) setInspection((p) => ({ ...p, attributes: data.attributes }))
+    return error
+  }
+
+  // Airworthiness flag per discrepancy (must-fix for an annual signoff).
+  async function saveAirworthy(itemId, on) {
+    const { data, error } = await saveItemAirworthiness(inspection, itemId, on)
     if (!error && data) setInspection((p) => ({ ...p, attributes: data.attributes }))
     return error
   }
@@ -439,6 +447,7 @@ export default function InspectionDetail() {
                 compression={inspection.attributes?.compression?.[item.id] ?? null}
                 estimate={inspection.attributes?.estimate?.items?.[item.id] ?? null}
                 laborRate={inspection.attributes?.estimate?.labor_rate ?? null}
+                airworthy={inspection.attributes?.airworthiness?.[item.id] === true}
                 onStatus={setItemStatus}
                 onPatch={patchItem}
                 onRemove={removeItem}
@@ -446,6 +455,7 @@ export default function InspectionDetail() {
                 onFlagFollowup={flagFollowup}
                 onSaveCompression={saveCompression}
                 onSaveEstimate={saveEstimate}
+                onSaveAirworthy={saveAirworthy}
               />
             ))}
           </ol>
@@ -527,7 +537,7 @@ function DangerZone({ inspection, noun = 'inspection', onDelete }) {
   )
 }
 
-function ItemRow({ item, media, inspection, compression, estimate, laborRate, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup, onSaveCompression, onSaveEstimate }) {
+function ItemRow({ item, media, inspection, compression, estimate, laborRate, airworthy, onStatus, onPatch, onRemove, onMediaChange, onFlagFollowup, onSaveCompression, onSaveEstimate, onSaveAirworthy }) {
   const [open, setOpen] = useState(false)
   const isCompression = isCompressionItem(item)
   const [findings, setFindings] = useState(item.findings ?? '')
@@ -651,6 +661,7 @@ function ItemRow({ item, media, inspection, compression, estimate, laborRate, on
           <span className="insp__itemcat">
             {item.category}
             {item.owner_priority && <span className="insp__ownertag">★ owner priority</span>}
+            {airworthy && isDiscrepancy && <span className="insp__awtag">✈ airworthiness</span>}
           </span>
           <span>{item.title}</span>
         </button>
@@ -706,6 +717,13 @@ function ItemRow({ item, media, inspection, compression, estimate, laborRate, on
               media={media}
               onMediaChange={onMediaChange}
             />
+          )}
+
+          {isDiscrepancy && (
+            <label className="insp__airworthy" title="Must be corrected for an annual / return-to-service signoff">
+              <input type="checkbox" checked={airworthy} onChange={(e) => onSaveAirworthy(item.id, e.target.checked)} />
+              <Wrench size={14} aria-hidden="true" /> Airworthiness item — required for signoff
+            </label>
           )}
 
           {isDiscrepancy && (

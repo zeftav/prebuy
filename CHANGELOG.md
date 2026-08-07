@@ -3,6 +3,24 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.62.0] — 2026-08-06
+
+### Added
+- **Airworthiness toggle on each discrepancy.** A discrepancy can now be flagged as an **airworthiness
+  item** — one that must be corrected for an annual / return-to-service signoff — to differentiate it from
+  advisory squawks. In the inspection, each discrepancy shows an "Airworthiness item — required for
+  signoff" toggle and a red ✈ badge in the item header when set. On the customer report, airworthiness
+  discrepancies get an **"Airworthiness"** badge and the Discrepancies section leads with a count
+  ("N of M are airworthiness items that must be corrected for a return-to-service / annual signoff"). New
+  `lib/airworthiness.js` (pure + tested): `normalizeAirworthiness` / `isAirworthinessItem` /
+  `airworthinessCount` + `saveItemAirworthiness`. Stored on `inspections.attributes.airworthiness`
+  (`{ [item_id]: true }`, JSONB — no migration).
+
+### Deploy
+- ⚠️ **REDEPLOY `report` (JWT OFF)** — returns `inspection.airworthiness` so the badges/count render.
+  **This one redeploy also covers v0.61.0** (`inspection.estimate` for the Estimated repairs table). No
+  migration.
+
 ## [0.61.0] — 2026-08-06
 
 ### Added

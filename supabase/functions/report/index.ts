@@ -80,6 +80,9 @@ async function assemble(admin: Admin, insp: Record<string, unknown>) {
       // Repair estimate (labor rate + per-item labor/parts). Only surfaced on the
       // report when the shop opts in (estimate.show_on_report); ReportView gates it.
       estimate: attrs?.estimate ?? null,
+      // Per-item airworthiness flag ({ [item_id]: true }) — discrepancies that must
+      // be corrected for a signoff. ReportView badges them.
+      airworthiness: attrs?.airworthiness ?? null,
     },
     items: (items ?? []).map((i: Record<string, unknown>) => ({
       id: i.id, category: i.category, title: i.title, description: i.description, status: i.status,

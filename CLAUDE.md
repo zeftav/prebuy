@@ -710,7 +710,15 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   ReportView `EstimateSection` = opt-in "Estimated repairs" table (per-item + grand total + caveat). ⚠️
   **REDEPLOY `report` (JWT OFF)** for the report table (capture + rollup are frontend-only). Tests 310.
   **Feature #1 still to build (Brett):** export the discrepancies (+ these estimates) as a **QuantumMX work
-  order** (import/export) to estimate repairs there.
+  order** (import/export) to estimate repairs there. (Blocked pending QuantumMX import format — Brett to
+  check if it even has one.)
+- Session 4 cont. — **Airworthiness flag per discrepancy** (v0.62.0). Differentiates must-fix-for-signoff
+  items from advisory squawks. `lib/airworthiness.js` (pure+tested, 4): `normalizeAirworthiness`/
+  `isAirworthinessItem`/`airworthinessCount` + `saveItemAirworthiness`. Stored on
+  `inspections.attributes.airworthiness = { [itemId]: true }` (JSONB, no migration). InspectionDetail:
+  toggle on each discrepancy + red ✈ header badge. `report` fn returns `inspection.airworthiness`;
+  ReportView badges airworthiness discrepancies + leads the section with a count. ⚠️ **REDEPLOY `report`
+  (JWT OFF)** — one redeploy covers **v0.61.0 (estimate) + v0.62.0 (airworthiness)**. Tests 314.
 
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac

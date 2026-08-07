@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.62.0',
+    date: '2026-08-06',
+    title: 'Airworthiness flag on discrepancies',
+    items: [
+      'Mark a discrepancy as an “airworthiness item” — one that has to be fixed for an annual or return-to-service signoff — to set it apart from advisory squawks. There’s a toggle on each discrepancy and a red badge when it’s set.',
+      'On the customer report, airworthiness discrepancies get an “Airworthiness” badge and the discrepancies list leads with a count of how many must be corrected for a signoff.',
+    ],
+  },
+  {
     version: '0.61.0',
     date: '2026-08-06',
     title: 'Repair estimates on each discrepancy',

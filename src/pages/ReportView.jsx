@@ -72,7 +72,8 @@ export default function ReportView() {
   }
 
   const { shop, inspection, items, overview, events = [], followups = [], documents = [], parts = [], revision = null } = data
-  const ordered = orderByFinancialRisk(items)
+  const airworthyMap = inspection.airworthiness || {}
+  const ordered = orderByFinancialRisk(items).map((i) => ({ ...i, airworthy: airworthyMap[i.id] === true }))
   const discrepancies = ordered.filter((i) => i.status === 'discrepancy')
   const monitors = ordered.filter((i) => i.status === 'monitor')
   const cleared = ordered.filter((i) => i.status === 'ok' || i.status === 'na')
@@ -314,7 +315,17 @@ export default function ReportView() {
         <Stat n={counts.ok + counts.na} label="Checked OK" tone="good" icon={<Check size={16} />} />
       </section>
 
-      {discrepancies.length > 0 && <ReportSection title="Discrepancies" items={discrepancies} showPhotos />}
+      {discrepancies.length > 0 && (
+        <ReportSection
+          title="Discrepancies"
+          items={discrepancies}
+          showPhotos
+          note={(() => {
+            const aw = discrepancies.filter((d) => d.airworthy).length
+            return aw > 0 ? `${aw} of ${discrepancies.length} ${aw === 1 ? 'is an airworthiness item' : 'are airworthiness items'} that must be corrected for a return-to-service / annual signoff.` : null
+          })()}
+        />
+      )}
       {monitors.length > 0 && <ReportSection title="Items to monitor" items={monitors} showPhotos />}
 
       {inspection.estimate?.show_on_report && <EstimateSection items={items} estimate={inspection.estimate} />}
@@ -604,15 +615,17 @@ function CompressionSection({ items, compression }) {
   )
 }
 
-function ReportSection({ title, items, showPhotos }) {
+function ReportSection({ title, items, showPhotos, note }) {
   return (
     <section className="report__section">
       <h2>{title}</h2>
+      {note && <p className="report__sectionnote">{note}</p>}
       <div className="report__findings">
         {items.map((i) => (
           <article key={i.id} className={`report__finding report__finding--${riskBand(i)}`}>
             <div className="report__findinghead">
               <span className="report__findingcat">{i.category}</span>
+              {i.airworthy && <span className="report__awtag">Airworthiness</span>}
               <h3>{i.title}</h3>
             </div>
             {i.findings && <p className="report__findingtext">{i.findings}</p>}
