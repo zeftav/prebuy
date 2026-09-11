@@ -3,6 +3,17 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.65.1] — 2026-09-11
+
+### Fixed
+- **Auto-recover from a stale app shell after a deploy.** A browser still running an older build requests a
+  lazily-imported chunk (e.g. `pdf-lib` for the logbook PDF compile, `heic2any`) whose hashed filename
+  changed in the new build; the SPA fallback (`/* /index.html 200`) then serves `index.html` for the
+  missing file, and the module loader rejects it — surfacing as **"Couldn't build the PDF ('text/html' is
+  not a valid JavaScript MIME type.)"** and similar. `main.jsx` now listens for Vite's `vite:preloadError`
+  and reloads once (with a 10s cooldown to avoid a loop) to pull the fresh shell, so a chunk-hash change on
+  deploy self-heals instead of stranding the page. Frontend only — no migration, no redeploy.
+
 ## [0.65.0] — 2026-09-11
 
 ### Added

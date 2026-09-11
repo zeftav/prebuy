@@ -744,6 +744,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `heic2any@^0.0.4`. Tests 321. No migration, no redeploy. (Brett also hit a one-off login "Failed to
   fetch" after ~5 wks idle — diagnosed as Supabase free-tier cold-start / transient; self-healed on retry.)
 
+- Session 5 cont. — **Stale-shell auto-recovery** (v0.65.1, frontend only). Brett hit "Couldn't build the
+  PDF ('text/html' is not a valid JavaScript MIME type.)" on his phone after the v0.65.0 deploy — the
+  v0.55.1 diagnostic exposing a **chunk-hash mismatch**: an old shell requests a lazily-imported chunk
+  (pdf-lib / heic2any) whose hashed name changed, the SPA fallback `/* /index.html 200` serves index.html,
+  and the ESM loader rejects it. `main.jsx` now listens for `vite:preloadError` → one guarded
+  `location.reload()` (10s sessionStorage cooldown vs loops) to fetch the fresh shell. Root cause was
+  stale cache, not code. Tests 321. No migration/redeploy.
+
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
   (added as a repo deploy key with write). No `gh` CLI installed yet.
