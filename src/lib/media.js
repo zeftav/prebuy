@@ -5,6 +5,7 @@
 // uses short-lived signed URLs. Pure path/name helpers are split out + tested.
 
 import { supabase } from './supabase.js'
+import { toWebImage } from './heic.js'
 
 const BUCKET = 'inspection-media'
 
@@ -43,6 +44,9 @@ export async function uploadMedia({ orgId, inspectionId, inspectionItemId = null
   if (!orgId || !inspectionId || !file) {
     return { data: null, error: new Error('Missing upload details.') }
   }
+  // iPhone HEIC/HEIF → JPEG so it displays in every browser + on the report and
+  // is readable by the AI scans. No-op for already-web formats.
+  file = await toWebImage(file)
   const path = mediaStoragePath(orgId, inspectionId, uniqueName(file.name))
   const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
     cacheControl: '3600',

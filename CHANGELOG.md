@@ -3,6 +3,24 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.65.0] — 2026-09-11
+
+### Added
+- **Attach multiple photos/videos to a discrepancy at once.** The per-item picker now accepts a
+  multi-select (`PhotoPicker multiple`); `addPhoto` uploads the whole `FileList` sequentially instead of
+  just the first file. (The camera "Take" path is still one shot at a time, as the OS enforces.)
+- **HEIC/HEIF photo support.** iPhone HEIC stills now work everywhere — new `lib/heic.js` (`isHeic` /
+  `jpegName` pure + tested, `toWebImage`) converts HEIC/HEIF to JPEG **at upload** via a lazy-imported
+  `heic2any` (its own ~1.35MB chunk, out of the main bundle). Wired into `uploadMedia`, so every path
+  benefits — discrepancy photos, the guided walkthrough, borescope shots, and logbook scans (Claude's
+  vision API can't read HEIC, so this also makes HEIC logbook pages scannable). Pickers now list
+  `.heic/.heif` explicitly so the file dialog surfaces them.
+
+### Fixed
+- **Supabase client no longer throws when env vars are absent** (tests / a misconfigured dev shell). Recent
+  `@supabase/supabase-js` rejects an empty URL at import time, which took down every module importing the
+  client; it now falls back to a syntactically-valid placeholder. Production is unaffected (real env wins).
+
 ## [0.64.0] — 2026-08-06
 
 ### Added

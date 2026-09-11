@@ -26,7 +26,9 @@ export default function PhotoPicker({
   // Scan/OCR callers keep images only (they feed Claude vision); capture callers
   // opt into video too. The camera (capture) input stays image-only — you can't
   // photograph a PDF — so PDFs are offered on the Upload picker only.
-  const accept = video ? 'image/*,video/*' : 'image/*'
+  // Include .heic/.heif explicitly — some file pickers don't surface them under
+  // the image/* wildcard. Uploaded HEICs are converted to JPEG on the way in.
+  const accept = video ? 'image/*,video/*,.heic,.heif' : 'image/*,.heic,.heif'
   const uploadAccept = pdf ? `${accept},application/pdf` : accept
   if (busy) {
     return (

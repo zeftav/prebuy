@@ -113,6 +113,10 @@ const FAQ = [
     a: 'Open the compression-check item on the inspection. It shows a compression form: enter the day’s master orifice reading and a value for each cylinder (XX/80), and set the cylinder count for the engine (defaults to 6). Any cylinder reading below the master orifice is highlighted so a weak jug stands out. Add notes (staking, borescope, where the air’s going), and it all prints as a per-cylinder table on the customer report. On a twin, each engine’s compression item has its own set of readings.',
   },
   {
+    q: 'Can I add several photos to a discrepancy, and do iPhone (HEIC) photos work?',
+    a: 'Yes to both. On a discrepancy, “Photo / video” lets you select multiple files at once from a browser (the phone camera still takes them one at a time). And iPhone HEIC/HEIF photos are fully supported — we convert them to JPEG as they upload, so they show correctly in every browser and on the customer report (a plain HEIC otherwise looks broken on anything but Safari). The same applies to records/logbook scans, so HEIC pages read fine.',
+  },
+  {
     q: 'Can I attach borescope images to each cylinder?',
     a: 'Yes. On the compression item, under the readings there’s a borescope row for each cylinder. Upload the images straight from your borescope (you can pick several files at once, photos or video), or take a shot with the phone. Each image is tied to its cylinder number, shows under that cylinder, and prints grouped by cylinder on the customer report.',
   },

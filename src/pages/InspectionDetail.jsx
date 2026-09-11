@@ -623,18 +623,23 @@ function ItemRow({ item, media, inspection, compression, estimate, laborRate, es
   const photos = media.filter((m) => m.kind !== 'document' && cylTag(m.caption) == null)
   const docs = media.filter((m) => m.kind === 'document')
 
-  async function addPhoto(file) {
-    if (!file) return
+  async function addPhoto(files) {
+    const list = Array.from(files ?? []).filter(Boolean)
+    if (!list.length) return
     setPhotoBusy(true)
-    const { error } = await uploadMedia({
-      orgId: inspection.org_id,
-      inspectionId: inspection.id,
-      inspectionItemId: item.id,
-      purpose: 'discrepancy',
-      file,
-    })
+    let ok = false
+    for (const file of list) {
+      const { error } = await uploadMedia({
+        orgId: inspection.org_id,
+        inspectionId: inspection.id,
+        inspectionItemId: item.id,
+        purpose: 'discrepancy',
+        file,
+      })
+      if (!error) ok = true
+    }
     setPhotoBusy(false)
-    if (!error) onMediaChange()
+    if (ok) onMediaChange()
   }
 
   async function addDoc(file) {
@@ -817,13 +822,13 @@ function ItemRow({ item, media, inspection, compression, estimate, laborRate, es
               <Sparkles size={15} aria-hidden="true" />
               {aiBusy ? 'Cleaning…' : 'Clean up with AI'}
             </button>
-            <PhotoPicker onPick={(files) => addPhoto(files?.[0])} busy={photoBusy} video takeLabel="Photo / video" uploadLabel="Photo / video" />
+            <PhotoPicker onPick={(files) => addPhoto(files)} multiple busy={photoBusy} video takeLabel="Photo / video" uploadLabel="Photo / video" />
             <label className="insp__capturebtn">
               <Paperclip size={15} aria-hidden="true" />
               {docBusy ? 'Uploading…' : 'Attach file'}
               <input
                 type="file"
-                accept="application/pdf,image/*"
+                accept="application/pdf,image/*,.heic,.heif"
                 hidden
                 disabled={docBusy}
                 onChange={(e) => addDoc(e.target.files?.[0])}

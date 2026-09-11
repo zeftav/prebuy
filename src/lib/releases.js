@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.65.0',
+    date: '2026-09-11',
+    title: 'Multiple photos at once + iPhone HEIC support',
+    items: [
+      'You can now select and attach several photos or videos to a discrepancy in one go, instead of one at a time.',
+      'iPhone HEIC photos now work everywhere — we convert them to JPEG on upload, so they display in every browser and on the customer report (and scanned HEIC logbook pages now read too).',
+    ],
+  },
+  {
     version: '0.64.0',
     date: '2026-08-06',
     title: 'Turn repair estimates on or off per inspection',

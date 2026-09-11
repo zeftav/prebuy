@@ -733,6 +733,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `saveItemEstimate` carry `enabled` (+tests, 316). ReportView `EstimateSection` early-returns when
   disabled. Rides existing `estimate` passthrough → no migration, no redeploy.
 
+- Session 5 (2026-09-11) — **Multi-photo discrepancy upload + HEIC support + supabase env hardening**
+  (v0.65.0, frontend only). Brett: discrepancy attach only allowed one file on desktop → `addPhoto` now
+  takes the whole `FileList` (sequential upload) + `PhotoPicker multiple`. **HEIC:** `lib/heic.js`
+  (`isHeic`/`jpegName` pure+tested, `toWebImage` lazy-imports `heic2any` → its own ~1.35MB chunk);
+  `uploadMedia` converts HEIC/HEIF→JPEG on the way in so it displays in all browsers + on the report + is
+  readable by Claude vision (logbook scans); pickers list `.heic/.heif`. **Env fix:** `supabase.js` now
+  falls back to `http://localhost:54321` / `public-anon-key` placeholders — recent `@supabase/supabase-js`
+  throws on empty URL at import (broke all 25 test files when the fresh container had no `.env`). New dep:
+  `heic2any@^0.0.4`. Tests 321. No migration, no redeploy. (Brett also hit a one-off login "Failed to
+  fetch" after ~5 wks idle — diagnosed as Supabase free-tier cold-start / transient; self-healed on retry.)
+
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
   (added as a repo deploy key with write). No `gh` CLI installed yet.
