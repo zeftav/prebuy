@@ -3,6 +3,21 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.67.0] — 2026-09-12
+
+### Added
+- **Report read-receipt — see when your customer opens the report.** Migration `034` adds a `report_views`
+  table (inspection/org/revision/viewed_at, org-scoped RLS select, no client insert). The `report` edge
+  function logs a row on the **serve** path (fire-and-forget, service role) — link-preview bots fetch the
+  `/r/:token` HTML shell and never run the JS that calls the function, so this counts real opens, not
+  unfurls. The inspection's publish panel now shows **"Report opened N times · last <when>"** with an
+  expandable list of recent opens. `lib/report.js`: `listReportViews` + pure `viewStats` (+tests). Note: a
+  reload counts as another open, and the shop viewing its own public link is counted too.
+
+### Deploy
+- ⚠️ **Run migration `034_report_views.sql` + REDEPLOY `report` (JWT OFF)** — the reads are org-RLS
+  (no fn needed); the fn writes the view rows.
+
 ## [0.66.1] — 2026-09-12
 
 ### Changed

@@ -1,5 +1,21 @@
 import { describe, it, expect } from 'vitest'
-import { reportSummary } from './report.js'
+import { reportSummary, viewStats } from './report.js'
+
+describe('viewStats', () => {
+  it('counts views and finds the most recent timestamp', () => {
+    const s = viewStats([
+      { viewed_at: '2026-09-10T10:00:00Z' },
+      { viewed_at: '2026-09-12T08:00:00Z' },
+      { viewed_at: '2026-09-11T12:00:00Z' },
+    ])
+    expect(s.count).toBe(3)
+    expect(s.lastAt).toBe('2026-09-12T08:00:00.000Z')
+  })
+  it('is empty-safe', () => {
+    expect(viewStats([])).toEqual({ count: 0, lastAt: null })
+    expect(viewStats(null)).toEqual({ count: 0, lastAt: null })
+  })
+})
 
 describe('reportSummary', () => {
   it('counts items by status', () => {

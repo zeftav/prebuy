@@ -771,6 +771,13 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   overloaded API. ⚠️ **Redeploy `research-asset` (JWT ON)** — no migration, no frontend change (profile
   page already renders the fn's `error`). Tests 325 (unchanged).
 
+- Session 5 cont. — **Report read-receipt** (v0.67.0). Migration `034` (`report_views`: inspection/org/
+  revision/viewed_at, org-RLS select, no client insert). `report` edge fn logs a view row on the **serve**
+  path (fire-and-forget, service role) — link-unfurl bots fetch the `/r/:token` SPA shell and never call
+  the fn, so this counts real opens. `lib/report.js`: `listReportViews` + pure `viewStats` (+tests, 327).
+  `PublishBar` shows "Report opened N times · last <when>" + expandable recent-opens list. Caveats:
+  reload = another open; shop's own opens counted. ⚠️ **Run migration 034 + REDEPLOY `report` (JWT OFF)**.
+
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
   (added as a repo deploy key with write). No `gh` CLI installed yet.

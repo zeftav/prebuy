@@ -53,6 +53,26 @@ export async function listRevisions(inspectionId) {
   return { data: data ?? [], error }
 }
 
+/** Report views (read-receipt) for an inspection, newest first. Org-scoped RLS. */
+export async function listReportViews(inspectionId) {
+  const { data, error } = await supabase
+    .from('report_views')
+    .select('id, revision, viewed_at')
+    .eq('inspection_id', inspectionId)
+    .order('viewed_at', { ascending: false })
+  return { data: data ?? [], error }
+}
+
+/** Summarize report views: total count + the most recent timestamp. Pure. */
+export function viewStats(views) {
+  const list = Array.isArray(views) ? views : []
+  const last = list.reduce((acc, v) => {
+    const t = v?.viewed_at ? Date.parse(v.viewed_at) : NaN
+    return Number.isFinite(t) && t > acc ? t : acc
+  }, 0)
+  return { count: list.length, lastAt: last ? new Date(last).toISOString() : null }
+}
+
 /** Public report URL for a share token. */
 export function reportUrl(token) {
   const origin = typeof window !== 'undefined' ? window.location.origin : ''

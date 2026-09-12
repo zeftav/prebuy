@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.67.0',
+    date: '2026-09-12',
+    title: 'See when your report is opened',
+    items: [
+      'The publish panel now shows a read-receipt for the customer report — how many times it’s been opened and when it was last viewed, with a details list of recent opens.',
+      'It counts real opens (link-preview bots don’t count). A page reload counts as another open, and opening your own share link counts too.',
+    ],
+  },
+  {
     version: '0.66.0',
     date: '2026-09-12',
     title: 'Choose what shows on the report — item by item',

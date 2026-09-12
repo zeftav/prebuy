@@ -202,6 +202,13 @@ Deno.serve(async (req: Request) => {
     .limit(1)
     .maybeSingle()
 
+  // Read-receipt: log this open (fire-and-forget, service role). Link-preview
+  // bots fetch the /r/:token HTML shell and never run the JS that calls this
+  // function, so this counts real human opens — not unfurls.
+  admin.from('report_views')
+    .insert({ inspection_id: insp.id, org_id: insp.org_id, revision: rev?.revision ?? null })
+    .then(() => {}, () => {})
+
   if (rev?.snapshot) {
     const signed = await signPayload(admin, rev.snapshot as Record<string, unknown>)
     return json({ ...signed, revision: rev.revision, published_at: rev.published_at })

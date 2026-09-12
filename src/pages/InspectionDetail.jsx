@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check, Wrench, CalendarClock, DollarSign } from 'lucide-react'
+import { Plane, Ship, ChevronLeft, Mic, Sparkles, Images, X, Flag, Plus, Trash2, Share2, Copy, ExternalLink, BookOpen, FileText, Paperclip, ClipboardCheck, Send, ListChecks, Search, Check, Wrench, CalendarClock, DollarSign, Eye } from 'lucide-react'
 import PhotoPicker from '../components/PhotoPicker.jsx'
 import { useAuth } from '../lib/auth.jsx'
 import {
@@ -26,7 +26,7 @@ import { uploadMedia, listMedia, deleteMedia } from '../lib/media.js'
 import { updateInspectionMeta, startInspectionFromListing, deleteInspection } from '../lib/inspections.js'
 import { fetchMemberships } from '../lib/shops.js'
 import { createHandoff, listHandoffs, revokeHandoff, handoffUrl } from '../lib/handoff.js'
-import { publishInspection, unpublishInspection, reportUrl, listRevisions } from '../lib/report.js'
+import { publishInspection, unpublishInspection, reportUrl, listRevisions, listReportViews, viewStats } from '../lib/report.js'
 import { listFollowups, addFollowup, updateFollowup, deleteFollowup, openCount, groupByStatus, reasonLabel, FOLLOWUP_REASONS } from '../lib/followups.js'
 import { hasPhases, PHASES } from '../lib/templates.js'
 import { isBeech } from '../lib/gearrig.js'
@@ -1293,14 +1293,18 @@ function PublishBar({ inspection, onPublish, onUnpublish, openFollowups = 0 }) {
   const [busy, setBusy] = useState(false)
   const [revisions, setRevisions] = useState([])
   const [showHistory, setShowHistory] = useState(false)
+  const [views, setViews] = useState([])
+  const [showViews, setShowViews] = useState(false)
   const published = inspection.status === 'published'
   const rev = Number(inspection.current_revision) || 0
   const link = reportUrl(inspection.share_token)
+  const vstats = viewStats(views)
 
   useEffect(() => {
     if (!published) return
     let active = true
     listRevisions(inspection.id).then(({ data }) => { if (active) setRevisions(data ?? []) })
+    listReportViews(inspection.id).then(({ data }) => { if (active) setViews(data ?? []) })
     return () => { active = false }
   }, [published, inspection.id, rev])
 
@@ -1358,6 +1362,33 @@ function PublishBar({ inspection, onPublish, onUnpublish, openFollowups = 0 }) {
         The link shows <strong>Revision {rev || 1}</strong>{lastRev?.published_at ? ` (published ${new Date(lastRev.published_at).toLocaleDateString()})` : ''}. Any edits you make now are
         draft — they go live when you publish the next revision.
       </p>
+      <div className="insp__viewrow">
+        <Eye size={14} aria-hidden="true" />
+        {vstats.count === 0 ? (
+          <span className="auth__hint">Not opened yet.</span>
+        ) : (
+          <span className="auth__hint">
+            Report opened <strong>{vstats.count}</strong> time{vstats.count === 1 ? '' : 's'} · last {new Date(vstats.lastAt).toLocaleString()}
+          </span>
+        )}
+        {views.length > 0 && (
+          <button type="button" className="auth__toggle" onClick={() => setShowViews((v) => !v)}>
+            {showViews ? 'Hide' : 'Details'}
+          </button>
+        )}
+      </div>
+      {showViews && views.length > 0 && (
+        <ul className="insp__revlist">
+          {views.slice(0, 25).map((v) => (
+            <li key={v.id} className="insp__revrow">
+              <span className="auth__hint">
+                {v.viewed_at ? new Date(v.viewed_at).toLocaleString() : ''}{v.revision ? ` · rev ${v.revision}` : ''}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="insp__capture">
         <button type="button" className="auth__btn" disabled={busy} onClick={() => act(onPublish)}>
           <Share2 size={15} aria-hidden="true" /> {busy ? 'Publishing…' : `Publish revision ${rev + 1}`}

@@ -61,6 +61,10 @@ const FAQ = [
     a: 'As we read your scans, every AD (Airworthiness Directive) we find is compiled into an “AD compliance” list on the Logbook audit — de-duplicated by AD number, with the latest compliance date/time and whether it recurs. If you also scan a standalone AD compliance report (pick “AD compliance report” when you scan a logbook), we cross-check it against the logbooks: any AD on the report we can’t find a logbook entry for is flagged “unverified,” and any AD in the logbooks that isn’t on the report is flagged too. It’s a starting cross-check, not a legal sign-off — always confirm against the actual records.',
   },
   {
+    q: 'Can I see whether my customer opened the report?',
+    a: 'Yes. Once a report is published, the publish panel shows a read-receipt — “Report opened N times · last <date/time>” — with a Details list of the recent opens. It counts real opens (link-preview bots that just unfurl the link don’t run the page, so they aren’t counted). A couple of caveats: a page reload counts as another open, and if you open your own share link to check it, that counts too — so treat the number as “activity,” not a precise unique-visitor count.',
+  },
+  {
     q: 'Can I publish a report and keep editing it?',
     a: 'Yes. Publishing freezes a snapshot — Revision 1 — and that’s exactly what the customer link shows. Any edits you make afterward stay in draft and are NOT visible on the link until you publish again. When you’re ready, tap “Publish revision N” to push your latest changes live as a new revision. Your publish bar and the report footer show the current revision, and there’s a revision history. “Unpublish” takes the link offline (history is kept).',
   },

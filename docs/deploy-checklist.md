@@ -173,6 +173,9 @@ Run in order. All are idempotent (safe to re-run).
       loaded the official `uscgboating.org/downloads/MIC.csv` (~16k builders). Needed `ENCODING 'WIN1252'`
       (file is Windows-1252; 0x91 smart quotes). Quarterly auto-refresh keeps it current.
 
+- [ ] ⬜ **Run migration `034_report_views.sql` + REDEPLOY `report` (JWT OFF) for v0.67.0** — report
+      read-receipt: `report_views` table (org-RLS select) + the `report` fn logs a view row on serve.
+
 ---
 
 _Keep this current: when a new migration/function/secret lands, add it here with ⬜ and note it in
