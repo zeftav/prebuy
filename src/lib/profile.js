@@ -43,6 +43,7 @@ export function emptyProfile(verticalKey = 'aviation') {
     currency: blankBag(schema.currencyFields),
     damage: [], //    [{ date, summary, affected }]
     equipment: { avionics: [], additional: [] }, // two buckets, relabeled per vertical
+    report_hidden: [], // scalar profile items held off the report (see normalizeProfile)
   }
 }
 
@@ -56,17 +57,15 @@ function fitLength(arr, n, make) {
   return out
 }
 
+// Row lists (damage, equipment) carry their fields plus a `hidden` flag that holds
+// that row back from the customer report. Default shown; `hidden: true` suppresses.
+// Pure.
 const rowList = (arr, fields) =>
   (Array.isArray(arr) ? arr : [])
-    .map((r) => (r && typeof r === 'object' ? Object.fromEntries(fields.map((f) => [f, str(r[f]).trim()])) : null))
+    .map((r) => (r && typeof r === 'object'
+      ? { ...Object.fromEntries(fields.map((f) => [f, str(r[f]).trim()])), hidden: !!r.hidden }
+      : null))
     .filter((r) => r && fields.some((f) => r[f]))
-
-// Equipment rows carry name + notes plus a `hidden` flag (suppress from the report).
-// Default shown; `hidden: true` holds it back. Pure.
-const equipList = (arr) =>
-  (Array.isArray(arr) ? arr : [])
-    .map((r) => (r && typeof r === 'object' ? { name: str(r.name).trim(), notes: str(r.notes).trim(), hidden: !!r.hidden } : null))
-    .filter((r) => r && (r.name || r.notes))
 
 /**
  * Coerce a stored/loose profile object into the canonical shape for its vertical.
@@ -121,9 +120,15 @@ export function normalizeProfile(raw, verticalKey = 'aviation') {
     currency: Object.fromEntries(curKeys.map((k) => [k, str(currency[k]).trim()])),
     damage: rowList(raw.damage, ['date', 'summary', 'affected']),
     equipment: {
-      avionics: equipList(eq.avionics),
-      additional: equipList(eq.additional),
+      avionics: rowList(eq.avionics, ['name', 'notes']),
+      additional: rowList(eq.additional, ['name', 'notes']),
     },
+    // Report-hidden set: stable keys of scalar profile items held off the customer
+    // report — 'summary', 'spec:<key>', 'cur:<key>', 'engine:<i>', 'prop:<i>'.
+    // (Row lists — damage, equipment — carry their own per-row `hidden` instead.)
+    report_hidden: Array.isArray(raw.report_hidden)
+      ? [...new Set(raw.report_hidden.filter((k) => typeof k === 'string' && k))]
+      : [],
   }
 }
 
@@ -309,18 +314,20 @@ export function buildSummaryContext(inspection, profile, events, items) {
   const schema = profileSchema(insp.vertical)
   const n = normalizeProfile(profile, insp.vertical)
 
+  // Items held off the report are also kept out of the AI-written summary.
+  const hidden = new Set(n.report_hidden ?? [])
   const specs = {}
-  for (const f of schema.specFields) if (n.specs[f.key]) specs[f.key] = formatSpecValue(n.specs[f.key], f.suffix)
+  for (const f of schema.specFields) if (n.specs[f.key] && !hidden.has(`spec:${f.key}`)) specs[f.key] = formatSpecValue(n.specs[f.key], f.suffix)
   const currency = {}
-  for (const f of schema.currencyFields) if (n.currency[f.key]) currency[f.key] = n.currency[f.key]
+  for (const f of schema.currencyFields) if (n.currency[f.key] && !hidden.has(`cur:${f.key}`)) currency[f.key] = n.currency[f.key]
 
   const nonEmpty = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v))
   const engines = n.engines
     .map((e, i) => ({ position: engineLabel(i, n.engine_count, n.layout), ...nonEmpty(e) }))
-    .filter((e) => Object.keys(e).length > 1)
+    .filter((e, i) => Object.keys(e).length > 1 && !hidden.has(`engine:${i}`))
   const props = n.props
     .map((p, i) => ({ position: propLabel(i, n.engine_count, n.layout), ...nonEmpty(p) }))
-    .filter((p) => Object.keys(p).length > 1)
+    .filter((p, i) => Object.keys(p).length > 1 && !hidden.has(`prop:${i}`))
 
   const findingItems = (items ?? [])
     .filter((i) => i.status === 'discrepancy' || i.status === 'monitor')
@@ -345,7 +352,8 @@ export function buildSummaryContext(inspection, profile, events, items) {
   if (engines.length) ctx.engines = engines
   if (props.length) ctx.props = props
   if (Object.keys(currency).length) ctx.currency = currency
-  if (n.damage.length) ctx.damage = n.damage
+  const shownDamage = n.damage.filter((d) => !d.hidden)
+  if (shownDamage.length) ctx.damage = shownDamage
   // Suppressed equipment is held off the report, so keep it out of the AI summary too.
   const shownAvionics = n.equipment.avionics.filter((r) => !r.hidden)
   const shownAdditional = n.equipment.additional.filter((r) => !r.hidden)

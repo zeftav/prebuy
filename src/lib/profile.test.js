@@ -221,6 +221,33 @@ describe('buildSummaryContext', () => {
   it('treats marine as a vessel', () => {
     expect(buildSummaryContext({ vertical: 'marine' }, null, [], []).asset.kind).toBe('vessel')
   })
+  it('excludes report-hidden specs and damage from the AI summary context', () => {
+    const profile = {
+      specs: { total_time: '4200', useful_load: '1050' },
+      damage: [{ date: '2019', summary: 'bird strike', hidden: true }],
+      report_hidden: ['spec:useful_load'],
+    }
+    const ctx = buildSummaryContext(inspection, profile, [], [])
+    expect('useful_load' in ctx.specs).toBe(false) // held off the report
+    expect(ctx.specs.total_time).toBe('4200 hrs')  // still included
+    expect('damage' in ctx).toBe(false)            // the only damage row is hidden
+  })
+})
+
+describe('report-hidden profile items', () => {
+  it('normalizeProfile keeps a deduped string report_hidden set', () => {
+    const n = normalizeProfile({ report_hidden: ['summary', 'spec:total_time', 'summary', 42, ''] })
+    expect(n.report_hidden).toEqual(['summary', 'spec:total_time'])
+  })
+  it('empty profile and junk normalize to an empty set', () => {
+    expect(normalizeProfile(null).report_hidden).toEqual([])
+    expect(normalizeProfile({ report_hidden: 'nope' }).report_hidden).toEqual([])
+  })
+  it('damage rows carry a hidden flag (default false)', () => {
+    const n = normalizeProfile({ damage: [{ summary: 'a' }, { summary: 'b', hidden: true }] })
+    expect(n.damage[0].hidden).toBe(false)
+    expect(n.damage[1].hidden).toBe(true)
+  })
 })
 
 describe('per-vertical profile schema', () => {

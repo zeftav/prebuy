@@ -3,6 +3,21 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.66.0] — 2026-09-12
+
+### Added
+- **Per-item "On report" toggles across the whole Aircraft Profile.** Extends the equipment suppression
+  (v0.60.0) to every profile item: the **summary**, each **specification**, each **currency / due-date**
+  line, each **engine block**, and each **damage entry** now has an "On report" checkbox in the profile
+  editor, so you can hold any individual item off the customer report while keeping it in your working
+  profile. Scalar items are held via a `profile.report_hidden` key set (`summary` / `spec:<key>` /
+  `cur:<key>` / `engine:<i>`); damage rows (like equipment) carry a per-row `hidden`. `ReportView` filters
+  all of them; held items are also excluded from the AI-written summary. The damage section still shows
+  "No damage reported" only when there genuinely is none — if every entry is held back it omits the section
+  rather than imply a clean history. `profile.js`: `rowList` now preserves `hidden` (damage + equipment),
+  `normalizeProfile` carries `report_hidden`, `buildSummaryContext` respects both (+tests, 325). Stored in
+  `attributes.profile` — **no migration**; the report filters client-side — **no redeploy**.
+
 ## [0.65.1] — 2026-09-11
 
 ### Fixed

@@ -85,6 +85,15 @@ export default function AircraftProfile() {
   const setSpec = (k) => (e) => edit((p) => { p.specs[k] = e.target.value })
   const setCurrency = (k) => (e) => edit((p) => { p.currency[k] = e.target.value })
   const setSummary = (e) => edit((p) => { p.summary = e.target.value })
+  // Per-item report visibility for scalar profile items (summary / spec:<k> /
+  // cur:<k> / engine:<i>). Shown unless the key is in report_hidden.
+  const isShown = (key) => !(profile.report_hidden ?? []).includes(key)
+  const toggleShown = (key) => edit((p) => {
+    const set = new Set(p.report_hidden ?? [])
+    if (set.has(key)) set.delete(key)
+    else set.add(key)
+    p.report_hidden = [...set]
+  })
   const setEngine = (i, k) => (e) => edit((p) => { p.engines[i][k] = e.target.value })
   const setProp = (i, k) => (e) => edit((p) => { p.props[i][k] = e.target.value })
   const setLayout = (e) => edit((p) => { p.layout = e.target.value })
@@ -174,9 +183,12 @@ export default function AircraftProfile() {
       <section className="insp__section">
         <div className="insp__sectionhead">
           <h2>Summary <InfoDot label="The overview a buyer reads first — overall condition, standout points, open items. Write it yourself, or draft it from your data with AI and edit." /></h2>
-          <button type="button" className="auth__btn auth__btn--ghost insp__genbtn" onClick={onGenerate} disabled={genBusy}>
-            <Sparkles size={15} aria-hidden="true" /> {genBusy ? 'Writing…' : 'Write with AI'}
-          </button>
+          <div className="insp__headright">
+            {profile.summary && <ReportChk on={isShown('summary')} onToggle={() => toggleShown('summary')} />}
+            <button type="button" className="auth__btn auth__btn--ghost insp__genbtn" onClick={onGenerate} disabled={genBusy}>
+              <Sparkles size={15} aria-hidden="true" /> {genBusy ? 'Writing…' : 'Write with AI'}
+            </button>
+          </div>
         </div>
         <textarea
           className="insp__summaryinput"
@@ -205,6 +217,7 @@ export default function AircraftProfile() {
                 value={profile.specs[f.key] ?? ''}
                 onChange={setSpec(f.key)}
               />
+              {profile.specs[f.key] && <ReportChk on={isShown(`spec:${f.key}`)} onToggle={() => toggleShown(`spec:${f.key}`)} />}
             </div>
           ))}
         </div>
@@ -240,6 +253,7 @@ export default function AircraftProfile() {
               <h3 className="insp__enginehead">
                 {engineLabel(i, profile.engine_count, profile.layout)}
                 {profile.engine_count > 1 && schema.propFields.length > 0 && <span className="insp__enginesub"> &amp; {propLabel(i, profile.engine_count, profile.layout)}</span>}
+                <ReportChk on={isShown(`engine:${i}`)} onToggle={() => toggleShown(`engine:${i}`)} />
               </h3>
               <div className="insp__profilegrid">
                 {schema.engineFields.map((f) => (
@@ -276,6 +290,7 @@ export default function AircraftProfile() {
                   value={profile.currency[f.key] ?? ''}
                   onChange={setCurrency(f.key)}
                 />
+                {profile.currency[f.key] && <ReportChk on={isShown(`cur:${f.key}`)} onToggle={() => toggleShown(`cur:${f.key}`)} />}
               </div>
             ))}
           </div>
@@ -289,9 +304,13 @@ export default function AircraftProfile() {
         rows={profile.damage}
         columns={schema.damageColumns}
         addLabel="Add entry"
-        onAdd={() => edit((p) => p.damage.push({ date: '', summary: '', affected: '' }))}
+        onAdd={() => edit((p) => p.damage.push({ date: '', summary: '', affected: '', hidden: false }))}
         onChange={(i, k, v) => edit((p) => { p.damage[i][k] = v })}
         onRemove={(i) => edit((p) => p.damage.splice(i, 1))}
+        onToggleHidden={(i, val) => edit((p) => {
+          if (i === 'all') p.damage.forEach((r) => { r.hidden = val })
+          else p.damage[i].hidden = !p.damage[i].hidden
+        })}
       />
 
       {/* Equipment groups (relabeled per vertical; stored as avionics / additional) */}
@@ -698,6 +717,16 @@ function ReviewGroup({ title, items, isOn, onToggle }) {
         ))}
       </ul>
     </>
+  )
+}
+
+// Compact "On report" checkbox for a single profile item (spec, currency line,
+// engine block, summary). Checked = shown on the customer report.
+function ReportChk({ on, onToggle, label = 'On report' }) {
+  return (
+    <label className="insp__fieldreport" title="Show this on the customer report">
+      <input type="checkbox" checked={on} onChange={onToggle} /> {label}
+    </label>
   )
 }
 

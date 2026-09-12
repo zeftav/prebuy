@@ -90,8 +90,12 @@ export default function ReportView() {
   const isListing = inspection.mode === 'listing'
   const profile = normalizeProfile(inspection.profile, inspection.vertical)
   const hasProfile = !isProfileEmpty(profile, inspection.vertical)
-  const specRows = fieldRows(profile.specs, schema.specFields)
-  const currencyRows = fieldRows(profile.currency, schema.currencyFields)
+  // Per-item report suppression: scalar items via the report_hidden key set, row
+  // lists (damage, equipment) via each row's own `hidden`.
+  const hiddenSet = new Set(profile.report_hidden ?? [])
+  const specRows = fieldRows(profile.specs, schema.specFields).filter((r) => !hiddenSet.has(`spec:${r.key}`))
+  const currencyRows = fieldRows(profile.currency, schema.currencyFields).filter((r) => !hiddenSet.has(`cur:${r.key}`))
+  const shownDamage = (profile.damage ?? []).filter((d) => !d.hidden)
   // Per-position engine + prop cards (each engine paired with its prop).
   const engineBlocks = (schema.hasEngines ? profile.engines : [])
     .map((eng, i) => {
@@ -105,7 +109,7 @@ export default function ReportView() {
       ]
       return { i, title: engineLabel(i, profile.engine_count, profile.layout), rows }
     })
-    .filter((b) => b.rows.length)
+    .filter((b) => b.rows.length && !hiddenSet.has(`engine:${b.i}`))
   // Part 1 is worth a header if there's any profile data, a maintenance timeline, or photos.
   const hasPart1 = hasProfile || events.length > 0 || overview.length > 0 || documents.length > 0 || parts.length > 0
 
@@ -134,7 +138,7 @@ export default function ReportView() {
         </div>
       </header>
 
-      {profile.summary && <p className="report__lede">{profile.summary}</p>}
+      {profile.summary && !hiddenSet.has('summary') && <p className="report__lede">{profile.summary}</p>}
 
       {/* ── Part 1 — Aircraft profile ─────────────────────────────────────── */}
       {hasPart1 && (
@@ -195,13 +199,15 @@ export default function ReportView() {
             </section>
           )}
 
-          {/* Damage callout — brokers always state it explicitly. */}
-          {hasProfile && (
+          {/* Damage callout — brokers always state it explicitly. Only claim "no
+              damage" when there genuinely is none; if every entry is held back,
+              omit the section rather than imply a clean history. */}
+          {hasProfile && (shownDamage.length > 0 || profile.damage.length === 0) && (
             <section className="report__section">
               <h2>{schema.damageTitle}</h2>
-              {profile.damage.length > 0 ? (
+              {shownDamage.length > 0 ? (
                 <div className="report__damage">
-                  {profile.damage.map((d, i) => (
+                  {shownDamage.map((d, i) => (
                     <div className="report__damagerow" key={i}>
                       <AlertTriangle size={16} aria-hidden="true" className="report__damageicon" />
                       <div>

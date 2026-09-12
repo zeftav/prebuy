@@ -752,6 +752,17 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   `location.reload()` (10s sessionStorage cooldown vs loops) to fetch the fresh shell. Root cause was
   stale cache, not code. Tests 321. No migration/redeploy.
 
+- Session 5 cont. — **Per-item report toggles across the whole Aircraft Profile** (v0.66.0, frontend
+  only; Brett chose per-item via AskUserQuestion). Extends equipment suppression (v0.60.0) to summary,
+  each spec, each currency line, each engine block, each damage row. `profile.js`: `rowList` preserves
+  `hidden` (damage + equipment share it; `equipList` removed); `normalizeProfile` carries `report_hidden`
+  (key set: `summary`/`spec:<k>`/`cur:<k>`/`engine:<i>`); `buildSummaryContext` excludes hidden
+  specs/currency/damage/engines from the AI summary; `mergeProfileDraft`/`mergeResearchDraft` preserve it
+  (via normalizeProfile). AircraftProfile: `ReportChk` checkbox on each item (`isShown`/`toggleShown`) +
+  damage RowEditor `onToggleHidden`. ReportView filters via `report_hidden` set + row `hidden`; damage
+  section omits itself (not "No damage") when all rows held. `attributes.profile` → no migration; report
+  filters client-side → no redeploy. Tests 325.
+
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
   (added as a repo deploy key with write). No `gh` CLI installed yet.

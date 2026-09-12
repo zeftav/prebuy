@@ -1121,6 +1121,17 @@
   margin-bottom: 4px;
 }
 .insp__rowedit--held { opacity: 0.6; }
+.insp__headright { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.insp__fieldreport {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted, #6b7280);
+  white-space: nowrap;
+}
 
 /* Per-discrepancy repair estimate + inspection rollup */
 .insp__estimate {

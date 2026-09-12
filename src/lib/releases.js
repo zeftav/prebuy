@@ -6,6 +6,15 @@
 
 export const releases = [
   {
+    version: '0.66.0',
+    date: '2026-09-12',
+    title: 'Choose what shows on the report — item by item',
+    items: [
+      'Every part of the Aircraft Profile now has an “On report” checkbox: the summary, each spec, each currency/due-date line, each engine, and each damage entry. Untick anything you want to keep in your working profile but leave off the customer report.',
+      'Held items also stay out of the AI-written summary. (Equipment already worked this way; now the whole profile does.)',
+    ],
+  },
+  {
     version: '0.65.0',
     date: '2026-09-11',
     title: 'Multiple photos at once + iPhone HEIC support',
