@@ -196,7 +196,12 @@ Deno.serve(async (req: Request) => {
     return json(result)
   } catch (e) {
     const status = (e as { status?: number })?.status
+    const detail = (e as { message?: string })?.message
+    // Surface the real reason so the UI isn't a dead end (this is an internal,
+    // authenticated tool). Log it server-side too for the function logs.
+    console.error('research-asset failed', status ?? '', detail ?? e)
     if (status === 429) return json({ error: 'AI is busy — try again in a moment.' }, 429)
-    return json({ error: 'Research request failed.' }, 502)
+    if (status && status >= 500) return json({ error: 'The AI service is momentarily unavailable — try again shortly.' }, 502)
+    return json({ error: `Research failed${detail ? `: ${String(detail).slice(0, 200)}` : ' — try again, or fill the profile manually.'}` }, status && status >= 400 && status < 500 ? status : 502)
   }
 })

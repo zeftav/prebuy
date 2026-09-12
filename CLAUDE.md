@@ -763,6 +763,14 @@ drives ordering) → `inspections` (N-number, share_token, status draft→in_pro
   section omits itself (not "No damage") when all rows held. `attributes.profile` → no migration; report
   filters client-side → no redeploy. Tests 325.
 
+- Session 5 cont. — **"Research with AI" error surfacing** (v0.66.1, edge-fn only). Brett hit a generic
+  "Research request failed." The `research-asset` outer catch swallowed the real error; now it splits
+  429 (busy) / 5xx (temporarily unavailable) / other (shows the underlying message, truncated) + logs it.
+  Verified via `claude-api` skill that the request shape is current (`web_search_20260209` +
+  `claude-opus-4-8` + `output_config.format`), so the reported failure was most likely a transient/
+  overloaded API. ⚠️ **Redeploy `research-asset` (JWT ON)** — no migration, no frontend change (profile
+  page already renders the fn's `error`). Tests 325 (unchanged).
+
 ## Repo / access
 - GitHub: `git@github.com:zeftav/prebuy.git` (`main` tracked). Auth via ed25519 SSH key on this Mac
   (added as a repo deploy key with write). No `gh` CLI installed yet.

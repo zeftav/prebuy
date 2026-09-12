@@ -3,6 +3,18 @@
 All notable changes that hit `main` (production) are recorded here.
 User-facing entries are also summarized in-app (see `src/lib/releases.js`).
 
+## [0.66.1] — 2026-09-12
+
+### Changed
+- **"Research with AI" surfaces the real failure reason** instead of a dead-end "Research request failed."
+  The `research-asset` edge function's catch-all now distinguishes a busy/rate-limited API (429), a
+  temporarily-unavailable service (5xx → "try again shortly"), and any other error (shows the underlying
+  message, truncated), and logs the detail server-side. The request shape itself is current
+  (`web_search_20260209` + `claude-opus-4-8` + `output_config.format`), so the most likely cause of the
+  reported failure is a transient/overloaded API — this makes a retry self-explaining. ⚠️ **Redeploy
+  `research-asset` (JWT ON)** — no migration, no frontend change (the profile page already shows the
+  function's error text).
+
 ## [0.66.0] — 2026-09-12
 
 ### Added
